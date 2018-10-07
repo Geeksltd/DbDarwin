@@ -131,3 +131,20 @@ During a deployment operation, we need to:
 - Bring the database back online
 
 TODO: This is to be handled via the Jenkins process. We will need the DB change script to be injected into the pipeline. The simplest approach is to make it an ad-hoc deployment parameter. But then, the history will be lost. So ideally, we need the generated SQL to be added to the source repo. But how?
+
+## Process
+The developer would use the UI tool to go through a step-by-step process to:
+
+1. Select the new (local) database such as `MyMSharpApp.Temp` on `.\SqlExpress`
+2. Select the current live (or UAT) database such as `MyMSharpApp` through a live connection string.
+   - Note: Ideally the live database should be first copied locally for a test run of the generated scripts.
+3. All removals will be shown on the left side of the screen, and all additions will be shown on the right side
+4. The developer can select an object from the left side, and one from the right side, and click a button reading "It's a rename"
+5. Rename operations will be shown on the right side.
+6. Clicking on any operation on either side, will show the equivalent generated SQL for it at the bottom of the screen.
+7. Click Done - which shows a screen with the full generated scripts and a button to Download as a file.
+
+### Next version
+- Upon every such action, a new version of the Diff.xml will be created, with the ability to Undo (go back to a previous version)
+- Any change (on either side of the screen) can be manually excluded, which simply deletes that item from the Diff xml.
+- We can add further manual intervention possibilities when the need araises.
