@@ -22,5 +22,6 @@ We will have a UI for the developer to select any addition/removal pair (for tab
 
 ### Generate script
 ```
-DbDarwin.exe generate-script -diff "CurrentLiveDatabaseFilePath.xml" -to "NewSchemaFilePath.xml" -out "Diff.xml"
+DbDarwin.exe generate-script -diff "Diff.xml" -out "migrate.sql" 
 ```
+Generates the sql code equvalent to the diff xml file.
