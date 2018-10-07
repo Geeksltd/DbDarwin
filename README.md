@@ -2,6 +2,17 @@
 *Forces evolution upon live databases*
 DbDarwin is a utility for Sql database migration script generation, optimised for M# dev ops.  
 
+## Background
+As a part of our transition to full DevOps, we have identified a need to automate our database migration process in a safe, reliable and highly efficient way.
+
+Tools such as SQL Compare are very mature and have lots of features. But they are not suitable for our purpose, due to licensing costs, learning curve and lack of flexibility for full flexibility and control to match our processes. In particular, they cannot give us enough control for full automation which we need for maximised efficiency.
+
+For that reason, we have decided to create our own database migration tool, codenamed DbDarwin. We take a very pragmatic and agile approach to designing and enhancing the tool, as our needs evolve.
+
+## Open source
+This project will be open source and available here on GitHub. It's licensed under GPLv3, and available to anyone who is interested in using it. However, beware that some of its features will be opinionated and designed for our specific needs and technical environment. 
+
+
 ## Commands reference
 The CLI tool will support the following commands:
 ### Extract schema
