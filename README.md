@@ -30,6 +30,29 @@ It will connect to a specified sql database and extract the schema into an XML f
 
 NOTE: Other than just schema, we need the data for reference tables also.
 
+> In the first version, we only focus on tables, columns, keys and indexes. We ignore Views, schemas, owner, ...
+```xml
+<Schema>
+  <Table Nname="MyTable">
+    <Column Name="Id" DataType="uniqueidentifier" Nullable="false" />
+    <Column Name="MyColumn" DataType="nvarchar(4000)" Nullable="true" />
+    <Column Name="MyAssociation" DataType="uniqueIdentifier" Nullable="true"
+            ForeignKeyName="SomeKey" References="AnotherTable.Id" OnDelete="Cascade" OnUpdate="No Action" />
+    ...
+    <PrimaryKey Column="Id" KeyName="..."/>
+    <Index Name="..." Clustered="false" Unique="false" Columns="Col1|Col2|Col3" />
+    <Records>
+      <Add Id="">
+        <Col1>Value 1</Col1>
+        <Col2>Value 2</Col2>
+        <Col3>...</Col3>
+      </Add>
+      ...
+    </Records>
+  </Table>
+</Schema>
+```
+
 ### Generate diff
 ```
 DbDarwin.exe generate-diff -from "CurrentLiveDatabaseFilePath.xml" -to "NewSchemaFilePath.xml" -out "Diff.xml"
