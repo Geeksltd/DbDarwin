@@ -19,3 +19,8 @@ DbDarwin.exe generate-diff -from "CurrentLiveDatabaseFilePath.xml" -to "NewSchem
 It will compare the schemas and generates a new xml file that represents the required changes. The generated file contains a flat list of additions and removals.
 
 We will have a UI for the developer to select any addition/removal pair (for tables and columns only) and optionally mark them as RENAME.
+
+### Generate script
+```
+DbDarwin.exe generate-script -diff "CurrentLiveDatabaseFilePath.xml" -to "NewSchemaFilePath.xml" -out "Diff.xml"
+```
