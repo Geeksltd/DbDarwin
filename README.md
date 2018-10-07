@@ -106,9 +106,28 @@ The UI app will allow the developer to select any addition/removal pair for the 
   </Table>  
 </Diff>
 ```
+Such transformation will be applied via a CLI command:
+```
+DbDarwin.exe rename -diff "Diff.xml" table="table-Name" from="MyOldColumn" to="MyNewColumn" -out "Diff v2.xml" 
+```
+> If the rename operation is on a table, rather than a table component, simply the `table="table-Name"` part will not be specified.
+
+#### Modified data
+A similar logic will be used for data changes in the reference tables.
 
 ### Generate script
+Once the developer is happy with the `Diff.Xml` file, after all manuall interventions, the following command will be invoked:
 ```
 DbDarwin.exe generate-script -diff "Diff.xml" -out "migrate.sql" 
 ```
-Generates the sql code equvalent to the diff xml file.
+It generates the sql code equvalent to the diff xml file.
+
+# Running the generated migration SQL
+During a deployment operation, we need to:
+
+- Take the live database offline
+- Create a backup
+- Run the generated SQL file
+- Bring the database back online
+
+TODO: This is to be handled via the Jenkins process. We will need the DB change script to be injected into the pipeline. The simplest approach is to make it an ad-hoc deployment parameter. But then, the history will be lost. So ideally, we need the generated SQL to be added to the source repo. But how?
