@@ -33,13 +33,15 @@ NOTE: Other than just schema, we need the data for reference tables also.
 > In the first version, we only focus on tables, columns, keys and indexes. We ignore Views, schemas, owner, ...
 ```xml
 <Schema>
-  <Table Nname="MyTable">
+  <Table Name="MyTable">
     <Column Name="Id" DataType="uniqueidentifier" Nullable="false" />
-    <Column Name="MyColumn" DataType="nvarchar(4000)" Nullable="true" />
-    <Column Name="MyAssociation" DataType="uniqueIdentifier" Nullable="true"
-            ForeignKeyName="SomeKey" References="AnotherTable.Id" OnDelete="Cascade" OnUpdate="No Action" />
+    <PrimaryKey Name="..." Column="Id" />
+    
+    <Column Name="MyColumn" DataType="nvarchar(4000)" Nullable="false" Default="..."/>
+    <Column Name="MyAssociation" DataType="uniqueIdentifier" Nullable="true" />
     ...
-    <PrimaryKey Column="Id" KeyName="..."/>
+    
+    <ForeignKey Name="SomeKey" Column="MyAssociation" References="AnotherTable.Id" OnDelete="Cascade" OnUpdate="No Action" />
     <Index Name="..." Clustered="false" Unique="false" Columns="Col1|Col2|Col3" />
     <Records>
       <Add Id="">
@@ -57,9 +59,53 @@ NOTE: Other than just schema, we need the data for reference tables also.
 ```
 DbDarwin.exe generate-diff -from "CurrentLiveDatabaseFilePath.xml" -to "NewSchemaFilePath.xml" -out "Diff.xml"
 ```
-It will compare the schemas and generates a new xml file that represents the required changes. The generated file contains a flat list of additions and removals.
+It will compare the schemas and generates a new xml file that represents the required changes.
 
-We will have a UI for the developer to select any addition/removal pair (for tables and columns only) and optionally mark them as RENAME.
+#### Changed settings for existing components
+Every component (table, column, etc) will be identified by its name (and parent table). When a component with the same name exists in both, but with changed setttings, it will be generated again, with only the changed settings.
+
+For example, if in the above sample code, only the nullable setting of the MyAssociation column in the MyTable table was changed, the following diff XML will be generated:
+```xml
+<Diff>
+  <Table Name="MyTable">
+    <Column Name="MyAssociation" Set-Nullable="false" />    
+  </Table>
+</Diff>
+```
+
+Note that the changed settings' will get a `Set-` prefix in the XML.
+
+#### Added / Removed table components
+Per existing table (which exists in both), for every additions or removal of columns, indexes, etc whose names do not match, an `<add>` or `<remove>` tag will be generated.
+
+```xml
+<Diff>
+  <Table Name="MyTable">
+    <add>
+      <Column Name="MyNewColumn" DataType="nvarchar(4000)" Nullable="true" />
+      <Column Name="AnotherNewColumn" DataType="int" Nullable="true" />
+    </add>
+    <remove>
+      <Column Name="MyOldColumn" DataType="nvarchar(4000)" Nullable="true" />
+    </remove>    
+    </Table>  
+</Diff>
+```
+
+#### Renamed objects
+If an existing component's name is changed, we normally identify that as a `remove / add` pair as there is no way to know that they are indeed the same. To solve this problem, we need the developer's manual intervention.
+
+The UI app will allow the developer to select any addition/removal pair for the same object type under the same table, and click `It's a rename` button, which would then modify the generated diff XML. For instance, if in the above example, the developer marked `MyOldColumn` and `MyNewColumn` as a *Rename*, then the generated Diff would become:
+```xml
+<Diff>
+  <Table Name="MyTable">
+    <Column Name="MyOldColumn" Set-Name="MyNewColumn" />
+    <add>      
+      <Column Name="AnotherNewColumn" DataType="int" Nullable="true" />
+    </add>
+  </Table>  
+</Diff>
+```
 
 ### Generate script
 ```
