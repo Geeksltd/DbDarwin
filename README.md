@@ -12,9 +12,17 @@ For that reason, we have decided to create our own database migration tool, code
 ## Open source
 This project will be open source and available here on GitHub. It's licensed under GPLv3, and available to anyone who is interested in using it. However, beware that some of its features will be opinionated and designed for our specific needs and technical environment. 
 
+## Overall architecture
+DbDarwin will consist of a CLI tool, `DbDarwin.dll`, and also a Graphical User Interface tool called `DbDarwin.UI.exe`.
 
-## Commands reference
+- Both will be developed using .NET Core 2.1.
+- The UI app will be a self-hosted ASP.NET Core app.
+
+> The UI app will be a lightweight application and it will not contain any actual logic related to SQL stuff. It will simply make calls to the CLI tool. It's purpose is just to simplify the developer decisions in teh process. All the real logic will be programmed in the CLI tool.
+
+# CLI Commands
 The CLI tool will support the following commands:
+
 ### Extract schema
 ```
 DbDarwin.exe extract-schema -connect "my connection string" -out "someFilePath.xml"
