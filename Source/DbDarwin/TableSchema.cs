@@ -26,7 +26,7 @@ namespace DbDarwin.SchemaXML
         //public decimal ShipCost;
         //public decimal TotalCost;
     }
-
+                                                   
 
     [Serializable]
     public class Column
