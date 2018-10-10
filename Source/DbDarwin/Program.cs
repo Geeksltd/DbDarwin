@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using PowerMapper;
 
 namespace DbDarwin
 {
@@ -37,10 +39,15 @@ namespace DbDarwin
                         da.Fill(dt1);
 
 
+                        List<SchemaXML.Column> c1Test = dt1.Columns.Cast<DataColumn>().ToList().MapTo<List<SchemaXML.Column>>();
+
+
 
                         DbDarwin.SchemaXML.Table myDt = new SchemaXML.Table()
                         {
-                            Name = dt1.TableName
+                            Name = dt1.TableName,
+                            Column = dt1.Columns.Cast<DataColumn>().ToList().MapTo<List<SchemaXML.Column>>()
+
 
                         };
 
@@ -50,7 +57,7 @@ namespace DbDarwin
                         ser.Serialize(sw2, myDt);
                         var xml = sw2.ToString();
                         File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "\\schema" + DateTime.Now.Ticks + ".xml", xml);
-                        //Console.WriteLine(xml);
+                        Console.WriteLine(xml);
                         //StringWriter sw = new StringWriter();
                         //dt1.WriteXml(sw, XmlWriteMode.DiffGram);
                         //var xml = sw.ToString();

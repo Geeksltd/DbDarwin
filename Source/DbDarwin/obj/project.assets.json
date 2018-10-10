@@ -1800,11 +1800,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\President\\Documents\\Visual Studio 2017\\Projects\\DbDarwin\\DbDarwin\\DbDarwin.csproj",
+      "projectUniqueName": "F:\\Projects\\Geeksltd\\DbDarwin\\Source\\DbDarwin\\DbDarwin.csproj",
       "projectName": "DbDarwin",
-      "projectPath": "C:\\Users\\President\\Documents\\Visual Studio 2017\\Projects\\DbDarwin\\DbDarwin\\DbDarwin.csproj",
+      "projectPath": "F:\\Projects\\Geeksltd\\DbDarwin\\Source\\DbDarwin\\DbDarwin.csproj",
       "packagesPath": "C:\\Users\\President\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\President\\Documents\\Visual Studio 2017\\Projects\\DbDarwin\\DbDarwin\\obj\\",
+      "outputPath": "F:\\Projects\\Geeksltd\\DbDarwin\\Source\\DbDarwin\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

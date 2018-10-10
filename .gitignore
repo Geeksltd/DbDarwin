@@ -3,3 +3,7 @@
 ################################################################################
 
 /Source/DbDarwin/bin/Debug/netcoreapp2.1
+/Source/DbDarwin/obj/Debug/netcoreapp2.1
+/Source/DbDarwin/obj/Release/netcoreapp2.1
+/Source/.vs/DbDarwin/v15
+/.vs

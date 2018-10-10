@@ -15,7 +15,8 @@ namespace DbDarwin.SchemaXML
         [XmlAttribute]
         public string Name { get; set; }
 
-        public Column Column { get; set; }
+        [XmlElement("Column")]
+        public List<Column> Column { get; set; }
 
         // The XmlArray attribute changes the XML element name  
         // from the default of "OrderedItems" to "Items".  
@@ -31,60 +32,62 @@ namespace DbDarwin.SchemaXML
     public class Column
     {
 
-        [DefaultValue(false)]
-        public bool ReadOnly { get; set; }
-
-        [DefaultValue("")]
-        public string Prefix { get; set; }
-
-        [Browsable(false)]
-        public int Ordinal { get; }
-
-        public string Namespace { get; set; }
-
-        [DefaultValue(-1)]
-        public int MaxLength { get; set; }
-
-        [Browsable(false)]
-        public PropertyCollection ExtendedProperties { get; set; }
-
-        [DefaultValue("")]
-        [RefreshProperties(RefreshProperties.All)]
-        public string Expression { get; set; }
-
-        public object DefaultValue { get; set; }
-
-        [DefaultValue(DataSetDateTime.UnspecifiedLocal)]
-        public DataSetDateTime DateTimeMode { get; set; }
-
-        [DefaultValue(typeof(string))]
-        public Type DataType { get; set; }
-
-        [DefaultValue("")]
+        [XmlAttribute]
         public string ColumnName { get; set; }
 
-        [DefaultValue(1)]
-        public long AutoIncrementStep { get; set; }
+        [XmlAttribute]
+        public bool ReadOnly { get; set; }
 
-        public string Caption { get; set; }
+        [XmlAttribute]
+        public string Prefix { get; set; }
 
-        //[Browsable(false)]
-        //public DataTable Table { get; }
+        [XmlAttribute]
+        public int Ordinal { get; set; }
 
-        [DefaultValue(0)]
-        public long AutoIncrementSeed { get; set; }
+        [XmlAttribute]
+        public string Namespace { get; set; }
 
-        [DefaultValue(false)]
-        [RefreshProperties(RefreshProperties.All)]
-        public bool AutoIncrement { get; set; }
+        [XmlAttribute]
+        public int MaxLength { get; set; }
 
-        [DefaultValue(true)]
-        public bool AllowDBNull { get; set; }
+        //[XmlAttribute]
+        //public PropertyCollection ExtendedProperties { get; set; }
 
-        [DefaultValue(MappingType.Element)]
-        public virtual MappingType ColumnMapping { get; set; }
+        [XmlAttribute]
+        public string Expression { get; set; }
 
-        [DefaultValue(false)]
-        public bool Unique { get; set; }
+        //[XmlAttribute]
+        //public object DefaultValue { get; set; }
+
+        [XmlAttribute]
+        public DataSetDateTime DateTimeMode { get; set; }
+
+        //[DefaultValue(typeof(string))]
+        //public Type DataType { get; set; }
+
+
+        //[DefaultValue(1)]
+        //public long AutoIncrementStep { get; set; }
+
+        //public string Caption { get; set; }
+
+        ////[Browsable(false)]
+        ////public DataTable Table { get; }
+
+        //[DefaultValue(0)]
+        //public long AutoIncrementSeed { get; set; }
+
+        //[DefaultValue(false)]
+        //[RefreshProperties(RefreshProperties.All)]
+        //public bool AutoIncrement { get; set; }
+
+        //[DefaultValue(true)]
+        //public bool AllowDBNull { get; set; }
+
+        //[DefaultValue(MappingType.Element)]
+        //public virtual MappingType ColumnMapping { get; set; }
+
+        //[DefaultValue(false)]
+        //public bool Unique { get; set; }
     }
 }
