@@ -2,7 +2,7 @@
   "profiles": {
     "DbDarwin": {
       "commandName": "Project",
-      "commandLineArgs": "extract-schema"
+      "commandLineArgs": "extract-schema -connect \"Data Source=EPIPC;Initial Catalog=AdventureWorks2012;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False\" -out \"test1.xml\""
     }
   }
 }

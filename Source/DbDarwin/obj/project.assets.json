@@ -477,6 +477,29 @@
         "compile": {
           "ref/netstandard1.3/System.Threading.Tasks.dll": {}
         }
+      },
+      "DbDarwin.Model/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v2.1",
+        "compile": {
+          "bin/placeholder/DbDarwin.Model.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/DbDarwin.Model.dll": {}
+        }
+      },
+      "DbDarwin.Service/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v2.1",
+        "dependencies": {
+          "DbDarwin.Model": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/DbDarwin.Service.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/DbDarwin.Service.dll": {}
+        }
       }
     }
   },
@@ -1784,10 +1807,21 @@
         "system.threading.tasks.4.0.11.nupkg.sha512",
         "system.threading.tasks.nuspec"
       ]
+    },
+    "DbDarwin.Model/1.0.0": {
+      "type": "project",
+      "path": "../DbDarwin.Model/DbDarwin.Model.csproj",
+      "msbuildProject": "../DbDarwin.Model/DbDarwin.Model.csproj"
+    },
+    "DbDarwin.Service/1.0.0": {
+      "type": "project",
+      "path": "../DbDarwin.Service/DbDarwin.Service.csproj",
+      "msbuildProject": "../DbDarwin.Service/DbDarwin.Service.csproj"
     }
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.1": [
+      "DbDarwin.Service >= 1.0.0",
       "Microsoft.NETCore.App >= 2.1.0",
       "PowerMapper >= 1.0.0",
       "System.Data.SqlClient >= 4.5.1"
@@ -1822,7 +1856,11 @@
       },
       "frameworks": {
         "netcoreapp2.1": {
-          "projectReferences": {}
+          "projectReferences": {
+            "F:\\Projects\\Geeksltd\\DbDarwin\\Source\\DbDarwin.Service\\DbDarwin.Service.csproj": {
+              "projectPath": "F:\\Projects\\Geeksltd\\DbDarwin\\Source\\DbDarwin.Service\\DbDarwin.Service.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
