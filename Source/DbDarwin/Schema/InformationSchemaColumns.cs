@@ -10,18 +10,20 @@ namespace DbDarwin.Schema
     [Serializable]
     public class InformationSchemaColumns
     {
+        [XmlIgnore]
         public string TABLE_CATALOG { get; set; }
 
+        [XmlIgnore]
         public string TABLE_SCHEMA { get; set; }
 
+        [XmlIgnore]
         public string TABLE_NAME { get; set; }
 
         [XmlAttribute]
         public string COLUMN_NAME { get; set; }
 
-        [XmlElement(IsNullable = true)]
         [XmlAttribute]
-        public int? ORDINAL_POSITION { get; set; }
+        public int ORDINAL_POSITION { get; set; }
 
         [XmlAttribute]
         public string COLUMN_DEFAULT { get; set; }
@@ -33,22 +35,22 @@ namespace DbDarwin.Schema
         public string DATA_TYPE { get; set; }
 
         [XmlAttribute]
-        public int? CHARACTER_MAXIMUM_LENGTH { get; set; }
+        public string CHARACTER_MAXIMUM_LENGTH { get; set; }
 
         [XmlAttribute]
-        public int? CHARACTER_OCTET_LENGTH { get; set; }
+        public string CHARACTER_OCTET_LENGTH { get; set; }
 
         [XmlAttribute]
-        public byte? NUMERIC_PRECISION { get; set; }
+        public string NUMERIC_PRECISION { get; set; }
 
         [XmlAttribute]
-        public short? NUMERIC_PRECISION_RADIX { get; set; }
+        public string NUMERIC_PRECISION_RADIX { get; set; }
 
         [XmlAttribute]
-        public int? NUMERIC_SCALE { get; set; }
+        public string NUMERIC_SCALE { get; set; }
 
         [XmlAttribute]
-        public short? DATETIME_PRECISION { get; set; }
+        public string DATETIME_PRECISION { get; set; }
 
         [XmlAttribute]
         public string CHARACTER_SET_CATALOG { get; set; }
