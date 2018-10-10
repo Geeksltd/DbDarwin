@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DbDarwin": {
+      "commandName": "Project",
+      "commandLineArgs": "extract-schema"
+    }
+  }
+}
