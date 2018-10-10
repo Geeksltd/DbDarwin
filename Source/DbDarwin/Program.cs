@@ -5,10 +5,12 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using DbDarwin.Schema;
 using PowerMapper;
 
 namespace DbDarwin
 {
+
     class Program
     {
         static void Main(string[] args)
@@ -29,26 +31,28 @@ namespace DbDarwin
                     da.SelectCommand.Connection = sql;
 
 
+
                     foreach (DataRow r in dt.Rows)
                     {
                         Console.WriteLine(r["TABLE_NAME"]);
-                        var tableName = r["TABLE_NAME"];
+                        var tableName = r["TABLE_SCHEMA"] + "." + r["TABLE_NAME"];
 
-                        da.SelectCommand.CommandText = "select * FROM [Sales].[Store]";// + tableName;
-                        DataTable dt1 = new DataTable("Store");
-                        da.Fill(dt1);
+                        da.SelectCommand.CommandText = "select * from INFORMATION_SCHEMA.COLUMNS";
+                        DataTable dt3 = new DataTable("COLUMNS");
+                        da.Fill(dt3);
 
-
-                        List<SchemaXML.Column> c1Test = dt1.Columns.Cast<DataColumn>().ToList().MapTo<List<SchemaXML.Column>>();
-
+                        var columns = dt3.DataTableToList<InformationSchemaColumns>();
 
 
-                        DbDarwin.SchemaXML.Table myDt = new SchemaXML.Table()
+
+                        //  List<SchemaXML.Column> c1Test = dt1.Columns.Cast<DataColumn>().ToList().MapTo<List<SchemaXML.Column>>();
+
+
+
+                        SchemaXML.Table myDt = new SchemaXML.Table()
                         {
-                            Name = dt1.TableName,
-                            Column = dt1.Columns.Cast<DataColumn>().ToList().MapTo<List<SchemaXML.Column>>()
-
-                                                                
+                            Name = r["TABLE_NAME"].ToString(),
+                            Column = columns.Where(x => x.TABLE_NAME == r["TABLE_NAME"].ToString()).ToList()
                         };
 
 
@@ -58,24 +62,11 @@ namespace DbDarwin
                         var xml = sw2.ToString();
                         File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "\\schema" + DateTime.Now.Ticks + ".xml", xml);
                         Console.WriteLine(xml);
-                        //StringWriter sw = new StringWriter();
-                        //dt1.WriteXml(sw, XmlWriteMode.DiffGram);
-                        //var xml = sw.ToString();
-                        //Console.WriteLine(xml);
-                        //File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "\\schema" + DateTime.Now.Ticks + ".xml", xml);
                         break;
                     }
 
-                    //MemoryStream ms = new MemoryStream();
-                    //dt.WriteXml(ms, XmlWriteMode.IgnoreSchema);
-                    //ms.Seek(0, SeekOrigin.Begin);
-                    //StreamReader sr = new StreamReader(ms);
-                    //string xml = sr.ReadToEnd();
-                    //ms.Close();
-
                     //     File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "\\schema" + DateTime.Now.Ticks + ".xml", xml);
 
-                    //Data Source=EPIPC;Initial Catalog=MSharp.Mvc2.Temp;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False
                 }
             }
 

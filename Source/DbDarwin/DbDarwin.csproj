@@ -6,6 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="InformationSchemaColumns.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Schema\InformationSchemaColumns.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="PowerMapper" Version="1.0.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
   </ItemGroup>

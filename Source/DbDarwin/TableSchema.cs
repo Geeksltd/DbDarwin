@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Text;
 using System.Xml.Serialization;
+using DbDarwin.Schema;
 
 namespace DbDarwin.SchemaXML
 {
@@ -16,7 +17,7 @@ namespace DbDarwin.SchemaXML
         public string Name { get; set; }
 
         [XmlElement("Column")]
-        public List<Column> Column { get; set; }
+        public List<InformationSchemaColumns> Column { get; set; }
 
         // The XmlArray attribute changes the XML element name  
         // from the default of "OrderedItems" to "Items".  
@@ -26,68 +27,68 @@ namespace DbDarwin.SchemaXML
         //public decimal ShipCost;
         //public decimal TotalCost;
     }
-                                                   
-
-    [Serializable]
-    public class Column
-    {
-
-        [XmlAttribute]
-        public string ColumnName { get; set; }
-
-        [XmlAttribute]
-        public bool ReadOnly { get; set; }
-
-        [XmlAttribute]
-        public string Prefix { get; set; }
-
-        [XmlAttribute]
-        public int Ordinal { get; set; }
-
-        [XmlAttribute]
-        public string Namespace { get; set; }
-
-        [XmlAttribute]
-        public int MaxLength { get; set; }
-
-        //[XmlAttribute]
-        //public PropertyCollection ExtendedProperties { get; set; }
-
-        [XmlAttribute]
-        public string Expression { get; set; }
-
-        //[XmlAttribute]
-        //public object DefaultValue { get; set; }
-
-        [XmlAttribute]
-        public DataSetDateTime DateTimeMode { get; set; }
-
-        //[DefaultValue(typeof(string))]
-        //public Type DataType { get; set; }
 
 
-        //[DefaultValue(1)]
-        //public long AutoIncrementStep { get; set; }
+    //[Serializable]
+    //public class Column
+    //{
 
-        //public string Caption { get; set; }
+    //    [XmlAttribute]
+    //    public string ColumnName { get; set; }
 
-        ////[Browsable(false)]
-        ////public DataTable Table { get; }
+    //    [XmlAttribute]
+    //    public bool ReadOnly { get; set; }
 
-        //[DefaultValue(0)]
-        //public long AutoIncrementSeed { get; set; }
+    //    [XmlAttribute]
+    //    public string Prefix { get; set; }
 
-        //[DefaultValue(false)]
-        //[RefreshProperties(RefreshProperties.All)]
-        //public bool AutoIncrement { get; set; }
+    //    [XmlAttribute]
+    //    public int Ordinal { get; set; }
 
-        //[DefaultValue(true)]
-        //public bool AllowDBNull { get; set; }
+    //    [XmlAttribute]
+    //    public string Namespace { get; set; }
 
-        //[DefaultValue(MappingType.Element)]
-        //public virtual MappingType ColumnMapping { get; set; }
+    //    [XmlAttribute]
+    //    public int MaxLength { get; set; }
 
-        //[DefaultValue(false)]
-        //public bool Unique { get; set; }
-    }
+    //    //[XmlAttribute]
+    //    //public PropertyCollection ExtendedProperties { get; set; }
+
+    //    [XmlAttribute]
+    //    public string Expression { get; set; }
+
+    //    [XmlAttribute]
+    //    public object DefaultValue { get; set; }
+
+    //    [XmlAttribute]
+    //    public DataSetDateTime DateTimeMode { get; set; }
+
+    //    //[DefaultValue(typeof(string))]
+    //    //public Type DataType { get; set; }
+
+
+    //    [XmlAttribute]
+    //    public long AutoIncrementStep { get; set; }
+
+    //    [XmlAttribute]
+    //    public string Caption { get; set; }
+
+    //    //[Browsable(false)]
+    //    //public DataTable Table { get; }
+
+    //    [XmlAttribute]
+    //    public long AutoIncrementSeed { get; set; }
+
+    //    [XmlAttribute]
+    //    public bool AutoIncrement { get; set; }
+
+    //    [XmlAttribute]
+    //    public bool AllowDBNull { get; set; }
+
+    //    [XmlAttribute]
+    //    public virtual MappingType ColumnMapping { get; set; }
+
+    //    [XmlAttribute]
+    //    public bool Unique { get; set; }
+    //}
 }
