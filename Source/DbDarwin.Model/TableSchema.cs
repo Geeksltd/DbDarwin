@@ -17,7 +17,11 @@ namespace DbDarwin.Model
         public string Name { get; set; }
 
         [XmlElement("Column")]
-        public List<InformationSchemaColumns> Column { get; set; }
+        public List<Column> Column { get; set; }
+
+        [XmlElement("Index")]
+        public List<Index> Index { get; set; }
+
     }
 
 

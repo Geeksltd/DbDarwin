@@ -8,7 +8,7 @@ namespace DbDarwin.Model.Schema
 {
 
     [Serializable]
-    public class InformationSchemaColumns
+    public class Column
     {
         [XmlIgnore]
         public string TABLE_CATALOG { get; set; }

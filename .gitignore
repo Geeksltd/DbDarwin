@@ -7,3 +7,7 @@
 /Source/DbDarwin/obj/Release/netcoreapp2.1
 /Source/.vs/DbDarwin/v15
 /.vs
+/Source/DbDarwin.Service/bin/Debug/netcoreapp2.1
+/Source/DbDarwin.Service/obj
+/Source/DbDarwin.Model/obj
+/Source/DbDarwin.Model/bin/Debug/netcoreapp2.1
