@@ -42,6 +42,10 @@ namespace DbDarwin.Service
                 DataTable allIndex = new DataTable("Indexes");
                 DataTable allSqlObjects = new DataTable("Objects");
                 DataTable allReferences = new DataTable("References");
+                DataTable allIndex_columns = new DataTable("index_columns");
+                DataTable allSys_columns = new DataTable("sys.columns");
+
+
 
                 /// fetch COLUMNS schema
                 da.SelectCommand.CommandText = "select * from INFORMATION_SCHEMA.COLUMNS";
@@ -57,36 +61,19 @@ namespace DbDarwin.Service
                 da.Fill(allSqlObjects);
                 var objectMapped = allSqlObjects.DataTableToList<SqlObject>();
 
+
+                /// Fetch All index_columns from SQL
+                da.SelectCommand.CommandText = "SELECT * FROM sys.index_columns";
+                da.Fill(allIndex_columns);
+                var index_columnsMapped = allIndex_columns.DataTableToList<index_columns>();
+
+                /// Fetch All sys.columns from SQL
+                da.SelectCommand.CommandText = "SELECT * FROM sys.columns";
+                da.Fill(allSys_columns);
+                var system_columnsMapped = allSys_columns.DataTableToList<system_columns>();
+
                 /// Fetch All Refrences from SQL
-                da.SelectCommand.CommandText = @"SELECT  
-  RC.CONSTRAINT_SCHEMA,
-  RC.CONSTRAINT_NAME,
-  RC.UNIQUE_CONSTRAINT_NAME,
-  RC.MATCH_OPTION,
-  RC.UPDATE_RULE,
-  RC.DELETE_RULE,
-
-  KCU1.Table_Name,
-  KCU1.COLUMN_NAME,
-  KCU1.ORDINAL_POSITION,
-
-  KCU2.TABLE_SCHEMA as Ref_TABLE_SCHEMA,
-  KCU2.TABLE_NAME as Ref_TABLE_NAME,
-  KCU2.COLUMN_NAME as Ref_COLUMN_NAME,
-  KCU2.ORDINAL_POSITION as Ref_ORDINAL_POSITION
-
-FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS RC 
-
-INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU1 
-    ON KCU1.CONSTRAINT_CATALOG = RC.CONSTRAINT_CATALOG  
-    AND KCU1.CONSTRAINT_SCHEMA = RC.CONSTRAINT_SCHEMA 
-    AND KCU1.CONSTRAINT_NAME = RC.CONSTRAINT_NAME 
-
-INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2 
-    ON KCU2.CONSTRAINT_CATALOG = RC.UNIQUE_CONSTRAINT_CATALOG  
-    AND KCU2.CONSTRAINT_SCHEMA = RC.UNIQUE_CONSTRAINT_SCHEMA 
-    AND KCU2.CONSTRAINT_NAME = RC.UNIQUE_CONSTRAINT_NAME 
-    AND KCU2.ORDINAL_POSITION = KCU1.ORDINAL_POSITION ";
+                da.SelectCommand.CommandText = Properties.Resources.REFERENTIAL_CONSTRAINTS;
                 da.Fill(allReferences);
                 var referencesMapped = allReferences.DataTableToList<REFERENTIAL_CONSTRAINTS>();
 
@@ -99,6 +86,28 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
                     Console.WriteLine(schema_Table + "." + tableName);
                     var tableId = objectMapped.Where(x => x.name == tableName).Select(x => x.object_id).FirstOrDefault();
 
+
+                    var result = (from ind in indexMapped
+                                  join ic in index_columnsMapped on new { ind.object_id, ind.index_id } equals new
+                                  { ic.object_id, ic.index_id }
+                                  join col in system_columnsMapped on new { ic.object_id, ic.column_id } equals new
+                                  { col.object_id, col.column_id }
+                                  where ind.object_id == tableId
+                                  select new { ind, ic, col }).ToList().GroupBy(x => x.ind.name);
+
+                    List<Index> ExistsIndex = new List<Index>();
+                    foreach (var index in result)
+                    {
+                        var resultIndex = index.FirstOrDefault()?.ind;
+                        if (resultIndex != null)
+                            resultIndex.Columns = index.ToList().OrderBy(x => x.ic.key_ordinal).Select(x => x.col.name)
+                                .Aggregate((x, y) => x + "|" + y).Trim('|');
+                        ExistsIndex.Add(resultIndex);
+                    }
+
+
+
+
                     DbDarwin.Model.Table myDt = new DbDarwin.Model.Table()
                     {
                         Name = r["TABLE_NAME"].ToString(),
@@ -106,7 +115,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
                                 x.TABLE_NAME == r["TABLE_NAME"].ToString() &&
                                 x.TABLE_SCHEMA == r["TABLE_SCHEMA"].ToString())
                             .ToList(),
-                        Index = indexMapped.Where(x => x.object_id == tableId).ToList(),
+                        Index = ExistsIndex,
                         ForeignKey = referencesMapped.Where(x => x.CONSTRAINT_SCHEMA == schema_Table && x.TABLE_NAME == tableName).ToList()
 
                     };

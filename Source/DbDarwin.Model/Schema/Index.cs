@@ -15,6 +15,9 @@ namespace DbDarwin.Model.Schema
         public string name { get; set; }
 
         [XmlAttribute]
+        public string Columns { get; set; }
+
+        [XmlAttribute]
         public int index_id { get; set; }
 
         [XmlAttribute]
