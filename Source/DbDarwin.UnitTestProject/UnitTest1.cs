@@ -17,9 +17,9 @@ namespace DbDarwin.UnitTestProject
     public class UnitTest1
     {
         [TestMethod]
-        public void TestMethod1()
+        public void ExtractSchema()
         {
-            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test2;Integrated Security=True;Connect Timeout=30",
+            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
                 "xml2.xml");
 
         }

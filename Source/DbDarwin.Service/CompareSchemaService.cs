@@ -33,7 +33,9 @@ namespace DbDarwin.Service
             // XmlSerializerNamespaces ns1 = new XmlSerializerNamespaces();
             // ns1.Add("xmlns", "http://www.w3.org/2001/XMLSchema");
             XmlElement ArrayOfTable = doc.CreateElement("ArrayOfTable");
-            // ArrayOfTable xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            var emptyNamepsaces = new XmlSerializerNamespaces(new[] {
+                XmlQualifiedName.Empty
+            });
 
 
             foreach (var r1 in result1)
@@ -53,9 +55,10 @@ namespace DbDarwin.Service
 
                     XmlElement add = doc.CreateElement("add");
                     var naviagetorAdd = add.CreateNavigator();
-                    var emptyNamepsaces = new XmlSerializerNamespaces(new[] {
-                        XmlQualifiedName.Empty
-                    });
+
+                    XmlElement removeColumn = doc.CreateElement("remove");
+                    var naviagetorRemove = removeColumn.CreateNavigator();
+
 
                     var mustAdd = findedTable.Column
                         .Where(x => !r1.Column.Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME)).ToList();
@@ -68,8 +71,6 @@ namespace DbDarwin.Service
                             serializer1.Serialize(writer, column, emptyNamepsaces);
                             writer.Close();
                         }
-
-                        //add.AppendChild()
                     }
 
                     if (add.HasChildNodes)
@@ -79,19 +80,28 @@ namespace DbDarwin.Service
                     foreach (var c1 in r1.Column)
                     {
                         XmlElement column = doc.CreateElement("Column");
-                        var findedColumns = findedTable.Column.FirstOrDefault(x => x.COLUMN_NAME == c1.COLUMN_NAME);
-                        if (findedColumns == null)
+                        var findedColumn = findedTable.Column.FirstOrDefault(x => x.COLUMN_NAME == c1.COLUMN_NAME);
+                        if (findedColumn == null)
                         {
-                            // Must Delete
+                            using (var writer = naviagetorRemove.AppendChild())
+                            {
+                                var serializer1 = new XmlSerializer(c1.GetType());
+                                writer.WriteWhitespace("");
+                                serializer1.Serialize(writer, c1, emptyNamepsaces);
+                                writer.Close();
+                            }
+
                         }
                         else
                         {
 
 
-                            var result = compareLogic.Compare(c1, findedColumns);
+                            var result = compareLogic.Compare(c1, findedColumn);
                             if (!result.AreEqual)
                             {
-                                //var listedPropery = result.Differences.Select(x => x.PropertyName).ToList();
+                                var columnName = doc.CreateAttribute(nameof(c1.COLUMN_NAME));
+                                columnName.Value = c1.COLUMN_NAME;
+                                column.Attributes.Append(columnName);
                                 foreach (var r in result.Differences)
                                 {
                                     var data = doc.CreateAttribute("Set-" + r.PropertyName);
@@ -101,15 +111,20 @@ namespace DbDarwin.Service
                                     Console.WriteLine(r.Object1TypeName + ":" + r.Object1Value);
                                     Console.WriteLine(r.Object2TypeName + ":" + r.Object2Value);
                                 }
+                                root.AppendChild(column);
                             }
                             else
                             {
 
                             }
 
-                            root.AppendChild(column);
+
                         }
+
+
                     }
+                    if (removeColumn.HasChildNodes)
+                        root.AppendChild(removeColumn);
                     ArrayOfTable.AppendChild(root);
                 }
             }
