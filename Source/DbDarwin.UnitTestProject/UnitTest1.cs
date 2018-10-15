@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -75,32 +76,87 @@ namespace DbDarwin.UnitTestProject
                     {
 
                         sb.AppendLine("GO");
-                        sb.AppendFormat("ALTER TABLE {0} ADD ", table.Name);
-
-                        var columns = table.Add.Column;
-                        sb.AppendLine();
-                        for (var index = 0; index < columns.Count; index++)
+                        if (table.Add.Column.Count > 0)
                         {
-                            sb.Append("\t");
-                            var column = columns[index];
-                            sb.AppendFormat("{0} {1}{2} {3}", column.COLUMN_NAME, column.DATA_TYPE,
-                                string.IsNullOrEmpty(column.CHARACTER_MAXIMUM_LENGTH)
-                                    ? ""
-                                    : "(" + column.CHARACTER_MAXIMUM_LENGTH + ")",
-                                column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
-                            if (columns.Count > 1 && index < columns.Count - 1)
-                                sb.AppendLine(",");
+                            sb.AppendFormat("ALTER TABLE {0} ADD ", table.Name);
 
-                        }
-                        sb.AppendLine();
-                        sb.AppendLine("GO");
-                        if (columns.Count > 0)
-                        {
-                            sb.Append($"ALTER TABLE {table.Name} SET (LOCK_ESCALATION = TABLE)");
+                            var columns = table.Add.Column;
+                            sb.AppendLine();
+                            for (var index = 0; index < columns.Count; index++)
+                            {
+                                sb.Append("\t");
+                                var column = columns[index];
+                                sb.AppendFormat("{0} {1}{2} {3}", column.COLUMN_NAME, column.DATA_TYPE,
+                                    string.IsNullOrEmpty(column.CHARACTER_MAXIMUM_LENGTH)
+                                        ? ""
+                                        : "(" + column.CHARACTER_MAXIMUM_LENGTH + ")",
+                                    column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                                if (columns.Count > 1 && index < columns.Count - 1)
+                                    sb.AppendLine(",");
+
+                            }
                             sb.AppendLine();
                             sb.AppendLine("GO");
+                            if (columns.Count > 0)
+                            {
+                                sb.Append($"ALTER TABLE {table.Name} SET (LOCK_ESCALATION = TABLE)");
+                                sb.AppendLine();
+                                sb.AppendLine("GO");
+                            }
                         }
+
+                        if (table.Add.Index.Count > 0)
+                        {
+                            var indexes = table.Add.Index;
+                            sb.AppendLine();
+                            for (var i = 0; i < indexes.Count; i++)
+                            {
+                                sb.AppendLine("GO");
+                                var index = indexes[i];
+                                sb.AppendFormat("CREATE NONCLUSTERED INDEX [{0}] ON {1}", index.Name, table.Name);
+                                sb.AppendLine("(");
+
+                                var splited = index.Columns.Split(new char[] { '|' });
+                                for (var index1 = 0; index1 < splited.Length; index1++)
+                                {
+                                    var c = splited[index1];
+                                    sb.AppendLine($"[{c}] ASC");
+                                    if (splited.Length > 1 && index1 < splited.Length - 1)
+                                        sb.AppendLine(",");
+                                }
+                                sb.Append(")");
+                                sb.Append(" WITH (");
+
+
+                                if (!string.IsNullOrEmpty(index.is_padded))
+                                    sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.Convert_ON_OFF());
+
+                                //if (!string.IsNullOrEmpty(index.))
+                                //  sb.AppendFormat("STATISTICS_NORECOMPUTE = {0}", index.is_padded.Convert_ON_OFF());
+                                if (!string.IsNullOrEmpty(index.allow_row_locks))
+                                    sb.AppendFormat(", ALLOW_ROW_LOCKS = {0}", index.allow_row_locks.Convert_ON_OFF());
+                                if (!string.IsNullOrEmpty(index.allow_page_locks))
+                                    sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", index.allow_page_locks.Convert_ON_OFF());
+
+                                sb.AppendLine(") ON [PRIMARY]");
+
+                            }
+
+                            sb.AppendLine();
+                            sb.AppendLine("GO");
+                            if (indexes.Count > 0)
+                            {
+                                sb.Append($"ALTER TABLE {table.Name} SET (LOCK_ESCALATION = TABLE)");
+                                sb.AppendLine();
+                                sb.AppendLine("GO");
+                            }
+                        }
+
+
                     }
+
+
+
                 }
             }
             sb.AppendLine("COMMIT");
