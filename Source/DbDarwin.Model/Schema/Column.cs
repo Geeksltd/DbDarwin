@@ -19,7 +19,10 @@ namespace DbDarwin.Model.Schema
         [XmlIgnore]
         public string TABLE_NAME { get; set; }
 
-        [XmlAttribute]
+
+        public string Name => COLUMN_NAME;
+
+        [XmlAttribute(AttributeName = "Name")]
         public string COLUMN_NAME { get; set; }
 
         [XmlAttribute]

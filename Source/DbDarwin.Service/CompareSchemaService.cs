@@ -66,9 +66,9 @@ namespace DbDarwin.Service
 
 
 
-                        GenerateDifference<Column>(doc, root, r1.Column, findedTable.Column, naviagetorAdd, naviagetorRemove, "COLUMN_NAME");
-                        GenerateDifference<Index>(doc, root, r1.Index, findedTable.Index, naviagetorAdd, naviagetorRemove, "name");
-                        GenerateDifference<REFERENTIAL_CONSTRAINTS>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove, "CONSTRAINT_NAME");
+                        GenerateDifference<Column>(doc, root, r1.Column, findedTable.Column, naviagetorAdd, naviagetorRemove);
+                        GenerateDifference<Index>(doc, root, r1.Index, findedTable.Index, naviagetorAdd, naviagetorRemove);
+                        GenerateDifference<REFERENTIAL_CONSTRAINTS>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove);
 
                         if (add.HasChildNodes)
                             root.AppendChild(add);
@@ -111,7 +111,7 @@ namespace DbDarwin.Service
         /// <param name="properyCheck"></param>
         public static void GenerateDifference<T>(XmlDocument doc, XmlElement root,
             List<T> currentList, List<T> newList,
-            XPathNavigator naviagetorAdd, XPathNavigator naviagetorRemove, string properyCheck)
+            XPathNavigator naviagetorAdd, XPathNavigator naviagetorRemove)
         {
             var emptyNamespaces = new XmlSerializerNamespaces(new[] {
                 XmlQualifiedName.Empty
@@ -171,17 +171,17 @@ namespace DbDarwin.Service
 
                 if (typeof(T) == typeof(Column))
                 {
-                    var found = newList.Cast<Column>().FirstOrDefault(x => x.COLUMN_NAME == c1.GetType().GetProperty(properyCheck).GetValue(c1).ToString());
+                    var found = newList.Cast<Column>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
                     foundObject = (T)Convert.ChangeType(found, typeof(T));
                 }
                 else if (typeof(T) == typeof(Index))
                 {
-                    var found = newList.Cast<Index>().FirstOrDefault(x => x.name == c1.GetType().GetProperty(properyCheck).GetValue(c1).ToString());
+                    var found = newList.Cast<Index>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
                     foundObject = (T)Convert.ChangeType(found, typeof(T));
                 }
                 else if (typeof(T) == typeof(REFERENTIAL_CONSTRAINTS))
                 {
-                    var found = newList.Cast<REFERENTIAL_CONSTRAINTS>().FirstOrDefault(x => x.CONSTRAINT_NAME == c1.GetType().GetProperty(properyCheck).GetValue(c1).ToString());
+                    var found = newList.Cast<REFERENTIAL_CONSTRAINTS>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
                     foundObject = (T)Convert.ChangeType(found, typeof(T));
                 }
 
@@ -201,8 +201,8 @@ namespace DbDarwin.Service
                     var result = compareLogic.Compare(c1, foundObject);
                     if (!result.AreEqual)
                     {
-                        var columnName = doc.CreateAttribute(properyCheck);
-                        columnName.Value = c1.GetType().GetProperty(properyCheck).GetValue(c1).ToString();
+                        var columnName = doc.CreateAttribute("Name");
+                        columnName.Value = c1.GetType().GetProperty("Name").GetValue(c1).ToString();
                         column.Attributes.Append(columnName);
                         foreach (var r in result.Differences)
                         {

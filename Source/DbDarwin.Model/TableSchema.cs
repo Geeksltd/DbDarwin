@@ -23,6 +23,13 @@ namespace DbDarwin.Model
         public List<Index> Index { get; set; }
         [XmlElement("ForeignKey")]
         public List<REFERENTIAL_CONSTRAINTS> ForeignKey { get; set; }
+
+
+
+        [XmlElement("add")]
+        public Table Add { get; set; }
+        [XmlElement("remove")]
+        public Table Remove { get; set; }
     }
 
 

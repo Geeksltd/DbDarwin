@@ -11,7 +11,10 @@ namespace DbDarwin.Model.Schema
         [XmlIgnore]
         public int object_id { get; set; }
 
-        [XmlAttribute]
+        [XmlIgnore]
+        public string Name => name;
+
+        [XmlAttribute(AttributeName = "Name")]
         public string name { get; set; }
 
         [XmlAttribute]

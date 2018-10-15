@@ -14,7 +14,9 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute]
         public string CONSTRAINT_SCHEMA { get; set; }
 
-        [XmlAttribute]
+
+        public string Name => CONSTRAINT_NAME;
+        [XmlAttribute(AttributeName = "Name")]
         public string CONSTRAINT_NAME { get; set; }
 
         [XmlIgnore]
