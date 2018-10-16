@@ -27,8 +27,25 @@ namespace DbDarwin
                             out var outputFile))
                             CompareSchemaService.StartCompare(currentFile, newSchemaFile, outputFile);
                     }
+                    else if (first.ToLower() == "generate-script")
+                    {
+                        if (ValidateArguamentGenerateScript(argList, out var diffFile, out var migrateSqlFile))
+                            GenerateScriptService.GenerateScript(diffFile, migrateSqlFile);
+                    }
                 }
             }
+        }
+
+        private static bool ValidateArguamentGenerateScript(List<string> argList, out string diffFile, out string migrateSqlFile)
+        {
+            Console.WriteLine("Start generate migration script...");
+            // Read -diff parameter
+            diffFile = ReadArgument("-diff", argList, "-diff parameter is requirement");
+            // Read -out parameter
+            migrateSqlFile = ReadArgument("-out", argList, "-out parameter is requirement");
+
+            return !string.IsNullOrEmpty(diffFile) && !string.IsNullOrEmpty(migrateSqlFile);
+
         }
 
         private static bool ValidateArguamentExtaractSchema(List<string> argList, out string connection, out string outputFile)

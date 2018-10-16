@@ -229,12 +229,12 @@ namespace DbDarwin.Service
                     index.Name, tableName);
                 sb.AppendLine("(");
 
-                var splited = index.Columns.Split(new char[] { '|' });
-                for (var index1 = 0; index1 < splited.Length; index1++)
+                var spited = index.Columns.Split(new char[] { '|' });
+                for (var index1 = 0; index1 < spited.Length; index1++)
                 {
-                    var c = splited[index1];
+                    var c = spited[index1];
                     sb.AppendLine($"[{c}] ASC");
-                    if (splited.Length > 1 && index1 < splited.Length - 1)
+                    if (spited.Length > 1 && index1 < spited.Length - 1)
                         sb.AppendLine(",");
                 }
                 sb.AppendLine(")");
@@ -244,7 +244,6 @@ namespace DbDarwin.Service
                 sb.Append(" WITH (");
 
 
-                //if (!string.IsNullOrEmpty(index.is_padded))
                 sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.To_ON_OFF());
 
                 if (!string.IsNullOrEmpty(index.ignore_dup_key) && index.is_padded.To_ON_OFF() == "ON")
@@ -254,8 +253,6 @@ namespace DbDarwin.Service
                     else
                         Console.WriteLine("Ignore duplicate values is valid only for unique indexes");
                 }
-                //if (!string.IsNullOrEmpty(index.))
-                //  sb.AppendFormat("STATISTICS_NORECOMPUTE = {0}", index.is_padded.Convert_ON_OFF());
                 if (!string.IsNullOrEmpty(index.allow_row_locks))
                     sb.AppendFormat(", ALLOW_ROW_LOCKS = {0}", index.allow_row_locks.To_ON_OFF());
                 if (!string.IsNullOrEmpty(index.allow_page_locks))
