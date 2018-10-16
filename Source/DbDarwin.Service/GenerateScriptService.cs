@@ -50,12 +50,9 @@ namespace DbDarwin.Service
                             sb.Append(GenerateNewColumns(table.Add.Column, table.Name));
                         if (table.Add.Index.Count > 0)
                             sb.Append(GenerateNewIndexes(table.Add.Index, table.Name));
-
-
+                        if (table.Add.ForeignKey.Count > 0)
+                            sb.Append(GenerateNewForeignKey(table.Add.ForeignKey, table.Name));
                     }
-
-
-
                 }
             }
             sb.AppendLine("COMMIT");
@@ -63,9 +60,32 @@ namespace DbDarwin.Service
             File.WriteAllText(outputFile, sb.ToString());
         }
 
-        private static string GenerateNewColumns(List<Column> columns, string name)
+        private static string GenerateNewForeignKey(List<ForeignKey> foreignKey, string tableName)
         {
             StringBuilder sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Create New ForeignKeys ---------------");
+            sb.AppendLine("-----------------------------------------------------------");
+            foreach (var key in foreignKey)
+            {
+                sb.AppendLine("GO");
+                sb.AppendFormat("ALTER TABLE [{0}]  WITH CHECK ADD  CONSTRAINT [{1}] FOREIGN KEY([{2}]) \r\n", tableName, key.Name, key.COLUMN_NAME);
+                sb.AppendFormat("REFERENCES [{0}] ([{1}])", key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
+                sb.AppendLine("\r\nGO");
+                sb.AppendFormat("ALTER TABLE [{0}] CHECK CONSTRAINT [{1}]", tableName, key.Name);
+                sb.AppendLine("\r\nGO");
+            }
+            return sb.ToString();
+        }
+
+        private static string GenerateNewColumns(List<Column> columns, string name)
+        {
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Create New Columns -------------------");
+            sb.AppendLine("-----------------------------------------------------------");
+
             sb.AppendFormat("ALTER TABLE {0} ADD ", name);
 
             sb.AppendLine();
@@ -91,27 +111,21 @@ namespace DbDarwin.Service
                 sb.AppendLine("GO");
             }
 
-            sb.AppendLine();
-            sb.AppendLine("GO");
-            if (columns.Count > 0)
-            {
-                sb.Append($"ALTER TABLE {name} SET (LOCK_ESCALATION = TABLE)");
-                sb.AppendLine();
-                sb.AppendLine("GO");
-            }
-
             return sb.ToString();
         }
 
         private static string GenerateNewIndexes(List<Index> indexes, string tableName)
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Create New Indexes -------------------");
+            sb.AppendLine("-----------------------------------------------------------");
             for (var i = 0; i < indexes.Count; i++)
             {
                 sb.AppendLine("GO");
                 var index = indexes[i];
-                sb.AppendFormat("CREATE {0} NONCLUSTERED INDEX [{1}] ON {2}", index.is_unique.ToBoolean(), index.Name, tableName);
+                sb.AppendFormat("CREATE {0} NONCLUSTERED INDEX [{1}] ON {2}", index.is_unique.ToBoolean() ? "UNIQUE" : string.Empty,
+                    index.Name, tableName);
                 sb.AppendLine("(");
 
                 var splited = index.Columns.Split(new char[] { '|' });
