@@ -64,11 +64,35 @@ namespace DbDarwin.Service
                         if (table.Add.ForeignKey.Count > 0)
                             sb.Append(GenerateNewForeignKey(table.Add.ForeignKey, table.Name));
                     }
+
+                    #region edit
+
+                    sb.AppendLine("GO");
+                    if (table.Column.Count > 0)
+                        sb.Append(GenerateUpdateColumns(table.Column, table.Name));
+
+
+                    #endregion
                 }
             }
             sb.AppendLine("COMMIT");
 
             File.WriteAllText(outputFile, sb.ToString());
+        }
+
+        private static string GenerateUpdateColumns(List<Column> columns, string tableName)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Update Column ------------------------");
+            sb.AppendLine("-----------------------------------------------------------");
+            foreach (var column in columns)
+            {
+                //  sb.AppendFormat("ALTER TABLE [{0}] DROP CONSTRAINT [{1}]", tableName, tableName, key.Name);
+                //  sb.AppendLine();
+                //  sb.AppendLine("GO");
+            }
+            return sb.ToString();
         }
 
 
@@ -213,7 +237,10 @@ namespace DbDarwin.Service
                     if (splited.Length > 1 && index1 < splited.Length - 1)
                         sb.AppendLine(",");
                 }
-                sb.Append(")");
+                sb.AppendLine(")");
+                if (index.has_filter.ToBoolean())
+                    sb.AppendFormat("WHERE {0}", index.filter_definition);
+                sb.AppendLine();
                 sb.Append(" WITH (");
 
 
@@ -235,6 +262,7 @@ namespace DbDarwin.Service
                     sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", index.allow_page_locks.To_ON_OFF());
                 if (index.fill_factor > 0)
                     sb.AppendFormat(", FILLFACTOR = {0}", index.fill_factor);
+
                 sb.AppendLine(") ON [PRIMARY]");
 
             }
