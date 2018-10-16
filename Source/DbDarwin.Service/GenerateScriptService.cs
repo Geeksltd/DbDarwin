@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using DbDarwin.Model;
@@ -42,6 +43,16 @@ namespace DbDarwin.Service
             {
                 foreach (var table in diffFile)
                 {
+                    if (table.Remove != null)
+                    {
+                        sb.AppendLine("GO");
+                        if (table.Remove.Index.Count > 0)
+                            sb.Append(GenerateRemoveIndexes(table.Remove.Index, table.Name));
+                        if (table.Remove.ForeignKey.Count > 0)
+                            sb.Append(GenerateRemoveForeignKey(table.Remove.ForeignKey, table.Name));
+                        if (table.Remove.Column.Count > 0)
+                            sb.Append(GenerateRemoveColumns(table.Remove.Column, table.Name));
+                    }
                     if (table.Add != null)
                     {
 
@@ -58,6 +69,72 @@ namespace DbDarwin.Service
             sb.AppendLine("COMMIT");
 
             File.WriteAllText(outputFile, sb.ToString());
+        }
+
+
+        /// <summary>
+        /// Generate Drop ForeignKeys
+        /// </summary>
+        /// <param name="foreignKeys"></param>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
+        private static string GenerateRemoveForeignKey(List<ForeignKey> foreignKeys, string tableName)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Drop Foreign Key ---------------------");
+            sb.AppendLine("-----------------------------------------------------------");
+            foreach (var key in foreignKeys)
+            {
+                sb.AppendFormat("ALTER TABLE [{0}] DROP CONSTRAINT [{1}]", tableName, tableName, key.Name);
+                sb.AppendLine();
+                sb.AppendLine("GO");
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Generate Drop Indexes
+        /// </summary>
+        /// <param name="tableName">Table Name</param>
+        /// <param name="indexes">Index Collection for this table</param>
+        /// <returns></returns>
+        private static string GenerateRemoveIndexes(List<Index> indexes, string tableName)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Drop Indexes -------------------------");
+            sb.AppendLine("-----------------------------------------------------------");
+            foreach (var index in indexes)
+            {
+                sb.AppendFormat("DROP INDEX [{0}] ON [{1}]", index.Name, tableName);
+                sb.AppendLine();
+                sb.AppendLine("GO");
+            }
+            return sb.ToString();
+        }
+
+        private static string GenerateRemoveColumns(List<Column> columns, string tableName)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Drop Columns -------------------------");
+            sb.AppendLine("-----------------------------------------------------------");
+
+            sb.AppendFormat("ALTER TABLE [{0}]", tableName);
+            sb.AppendLine();
+            sb.Append("\t");
+            sb.AppendFormat("DROP COLUMN {0}",
+                columns.Select(x => x.Name).Aggregate((x, y) => x + ", " + y).Trim(new[] { ',' }));
+
+            sb.AppendLine();
+            sb.AppendLine("GO");
+            sb.Append($"ALTER TABLE {tableName} SET (LOCK_ESCALATION = TABLE)");
+            sb.AppendLine();
+            sb.AppendLine("GO");
+
+            return sb.ToString();
         }
 
         private static string GenerateNewForeignKey(List<ForeignKey> foreignKey, string tableName)
