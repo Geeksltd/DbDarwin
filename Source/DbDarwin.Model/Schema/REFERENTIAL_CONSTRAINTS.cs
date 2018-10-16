@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace DbDarwin.Model.Schema
 {
+    /// <summary>
+    /// // REFERENTIAL_CONSTRAINTS
+    /// </summary>
     [Serializable]
-    public class REFERENTIAL_CONSTRAINTS
+
+    public class ForeignKey
     {
         [XmlIgnore]
         public string CONSTRAINT_CATALOG { get; set; }

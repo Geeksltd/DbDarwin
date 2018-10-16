@@ -22,7 +22,7 @@ namespace DbDarwin.Model
         [XmlElement("Index")]
         public List<Index> Index { get; set; }
         [XmlElement("ForeignKey")]
-        public List<REFERENTIAL_CONSTRAINTS> ForeignKey { get; set; }
+        public List<ForeignKey> ForeignKey { get; set; }
 
 
 

@@ -75,7 +75,7 @@ namespace DbDarwin.Service
                 /// Fetch All Refrences from SQL
                 da.SelectCommand.CommandText = Properties.Resources.REFERENTIAL_CONSTRAINTS;
                 da.Fill(allReferences);
-                var referencesMapped = allReferences.DataTableToList<REFERENTIAL_CONSTRAINTS>();
+                var referencesMapped = allReferences.DataTableToList<ForeignKey>();
 
 
                 // Create Table Model

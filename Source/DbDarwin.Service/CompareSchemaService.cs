@@ -68,7 +68,7 @@ namespace DbDarwin.Service
 
                         GenerateDifference<Column>(doc, root, r1.Column, findedTable.Column, naviagetorAdd, naviagetorRemove);
                         GenerateDifference<Index>(doc, root, r1.Index, findedTable.Index, naviagetorAdd, naviagetorRemove);
-                        GenerateDifference<REFERENTIAL_CONSTRAINTS>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove);
+                        GenerateDifference<ForeignKey>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove);
 
                         if (add.HasChildNodes)
                             root.AppendChild(add);
@@ -114,7 +114,7 @@ namespace DbDarwin.Service
             XPathNavigator naviagetorAdd, XPathNavigator naviagetorRemove)
         {
             var emptyNamespaces = new XmlSerializerNamespaces(new[] {
-                XmlQualifiedName.Empty
+                XmlQualifiedName.Empty,
             });
 
             #region Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
@@ -133,10 +133,10 @@ namespace DbDarwin.Service
                     .Where(x => !currentList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
                 mustAdd = (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
             }
-            else if (typeof(T) == typeof(REFERENTIAL_CONSTRAINTS))
+            else if (typeof(T) == typeof(ForeignKey))
             {
-                var tempAdd = newList.Cast<REFERENTIAL_CONSTRAINTS>()
-                    .Where(x => !currentList.Cast<REFERENTIAL_CONSTRAINTS>().Select(c => c.CONSTRAINT_NAME).ToList().Contains(x.CONSTRAINT_NAME)).ToList();
+                var tempAdd = newList.Cast<ForeignKey>()
+                    .Where(x => !currentList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList().Contains(x.CONSTRAINT_NAME)).ToList();
                 mustAdd = (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
             }
 
@@ -147,7 +147,7 @@ namespace DbDarwin.Service
             {
                 using (var writer = naviagetorAdd.AppendChild())
                 {
-                    var serializer1 = new XmlSerializer(sqlObject.GetType());
+                    var serializer1 = new XmlSerializer( sqlObject.GetType());
                     writer.WriteWhitespace("");
                     serializer1.Serialize(writer, sqlObject, emptyNamespaces);
                     writer.Close();
@@ -179,9 +179,9 @@ namespace DbDarwin.Service
                     var found = newList.Cast<Index>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
                     foundObject = (T)Convert.ChangeType(found, typeof(T));
                 }
-                else if (typeof(T) == typeof(REFERENTIAL_CONSTRAINTS))
+                else if (typeof(T) == typeof(ForeignKey))
                 {
-                    var found = newList.Cast<REFERENTIAL_CONSTRAINTS>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
+                    var found = newList.Cast<ForeignKey>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
                     foundObject = (T)Convert.ChangeType(found, typeof(T));
                 }
 
