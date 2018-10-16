@@ -113,7 +113,7 @@ namespace DbDarwin.UnitTestProject
                             {
                                 sb.AppendLine("GO");
                                 var index = indexes[i];
-                                sb.AppendFormat("CREATE NONCLUSTERED INDEX [{0}] ON {1}", index.Name, table.Name);
+                                sb.AppendFormat("CREATE {0} NONCLUSTERED INDEX [{1}] ON {2}", index.is_unique.ToBoolean(), index.Name, table.Name);
                                 sb.AppendLine("(");
 
                                 var splited = index.Columns.Split(new char[] { '|' });
@@ -128,16 +128,24 @@ namespace DbDarwin.UnitTestProject
                                 sb.Append(" WITH (");
 
 
-                                if (!string.IsNullOrEmpty(index.is_padded))
-                                    sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.Convert_ON_OFF());
+                                //if (!string.IsNullOrEmpty(index.is_padded))
+                                sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.To_ON_OFF());
 
+                                if (!string.IsNullOrEmpty(index.ignore_dup_key) && index.is_padded.To_ON_OFF() == "ON")
+                                {
+                                    if (index.is_unique.ToBoolean())
+                                        sb.AppendFormat(", IGNORE_DUP_KEY = {0}", index.is_padded.To_ON_OFF());
+                                    else
+                                        Console.WriteLine("Ignore duplicate values is valid only for unique indexes");
+                                }
                                 //if (!string.IsNullOrEmpty(index.))
                                 //  sb.AppendFormat("STATISTICS_NORECOMPUTE = {0}", index.is_padded.Convert_ON_OFF());
                                 if (!string.IsNullOrEmpty(index.allow_row_locks))
-                                    sb.AppendFormat(", ALLOW_ROW_LOCKS = {0}", index.allow_row_locks.Convert_ON_OFF());
+                                    sb.AppendFormat(", ALLOW_ROW_LOCKS = {0}", index.allow_row_locks.To_ON_OFF());
                                 if (!string.IsNullOrEmpty(index.allow_page_locks))
-                                    sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", index.allow_page_locks.Convert_ON_OFF());
-
+                                    sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", index.allow_page_locks.To_ON_OFF());
+                                if (index.fill_factor > 0)
+                                    sb.AppendFormat(", FILLFACTOR = {0}", index.fill_factor);
                                 sb.AppendLine(") ON [PRIMARY]");
 
                             }
