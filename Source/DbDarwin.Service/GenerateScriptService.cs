@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Serialization;
 using DbDarwin.Model;
 using DbDarwin.Model.Schema;
+using KellermanSoftware.CompareNetObjects;
 
 namespace DbDarwin.Service
 {
@@ -59,14 +61,19 @@ namespace DbDarwin.Service
                             sb.Append(GenerateNewForeignKey(table.Add.ForeignKey, table.Name));
                     }
 
-                    #region edit
+                    if (table.Update != null)
+                    {
 
-                    sb.AppendLine("GO");
-                    if (table.Column.Count > 0)
-                        sb.Append(GenerateUpdateColumns(table.Column, table.Name));
+                        sb.AppendLine("GO");
+                        if (table.Update.Column.Count > 0)
+                            sb.Append(GenerateUpdateColumns(table.Update.Column, table.Name));
+                        //if (table.Update.Index.Count > 0)
+                        //    sb.Append(GenerateNewIndexes(table.Update.Index, table.Name));
+                        //if (table.Update.ForeignKey.Count > 0)
+                        //    sb.Append(GenerateNewForeignKey(table.Update.ForeignKey, table.Name));
+                    }
 
 
-                    #endregion
                 }
             }
             sb.AppendLine("COMMIT");
@@ -82,12 +89,87 @@ namespace DbDarwin.Service
             sb.AppendLine("-----------------------------------------------------------");
             foreach (var column in columns)
             {
-                //  sb.AppendFormat("ALTER TABLE [{0}] DROP CONSTRAINT [{1}]", tableName, tableName, key.Name);
-                //  sb.AppendLine();
-                //  sb.AppendLine("GO");
+                CompareLogic compareLogic = new CompareLogic
+                {
+                    Config = { MaxDifferences = Int32.MaxValue }
+                };
+
+
+                if (!string.IsNullOrEmpty(column.SetName))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine();
+                    sb.AppendLine("GO");
+                    sb.AppendLine("PRINT 'Updating Column Name...'");
+                    sb.AppendLine();
+                    sb.AppendLine();
+                    sb.AppendLine("GO");
+                    sb.AppendFormat("EXECUTE sp_rename N'{0}.{1}', N'{2}', 'COLUMN' ", tableName,
+                        column.Name,
+                        column.SetName);
+                    column.COLUMN_NAME = column.SetName;
+                }
+
+                var resultCompare = compareLogic.Compare(new Column(), column);
+                if (!resultCompare.AreEqual)
+                {
+                    foreach (var dif in resultCompare.Differences)
+                    {
+                        switch (dif.PropertyName)
+                        {
+                            case nameof(column.CHARACTER_MAXIMUM_LENGTH):
+                                sb.AppendLine();
+                                sb.AppendLine();
+                                sb.AppendLine();
+                                sb.AppendLine("GO");
+                                sb.AppendLine("PRINT 'Updating Column Type and Length...'");
+                                sb.AppendLine();
+                                sb.AppendLine();
+                                sb.AppendLine("GO");
+
+
+                                var typeLen = string.Empty;
+
+
+                                if (IsTypeHaveLength(column.DATA_TYPE))
+                                {
+                                    if (!string.IsNullOrEmpty(column.CHARACTER_MAXIMUM_LENGTH))
+                                        typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
+                                }
+
+
+                                sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2} {3} {4};", tableName,
+                                    column.Name,
+                                    column.DATA_TYPE,
+                                    typeLen,
+                                    column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                                break;
+
+                        }
+
+                    }
+                }
+
+
+
+                sb.AppendLine();
+                sb.AppendLine("GO");
             }
             return sb.ToString();
         }
+
+        public static bool IsTypeHaveLength(string type)
+        {
+            List<string> types = new List<string>()
+            {
+                 "bigint", "bit", "date", "datetime", "float", "geography", "geometry", "hierarchyid", "image", "int",
+                "money", "ntext", "real", "smalldatetime", "smallint", "smallmoney", "sql_variant", "text", "timestamp",
+                "tinyint", "uniqueidentifier", "xml"
+            };
+
+            return !types.Contains(type.ToLower());
+        }
+
 
 
         /// <summary>

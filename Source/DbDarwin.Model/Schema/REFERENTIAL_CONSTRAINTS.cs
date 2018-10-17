@@ -13,6 +13,9 @@ namespace DbDarwin.Model.Schema
 
     public class ForeignKey
     {
+        [XmlAttribute(AttributeName = "Set-Name")]
+        public string SetName { get; set; }
+
         [XmlIgnore]
         public string CONSTRAINT_CATALOG { get; set; }
 

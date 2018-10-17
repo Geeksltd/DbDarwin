@@ -8,6 +8,9 @@ namespace DbDarwin.Model.Schema
     [Serializable]
     public class Index
     {
+        [XmlAttribute(AttributeName = "Set-Name")]
+        public string SetName { get; set; }
+
         [XmlIgnore]
         public int object_id { get; set; }
 

@@ -23,7 +23,11 @@ namespace DbDarwin.UnitTestProject
         public void ExtractSchema()
         {
             ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
+                "xml1.xml");
+            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30",
                 "xml2.xml");
+            GenerateDiff();
+            GenerateScripts();
 
         }
 

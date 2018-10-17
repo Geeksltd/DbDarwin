@@ -19,6 +19,8 @@ namespace DbDarwin.Model.Schema
         [XmlIgnore]
         public string TABLE_NAME { get; set; }
 
+        [XmlAttribute(AttributeName = "Set-Name")]
+        public string SetName { get; set; }
 
         public string Name => COLUMN_NAME;
 

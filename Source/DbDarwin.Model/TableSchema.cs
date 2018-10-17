@@ -28,8 +28,12 @@ namespace DbDarwin.Model
 
         [XmlElement("add")]
         public Table Add { get; set; }
+
         [XmlElement("remove")]
         public Table Remove { get; set; }
+
+        [XmlElement("update")]
+        public Table Update { get; set; }
     }
 
 
