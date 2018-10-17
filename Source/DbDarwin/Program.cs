@@ -18,25 +18,25 @@ namespace DbDarwin
                 {
                     if (first.ToLower() == "extract-schema")
                     {
-                        if (ValidateArguamentExtaractSchema(argList, out var connection, out var outputFile))
+                        if (ValidateArgumentExtaractSchema(argList, out var connection, out var outputFile))
                             ExtractSchemaService.ExtractSchema(connection, outputFile);
                     }
                     else if (first.ToLower() == "generate-diff")
                     {
-                        if (ValidateArguamentGenerateDiff(argList, out var currentFile, out var newSchemaFile,
+                        if (ValidateArgumentGenerateDiff(argList, out var currentFile, out var newSchemaFile,
                             out var outputFile))
                             CompareSchemaService.StartCompare(currentFile, newSchemaFile, outputFile);
                     }
                     else if (first.ToLower() == "generate-script")
                     {
-                        if (ValidateArguamentGenerateScript(argList, out var diffFile, out var migrateSqlFile))
+                        if (ValidateArgumentGenerateScript(argList, out var diffFile, out var migrateSqlFile))
                             GenerateScriptService.GenerateScript(diffFile, migrateSqlFile);
                     }
                 }
             }
         }
 
-        private static bool ValidateArguamentGenerateScript(List<string> argList, out string diffFile, out string migrateSqlFile)
+        private static bool ValidateArgumentGenerateScript(List<string> argList, out string diffFile, out string migrateSqlFile)
         {
             Console.WriteLine("Start generate migration script...");
             // Read -diff parameter
@@ -48,7 +48,7 @@ namespace DbDarwin
 
         }
 
-        private static bool ValidateArguamentExtaractSchema(List<string> argList, out string connection, out string outputFile)
+        private static bool ValidateArgumentExtaractSchema(List<string> argList, out string connection, out string outputFile)
         {
             Console.WriteLine("Start Extract Schema...");
             // Read -connect parameter
@@ -60,7 +60,7 @@ namespace DbDarwin
 
         }
 
-        private static bool ValidateArguamentGenerateDiff(List<string> argList, out string currentFile, out string newSchemaFile, out string outputFile)
+        private static bool ValidateArgumentGenerateDiff(List<string> argList, out string currentFile, out string newSchemaFile, out string outputFile)
         {
             Console.WriteLine("Start generate the differences...");
             // Read -from parameter

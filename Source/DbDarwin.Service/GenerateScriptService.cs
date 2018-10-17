@@ -32,12 +32,6 @@ namespace DbDarwin.Service
             sb.AppendLine("COMMIT");
             sb.AppendLine("BEGIN TRANSACTION ");
 
-            //      GO
-            //    --GO
-            //    --ALTER TABLE dbo.Table_1 SET (LOCK_ESCALATION = TABLE)
-            //GO
-            //    COMMIT
-            //"
 
             if (diffFile != null)
             {

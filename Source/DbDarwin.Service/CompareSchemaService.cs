@@ -64,17 +64,25 @@ namespace DbDarwin.Service
                         XmlElement removeColumn = doc.CreateElement("remove");
                         XPathNavigator naviagetorRemove = removeColumn.CreateNavigator();
 
+                        XmlElement updateElement = doc.CreateElement("update");
+                        //XPathNavigator naviagetorUpdate = updateElement.CreateNavigator();
 
 
-                        GenerateDifference<Column>(doc, root, r1.Column, findedTable.Column, naviagetorAdd, naviagetorRemove);
-                        GenerateDifference<Index>(doc, root, r1.Index, findedTable.Index, naviagetorAdd, naviagetorRemove);
-                        GenerateDifference<ForeignKey>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove);
+
+                        GenerateDifference<Column>(doc, root, r1.Column, findedTable.Column, naviagetorAdd, naviagetorRemove, updateElement);
+                        GenerateDifference<Index>(doc, root, r1.Index, findedTable.Index, naviagetorAdd, naviagetorRemove, updateElement);
+                        GenerateDifference<ForeignKey>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove, updateElement);
 
                         if (add.HasChildNodes)
                             root.AppendChild(add);
 
                         if (removeColumn.HasChildNodes)
                             root.AppendChild(removeColumn);
+
+                        if (updateElement.HasChildNodes)
+                            root.AppendChild(updateElement);
+
+
                         ArrayOfTable.AppendChild(root);
                     }
                 }
@@ -88,7 +96,7 @@ namespace DbDarwin.Service
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.ToString());
                 Console.ForegroundColor = ConsoleColor.White;
-                return false;
+                throw ex;
             }
             finally
             {
@@ -111,7 +119,7 @@ namespace DbDarwin.Service
         /// <param name="properyCheck"></param>
         public static void GenerateDifference<T>(XmlDocument doc, XmlElement root,
             List<T> currentList, List<T> newList,
-            XPathNavigator naviagetorAdd, XPathNavigator naviagetorRemove)
+            XPathNavigator naviagetorAdd, XPathNavigator naviagetorRemove, XmlElement naviagetorUpdate)
         {
             var emptyNamespaces = new XmlSerializerNamespaces(new[] {
                 XmlQualifiedName.Empty,
@@ -147,7 +155,7 @@ namespace DbDarwin.Service
             {
                 using (var writer = naviagetorAdd.AppendChild())
                 {
-                    var serializer1 = new XmlSerializer( sqlObject.GetType());
+                    var serializer1 = new XmlSerializer(sqlObject.GetType());
                     writer.WriteWhitespace("");
                     serializer1.Serialize(writer, sqlObject, emptyNamespaces);
                     writer.Close();
@@ -165,7 +173,7 @@ namespace DbDarwin.Service
             // Detect Sql Objects Changes
             foreach (T c1 in currentList)
             {
-                XmlElement column = doc.CreateElement(typeof(T).Name);
+                XmlElement sqlElement = doc.CreateElement(typeof(T).Name);
 
                 T foundObject = default(T);
 
@@ -203,18 +211,21 @@ namespace DbDarwin.Service
                     {
                         var columnName = doc.CreateAttribute("Name");
                         columnName.Value = c1.GetType().GetProperty("Name").GetValue(c1).ToString();
-                        column.Attributes.Append(columnName);
+                        sqlElement.Attributes.Append(columnName);
                         foreach (var r in result.Differences)
                         {
-                            var data = doc.CreateAttribute("Set-" + r.PropertyName);
+                            var data = doc.CreateAttribute(r.PropertyName);
                             data.Value = r.Object2Value;
-                            column.Attributes.Append(data);
+                            sqlElement.Attributes.Append(data);
                             Console.WriteLine(r.PropertyName);
                             Console.WriteLine(r.Object1TypeName + ":" + r.Object1Value);
                             Console.WriteLine(r.Object2TypeName + ":" + r.Object2Value);
                         }
-                        root.AppendChild(column);
+                        naviagetorUpdate.AppendChild(sqlElement);
+
                     }
+
+
                 }
             }
         }
