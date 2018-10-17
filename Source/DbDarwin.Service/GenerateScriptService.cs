@@ -67,8 +67,8 @@ namespace DbDarwin.Service
                         sb.AppendLine("GO");
                         if (table.Update.Column.Count > 0)
                             sb.Append(GenerateUpdateColumns(table.Update.Column, table.Name));
-                        //if (table.Update.Index.Count > 0)
-                        //    sb.Append(GenerateNewIndexes(table.Update.Index, table.Name));
+                        if (table.Update.Index.Count > 0)
+                            sb.Append(GenerateUpdateIndexes(table.Update.Index, table.Name));
                         //if (table.Update.ForeignKey.Count > 0)
                         //    sb.Append(GenerateNewForeignKey(table.Update.ForeignKey, table.Name));
                     }
@@ -79,6 +79,43 @@ namespace DbDarwin.Service
             sb.AppendLine("COMMIT");
 
             File.WriteAllText(outputFile, sb.ToString());
+        }
+
+        private static string GenerateUpdateIndexes(List<Index> indexes, string tableName)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Update Index ------------------------");
+            sb.AppendLine("-----------------------------------------------------------");
+            foreach (var index in indexes)
+            {
+                CompareLogic compareLogic = new CompareLogic
+                {
+                    Config = { MaxDifferences = Int32.MaxValue }
+                };
+
+                if (!string.IsNullOrEmpty(index.SetName))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine();
+                    sb.AppendLine("GO");
+                    sb.AppendLine("PRINT 'Updating Index Name...'");
+                    sb.AppendLine();
+                    sb.AppendLine();
+                    sb.AppendLine("GO");
+                    sb.AppendFormat("EXECUTE sp_rename N'{0}.{1}', N'{2}', 'Index' ", tableName,
+                        index.Name,
+                        index.SetName);
+                    index.name = index.SetName;
+                }
+
+                var resultCompare = compareLogic.Compare(new Index(), index);
+                if (!resultCompare.AreEqual)
+                    sb.AppendLine(GenerateNewIndexes(new List<Index>() { index }, tableName));
+                sb.AppendLine();
+                sb.AppendLine("GO");
+            }
+            return sb.ToString();
         }
 
         private static string GenerateUpdateColumns(List<Column> columns, string tableName)
@@ -126,18 +163,12 @@ namespace DbDarwin.Service
                                 sb.AppendLine();
                                 sb.AppendLine();
                                 sb.AppendLine("GO");
-
-
                                 var typeLen = string.Empty;
-
-
                                 if (IsTypeHaveLength(column.DATA_TYPE))
                                 {
                                     if (!string.IsNullOrEmpty(column.CHARACTER_MAXIMUM_LENGTH))
                                         typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
                                 }
-
-
                                 sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2} {3} {4};", tableName,
                                     column.Name,
                                     column.DATA_TYPE,
@@ -309,7 +340,7 @@ namespace DbDarwin.Service
                 for (var index1 = 0; index1 < spited.Length; index1++)
                 {
                     var c = spited[index1];
-                    sb.AppendLine($"[{c}] ASC");
+                    sb.Append($"[{c}] ASC");
                     if (spited.Length > 1 && index1 < spited.Length - 1)
                         sb.AppendLine(",");
                 }
@@ -335,6 +366,10 @@ namespace DbDarwin.Service
                     sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", index.allow_page_locks.To_ON_OFF());
                 if (index.fill_factor > 0)
                     sb.AppendFormat(", FILLFACTOR = {0}", index.fill_factor);
+
+                sb.AppendFormat(", DROP_EXISTING = ON");
+
+
 
                 sb.AppendLine(") ON [PRIMARY]");
 

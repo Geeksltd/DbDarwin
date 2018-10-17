@@ -22,13 +22,10 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void ExtractSchema()
         {
-            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
-                "xml1.xml");
-            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30",
-                "xml2.xml");
+            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30", "xml1.xml");
+            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30", "xml2.xml");
             GenerateDiff();
             GenerateScripts();
-
         }
 
         [TestMethod]
@@ -38,7 +35,6 @@ namespace DbDarwin.UnitTestProject
                 AppDomain.CurrentDomain.BaseDirectory + "\\" + "xml1.xml",
                 AppDomain.CurrentDomain.BaseDirectory + "\\" + "xml2.xml",
                 AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
-
             Assert.IsTrue(true);
         }
 
