@@ -39,6 +39,19 @@ namespace DbDarwin.UnitTestProject
         }
 
         [TestMethod]
+        public void TransformationForRenameTableNameDiff()
+        {
+            CompareSchemaService.TransformationDiffFile(
+
+                AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                "Table_1",
+                "343",
+                "3434",
+                AppDomain.CurrentDomain.BaseDirectory + "\\diff2.xml");
+            Assert.IsTrue(true);
+        }
+
+        [TestMethod]
         public void GenerateScripts()
         {
 

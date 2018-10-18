@@ -28,7 +28,7 @@ namespace DbDarwin.Model.Schema
         public string COLUMN_NAME { get; set; }
 
         [XmlAttribute]
-        public int ORDINAL_POSITION { get; set; }
+        public string ORDINAL_POSITION { get; set; }
 
         [XmlAttribute]
         public string COLUMN_DEFAULT { get; set; }

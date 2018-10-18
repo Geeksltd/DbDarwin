@@ -32,8 +32,56 @@ namespace DbDarwin
                         if (ValidateArgumentGenerateScript(argList, out var diffFile, out var migrateSqlFile))
                             GenerateScriptService.GenerateScript(diffFile, migrateSqlFile);
                     }
+                    else if (first.ToLower() == "rename")
+                    {
+                        if (ValidateArgumentTransformation(argList, out var diffFile, out var tableName, out var fromName, out var toName, out var diffFileOutput))
+                            CompareSchemaService.TransformationDiffFile(diffFile, tableName, fromName, toName, diffFileOutput);
+                    }
                 }
             }
+        }
+
+
+        public static bool ValidateArgumentTransformation(List<string> argList, out string diffFile, out string tableName, out string fromName, out string toName, out string migrateSqlFile)
+        {
+            Console.WriteLine("Start generate migration script...");
+            // Read -diff parameter
+            diffFile = ReadArgument("-diff", argList, "-diff parameter is requirement");
+            // Read -out parameter
+            migrateSqlFile = ReadArgument("-out", argList, "-out parameter is requirement");
+
+            // Read table name parameter
+            var table = argList.FirstOrDefault(x => x.ToLower().StartsWith("table"));
+            tableName = !string.IsNullOrEmpty(table) ?
+                table.Split(new[] { '=' }).LastOrDefault()?.Trim(new[] { '\"' }) :
+                null;
+
+            // Read from parameter
+            var fromParam = argList.FirstOrDefault(x => x.ToLower().StartsWith("from"));
+            if (!string.IsNullOrEmpty(fromParam))
+                fromName = fromParam.Split(new[] { '=' }).LastOrDefault()?.Trim(new[] { '\"' });
+            else
+            {
+                fromName = null;
+                Console.WriteLine("from parameter is requirement");
+                Console.ReadLine();
+            }
+
+            // Read to parameter
+            var toParam = argList.FirstOrDefault(x => x.ToLower().StartsWith("to"));
+            if (!string.IsNullOrEmpty(toParam))
+                toName = toParam.Split(new[] { '=' }).LastOrDefault()?.Trim(new[] { '\"' });
+            else
+            {
+                toName = null;
+                Console.WriteLine("to parameter is requirement");
+                Console.ReadLine();
+            }
+            return !string.IsNullOrEmpty(diffFile) &&
+                   !string.IsNullOrEmpty(fromParam) &&
+                   !string.IsNullOrEmpty(migrateSqlFile) &&
+                   !string.IsNullOrEmpty(fromName) &&
+                   !string.IsNullOrEmpty(toName);
         }
 
         private static bool ValidateArgumentGenerateScript(List<string> argList, out string diffFile, out string migrateSqlFile)

@@ -107,6 +107,62 @@ namespace DbDarwin.Service
         }
 
         /// <summary>
+        /// Operation Set Name to Diff File 
+        /// </summary>
+        /// <param name="diffFile"></param>
+        /// <param name="tableName"></param>
+        /// <param name="fromName"></param>
+        /// <param name="toName"></param>
+        /// <param name="diffFileOutput"></param>
+        public static void TransformationDiffFile(string diffFile, string tableName, string fromName, string toName, string diffFileOutput)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(List<Table>));
+            List<Table> result1 = null;
+            using (var reader = new StreamReader(diffFile))
+                result1 = (List<Table>)serializer.Deserialize(reader);
+
+            if (result1 != null)
+            {
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    var table = result1.FirstOrDefault(x => String.Equals(x.Name, fromName, StringComparison.CurrentCultureIgnoreCase));
+                    if (table != null)
+                        table.SetName = toName;
+                    else
+                    {
+                        table = new Table { Name = fromName, SetName = toName };
+                        result1.Add(table);
+                    }
+                }
+                else
+                {
+                    var table = result1.FirstOrDefault(x => String.Equals(x.Name, tableName, StringComparison.CurrentCultureIgnoreCase));
+                    if (table != null)
+                    {
+                        var column = table.Update?.Column.FirstOrDefault(x =>
+                            String.Equals(x.COLUMN_NAME, fromName, StringComparison.CurrentCultureIgnoreCase));
+                        if (column != null)
+                            column.SetName = toName;
+                        else
+                        {
+                            column = new Column { COLUMN_NAME = fromName, SetName = toName };
+                            if (table.Update == null)
+                                table.Update = new Table();
+                            table.Update.Column.Add(column);
+                        }
+                    }
+                }
+            }
+
+
+
+            StringWriter sw2 = new StringWriter();
+            serializer.Serialize(sw2, result1);
+            var xml = sw2.ToString();
+            File.WriteAllText(diffFileOutput, xml);
+        }
+
+        /// <summary>
         /// compare objects
         /// </summary>
         /// <typeparam name="T"></typeparam>

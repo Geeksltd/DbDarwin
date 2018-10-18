@@ -2,7 +2,7 @@
   "profiles": {
     "DbDarwin": {
       "commandName": "Project",
-      "commandLineArgs": "generate-diff -from \"F:\\Projects\\Geeksltd\\DbDarwin\\Source\\DbDarwin.UnitTestProject\\bin\\Debug\\netcoreapp2.1\\xml1.xml\" -to \"F:\\Projects\\Geeksltd\\DbDarwin\\Source\\DbDarwin.UnitTestProject\\bin\\Debug\\netcoreapp2.1\\xml2.xml\" -out \"diff1.xml\""
+      "commandLineArgs": "rename -diff \"F:\\Projects\\Geeksltd\\DbDarwin\\Source\\DbDarwin.UnitTestProject\\bin\\Debug\\netcoreapp2.1\\Diff.xml\" table=\"table-Name\" from=\"MyOldColumn\" to=\"MyNewColumn\" -out \"Diff v2.xml\" "
     }
   }
 }

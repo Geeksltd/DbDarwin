@@ -16,6 +16,9 @@ namespace DbDarwin.Model
         [XmlAttribute]
         public string Name { get; set; }
 
+        [XmlAttribute("Set-Name")]
+        public string SetName { get; set; }
+
         [XmlElement("Column")]
         public List<Column> Column { get; set; }
 
@@ -34,6 +37,9 @@ namespace DbDarwin.Model
 
         [XmlElement("update")]
         public Table Update { get; set; }
+
+
+
     }
 
 
