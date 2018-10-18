@@ -69,8 +69,8 @@ namespace DbDarwin.Service
                             sb.Append(GenerateUpdateColumns(table.Update.Column, table.Name));
                         if (table.Update.Index.Count > 0)
                             sb.Append(GenerateUpdateIndexes(table.Update.Index, table.Name));
-                        //if (table.Update.ForeignKey.Count > 0)
-                        //    sb.Append(GenerateNewForeignKey(table.Update.ForeignKey, table.Name));
+                        if (table.Update.ForeignKey.Count > 0)
+                            sb.Append(GenerateUpdateForeignKey(table.Update.ForeignKey, table.Name));
                     }
 
 
@@ -79,6 +79,47 @@ namespace DbDarwin.Service
             sb.AppendLine("COMMIT");
 
             File.WriteAllText(outputFile, sb.ToString());
+        }
+
+        private static string GenerateUpdateForeignKey(List<ForeignKey> foreignKeys, string tableName)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Update ForeignKey --------------------");
+            sb.AppendLine("-----------------------------------------------------------");
+            foreach (var key in foreignKeys)
+            {
+                CompareLogic compareLogic = new CompareLogic
+                {
+                    Config = { MaxDifferences = Int32.MaxValue }
+                };
+
+                if (!string.IsNullOrEmpty(key.SetName))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine();
+                    sb.AppendLine("GO");
+                    sb.AppendLine("PRINT 'Updating ForeignKeys Name...'");
+                    sb.AppendLine();
+                    sb.AppendLine();
+                    sb.AppendLine("GO");
+                    sb.AppendFormat("EXECUTE sp_rename N'{0}.{1}', N'{2}', 'OBJECT' ", tableName,
+                        key.Name,
+                        key.SetName);
+                    key.CONSTRAINT_NAME = key.SetName;
+                }
+
+                var resultCompare = compareLogic.Compare(new Index(), key);
+                if (!resultCompare.AreEqual)
+                {
+                    sb.AppendLine(string.Format("ALTER TABLE {0} DROP CONSTRAINT {1}", tableName, key.Name));
+                    sb.AppendLine(GenerateNewForeignKey(new List<ForeignKey>() { key }, tableName));
+                }
+
+                sb.AppendLine();
+                sb.AppendLine("GO");
+            }
+            return sb.ToString();
         }
 
         private static string GenerateUpdateIndexes(List<Index> indexes, string tableName)
@@ -278,7 +319,11 @@ namespace DbDarwin.Service
             {
                 sb.AppendLine("GO");
                 sb.AppendFormat("ALTER TABLE [{0}]  WITH CHECK ADD  CONSTRAINT [{1}] FOREIGN KEY([{2}]) \r\n", tableName, key.Name, key.COLUMN_NAME);
-                sb.AppendFormat("REFERENCES [{0}] ([{1}])", key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
+                sb.AppendFormat("REFERENCES [{0}] ", key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
+
+                sb.AppendLine(string.Format("([{0}]) ON UPDATE {1} ON DELETE {2} ", key.COLUMN_NAME, key.UPDATE_RULE,
+                    key.DELETE_RULE));
+
                 sb.AppendLine("\r\nGO");
                 sb.AppendFormat("ALTER TABLE [{0}] CHECK CONSTRAINT [{1}]", tableName, key.Name);
                 sb.AppendLine("\r\nGO");

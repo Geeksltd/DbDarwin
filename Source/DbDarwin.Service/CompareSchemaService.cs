@@ -65,13 +65,13 @@ namespace DbDarwin.Service
                         XPathNavigator naviagetorRemove = removeColumn.CreateNavigator();
 
                         XmlElement updateElement = doc.CreateElement("update");
-                        //XPathNavigator naviagetorUpdate = updateElement.CreateNavigator();
+                        XPathNavigator naviagetorUpdate = updateElement.CreateNavigator();
 
 
 
-                        GenerateDifference<Column>(doc, root, r1.Column, findedTable.Column, naviagetorAdd, naviagetorRemove, updateElement);
-                        GenerateDifference<Index>(doc, root, r1.Index, findedTable.Index, naviagetorAdd, naviagetorRemove, updateElement);
-                        GenerateDifference<ForeignKey>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove, updateElement);
+                        GenerateDifference<Column>(doc, root, r1.Column, findedTable.Column, naviagetorAdd, naviagetorRemove, naviagetorUpdate);
+                        GenerateDifference<Index>(doc, root, r1.Index, findedTable.Index, naviagetorAdd, naviagetorRemove, naviagetorUpdate);
+                        GenerateDifference<ForeignKey>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove, naviagetorUpdate);
 
                         if (add.HasChildNodes)
                             root.AppendChild(add);
@@ -119,7 +119,7 @@ namespace DbDarwin.Service
         /// <param name="properyCheck"></param>
         public static void GenerateDifference<T>(XmlDocument doc, XmlElement root,
             List<T> currentList, List<T> newList,
-            XPathNavigator naviagetorAdd, XPathNavigator naviagetorRemove, XmlElement naviagetorUpdate)
+            XPathNavigator naviagetorAdd, XPathNavigator naviagetorRemove, XPathNavigator naviagetorUpdate)
         {
             var emptyNamespaces = new XmlSerializerNamespaces(new[] {
                 XmlQualifiedName.Empty,
@@ -209,19 +209,27 @@ namespace DbDarwin.Service
                     var result = compareLogic.Compare(c1, foundObject);
                     if (!result.AreEqual)
                     {
-                        var columnName = doc.CreateAttribute("Name");
-                        columnName.Value = c1.GetType().GetProperty("Name").GetValue(c1).ToString();
-                        sqlElement.Attributes.Append(columnName);
-                        foreach (var r in result.Differences)
+                        using (var writer = naviagetorUpdate.AppendChild())
                         {
-                            var data = doc.CreateAttribute(r.PropertyName);
-                            data.Value = r.Object2Value;
-                            sqlElement.Attributes.Append(data);
-                            Console.WriteLine(r.PropertyName);
-                            Console.WriteLine(r.Object1TypeName + ":" + r.Object1Value);
-                            Console.WriteLine(r.Object2TypeName + ":" + r.Object2Value);
+                            var serializer1 = new XmlSerializer(foundObject.GetType());
+                            writer.WriteWhitespace("");
+                            serializer1.Serialize(writer, foundObject, emptyNamespaces);
+                            writer.Close();
                         }
-                        naviagetorUpdate.AppendChild(sqlElement);
+
+                        //var columnName = doc.CreateAttribute("Name");
+                        //columnName.Value = c1.GetType().GetProperty("Name").GetValue(c1).ToString();
+                        //sqlElement.Attributes.Append(columnName);
+                        //foreach (var r in result.Differences)
+                        //{
+                        //    var data = doc.CreateAttribute(r.PropertyName);
+                        //    data.Value = r.Object2Value;
+                        //    sqlElement.Attributes.Append(data);
+                        //    Console.WriteLine(r.PropertyName);
+                        //    Console.WriteLine(r.Object1TypeName + ":" + r.Object1Value);
+                        //    Console.WriteLine(r.Object2TypeName + ":" + r.Object2Value);
+                        //}
+                        //naviagetorUpdate.AppendChild(sqlElement);
 
                     }
 
