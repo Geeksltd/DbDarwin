@@ -39,6 +39,20 @@ namespace DbDarwin.Service
             {
                 foreach (var table in diffFile)
                 {
+
+                    if (!string.IsNullOrEmpty(table.SetName))
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine();
+                        sb.AppendLine("GO");
+                        sb.AppendLine("PRINT 'Updating Table Name...'");
+                        sb.AppendLine();
+                        sb.AppendLine();
+                        sb.AppendLine("GO");
+                        sb.AppendLine(string.Format("EXECUTE sp_rename N'{0}', N'{1}', 'OBJECT' ", table.Name, table.SetName));
+                        table.Name = table.SetName;
+                    }
+
                     if (table.Remove != null)
                     {
                         sb.AppendLine("GO");
