@@ -108,7 +108,7 @@ The UI app will allow the developer to select any addition/removal pair for the 
 ```
 Such transformation will be applied via a CLI command:
 ```
-DbDarwin.exe rename -diff "Diff.xml" table="table-Name" from="MyOldColumn" to="MyNewColumn" -out "Diff v2.xml" 
+DbDarwin.exe rename -diff "Diff.xml" table "table-Name" from "MyOldColumn" to "MyNewColumn" -out "Diff v2.xml" 
 ```
 > If the rename operation is on a table, rather than a table component, simply the `table="table-Name"` part will not be specified.
 
