@@ -1,18 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
-using DbDarwin.Model;
-using DbDarwin.Model.Schema;
 using DbDarwin.Service;
-using KellermanSoftware.CompareNetObjects;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace DbDarwin.UnitTestProject
 {
@@ -54,8 +42,6 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void GenerateScripts()
         {
-
-
             GenerateScriptService.GenerateScript(@"F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin\bin\Debug\netcoreapp2.1\Diff v2.xml",
                 //AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
                 AppContext.BaseDirectory + "\\output.sql"
@@ -63,6 +49,5 @@ namespace DbDarwin.UnitTestProject
 
             Assert.IsTrue(true);
         }
-
     }
 }

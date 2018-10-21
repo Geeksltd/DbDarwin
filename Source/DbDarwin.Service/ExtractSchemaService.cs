@@ -1,14 +1,11 @@
-﻿using DbDarwin.Model;
+﻿using DbDarwin.Model.Schema;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
 using System.Xml.Serialization;
-using DbDarwin.Model.Schema;
 
 namespace DbDarwin.Service
 {
@@ -25,12 +22,12 @@ namespace DbDarwin.Service
             // Create Connection to database
             try
             {
-                System.Data.SqlClient.SqlConnection sql = new System.Data.SqlClient.SqlConnection(connectionString);
+                var sql = new System.Data.SqlClient.SqlConnection(connectionString);
                 List<DbDarwin.Model.Table> tables = new List<DbDarwin.Model.Table>();
 
                 sql.Open();
                 var allTables = sql.GetSchema("Tables");
-                SqlDataAdapter da = new SqlDataAdapter
+                var da = new SqlDataAdapter
                 {
                     SelectCommand = new SqlCommand
                     {
@@ -38,14 +35,12 @@ namespace DbDarwin.Service
                     }
                 };
                 // Get All Columns Database
-                DataTable allColumns = new DataTable("Columns");
-                DataTable allIndex = new DataTable("Indexes");
-                DataTable allSqlObjects = new DataTable("Objects");
-                DataTable allReferences = new DataTable("References");
-                DataTable allIndex_columns = new DataTable("index_columns");
-                DataTable allSys_columns = new DataTable("sys.columns");
-
-
+                var allColumns = new DataTable("Columns");
+                var allIndex = new DataTable("Indexes");
+                var allSqlObjects = new DataTable("Objects");
+                var allReferences = new DataTable("References");
+                var allIndex_columns = new DataTable("index_columns");
+                var allSys_columns = new DataTable("sys.columns");
 
                 /// fetch COLUMNS schema
                 da.SelectCommand.CommandText = "select * from INFORMATION_SCHEMA.COLUMNS";
@@ -60,7 +55,6 @@ namespace DbDarwin.Service
                 da.SelectCommand.CommandText = "SELECT * FROM sys.objects";
                 da.Fill(allSqlObjects);
                 var objectMapped = allSqlObjects.DataTableToList<SqlObject>();
-
 
                 /// Fetch All index_columns from SQL
                 da.SelectCommand.CommandText = "SELECT * FROM sys.index_columns";
@@ -77,7 +71,6 @@ namespace DbDarwin.Service
                 da.Fill(allReferences);
                 var referencesMapped = allReferences.DataTableToList<ForeignKey>();
 
-
                 // Create Table Model
                 foreach (DataRow r in allTables.Rows)
                 {
@@ -85,7 +78,6 @@ namespace DbDarwin.Service
                     var tableName = r["TABLE_NAME"].ToString();
                     Console.WriteLine(schema_Table + "." + tableName);
                     var tableId = objectMapped.Where(x => x.name == tableName).Select(x => x.object_id).FirstOrDefault();
-
 
                     var result = (from ind in indexMapped
                                   join ic in index_columnsMapped on new { ind.object_id, ind.index_id } equals new
@@ -95,27 +87,24 @@ namespace DbDarwin.Service
                                   where ind.object_id == tableId
                                   select new { ind, ic, col }).ToList().GroupBy(x => x.ind.name);
 
-                    List<Index> ExistsIndex = new List<Index>();
+                    List<Index> existsIndex = new List<Index>();
                     foreach (var index in result)
                     {
                         var resultIndex = index.FirstOrDefault()?.ind;
                         if (resultIndex != null)
                             resultIndex.Columns = index.ToList().OrderBy(x => x.ic.key_ordinal).Select(x => x.col.name)
                                 .Aggregate((x, y) => x + "|" + y).Trim('|');
-                        ExistsIndex.Add(resultIndex);
+                        existsIndex.Add(resultIndex);
                     }
 
-
-
-
-                    DbDarwin.Model.Table myDt = new DbDarwin.Model.Table()
+                    var myDt = new DbDarwin.Model.Table()
                     {
                         Name = r["TABLE_NAME"].ToString(),
                         Column = columnsMapped.Where(x =>
                                 x.TABLE_NAME == r["TABLE_NAME"].ToString() &&
                                 x.TABLE_SCHEMA == r["TABLE_SCHEMA"].ToString())
                             .ToList(),
-                        Index = ExistsIndex,
+                        Index = existsIndex,
                         ForeignKey = referencesMapped.Where(x => x.CONSTRAINT_SCHEMA == schema_Table && x.TABLE_NAME == tableName).ToList()
 
                     };
@@ -124,7 +113,7 @@ namespace DbDarwin.Service
 
                 // Create Serialize Object and save as XML file
                 var ser = new XmlSerializer(typeof(List<DbDarwin.Model.Table>));
-                StringWriter sw2 = new StringWriter();
+                var sw2 = new StringWriter();
                 ser.Serialize(sw2, tables);
                 var xml = sw2.ToString();
                 var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;

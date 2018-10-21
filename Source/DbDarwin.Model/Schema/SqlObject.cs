@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DbDarwin.Model.Schema
 {
@@ -29,7 +27,5 @@ namespace DbDarwin.Model.Schema
         public bool is_published { get; set; }
 
         public bool is_schema_published { get; set; }
-
     }
-
 }

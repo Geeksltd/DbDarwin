@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -22,7 +20,6 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute]
         public string CONSTRAINT_SCHEMA { get; set; }
 
-
         public string Name => CONSTRAINT_NAME;
         [XmlAttribute(AttributeName = "Name")]
         public string CONSTRAINT_NAME { get; set; }
@@ -43,7 +40,6 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute]
         public string DELETE_RULE { get; set; }
 
-
         [XmlAttribute]
         public string TABLE_NAME { get; set; }
         [XmlAttribute]
@@ -51,9 +47,6 @@ namespace DbDarwin.Model.Schema
 
         [XmlAttribute]
         public int ORDINAL_POSITION { get; set; }
-
-
-
 
         [XmlAttribute]
         public string Ref_TABLE_SCHEMA { get; set; }

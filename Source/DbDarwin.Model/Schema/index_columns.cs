@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DbDarwin.Model.Schema
+﻿namespace DbDarwin.Model.Schema
 {
     /// <summary>
     /// sys.index_columns
@@ -24,6 +20,5 @@ namespace DbDarwin.Model.Schema
         public bool? is_descending_key { get; set; }
 
         public bool? is_included_column { get; set; }
-
     }
 }

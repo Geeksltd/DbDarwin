@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace DbDarwin.Service
 {
@@ -25,13 +22,13 @@ namespace DbDarwin.Service
 
                 foreach (DataRow row in table.Rows)
                 {
-                    T obj = new T();
+                    var obj = new T();
 
                     foreach (var prop in obj.GetType().GetProperties())
                     {
                         try
                         {
-                            PropertyInfo propertyInfo = obj.GetType().GetProperty(prop.Name);
+                            var propertyInfo = obj.GetType().GetProperty(prop.Name);
 
                             var t = propertyInfo.PropertyType;
                             if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))

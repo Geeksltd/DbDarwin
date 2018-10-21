@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Xml.Serialization;
 
 namespace DbDarwin.Model.Schema
@@ -70,7 +68,5 @@ namespace DbDarwin.Model.Schema
 
         [XmlAttribute]
         public string filter_definition { get; set; }
-
     }
-
 }

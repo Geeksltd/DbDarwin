@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DbDarwin.Model.Schema
+﻿namespace DbDarwin.Model.Schema
 {
     public class system_columns
     {
@@ -55,6 +51,5 @@ namespace DbDarwin.Model.Schema
         public bool? is_sparse { get; set; }
 
         public bool? is_column_set { get; set; }
-
     }
 }

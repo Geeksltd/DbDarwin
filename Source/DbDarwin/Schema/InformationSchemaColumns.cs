@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.Text;
 using System.Xml.Serialization;
 
 namespace DbDarwin.Schema
 {
-
     [Serializable]
     public class InformationSchemaColumns
     {
@@ -78,7 +74,5 @@ namespace DbDarwin.Schema
 
         [XmlAttribute]
         public string DOMAIN_NAME { get; set; }
-
     }
-
 }

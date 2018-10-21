@@ -1,20 +1,18 @@
-﻿using System;
+﻿using DbDarwin.Model;
+using DbDarwin.Model.Schema;
+using KellermanSoftware.CompareNetObjects;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Xml.XPath;
-using DbDarwin.Model;
-using DbDarwin.Model.Schema;
-using KellermanSoftware.CompareNetObjects;
 
 namespace DbDarwin.Service
 {
     public class CompareSchemaService
     {
-
         /// <summary>
         /// compare two xml file and create diff xml file
         /// </summary>
@@ -25,7 +23,7 @@ namespace DbDarwin.Service
         {
             try
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(List<Table>));
+                var serializer = new XmlSerializer(typeof(List<Table>));
                 List<Table> result1 = null;
                 List<Table> result2 = null;
                 using (var reader = new StreamReader(currentFileName))
@@ -33,15 +31,13 @@ namespace DbDarwin.Service
                 using (var reader = new StreamReader(newSchema))
                     result2 = (List<Table>)serializer.Deserialize(reader);
 
-
-                XmlDocument doc = new XmlDocument();
+                var doc = new XmlDocument();
                 XmlNode docNode = doc.CreateXmlDeclaration("1.0", "UTF-8", null);
                 doc.AppendChild(docNode);
-                XmlElement ArrayOfTable = doc.CreateElement("ArrayOfTable");
+                var arrayOfTable = doc.CreateElement("ArrayOfTable");
                 var emptyNamepsaces = new XmlSerializerNamespaces(new[] {
                     XmlQualifiedName.Empty
                 });
-
 
                 foreach (var r1 in result1)
                 {
@@ -52,29 +48,25 @@ namespace DbDarwin.Service
                     }
                     else
                     {
-                        XmlElement root = doc.CreateElement("Table");
+                        var root = doc.CreateElement("Table");
                         var name = doc.CreateAttribute("Name");
                         name.Value = r1.Name;
                         root.Attributes.Append(name);
 
-
-                        XmlElement add = doc.CreateElement("add");
+                        var add = doc.CreateElement("add");
                         var naviagetorAdd = add.CreateNavigator();
 
-                        XmlElement removeColumn = doc.CreateElement("remove");
-                        XPathNavigator naviagetorRemove = removeColumn.CreateNavigator();
+                        var removeColumn = doc.CreateElement("remove");
+                        var naviagetorRemove = removeColumn.CreateNavigator();
 
-                        XmlElement updateElement = doc.CreateElement("update");
-                        XPathNavigator naviagetorUpdate = updateElement.CreateNavigator();
-
-
+                        var updateElement = doc.CreateElement("update");
+                        var naviagetorUpdate = updateElement.CreateNavigator();
 
                         GenerateDifference<Column>(doc, root, r1.Column, findedTable.Column, naviagetorAdd, naviagetorRemove, naviagetorUpdate);
                         GenerateDifference<Index>(doc, root, r1.Index, findedTable.Index, naviagetorAdd, naviagetorRemove, naviagetorUpdate);
                         GenerateDifference<ForeignKey>(doc, root, r1.ForeignKey, findedTable.ForeignKey, naviagetorAdd, naviagetorRemove, naviagetorUpdate);
 
-                        if (add.HasChildNodes)
-                            root.AppendChild(add);
+                        if (add.HasChildNodes) root.AppendChild(add);
 
                         if (removeColumn.HasChildNodes)
                             root.AppendChild(removeColumn);
@@ -82,13 +74,13 @@ namespace DbDarwin.Service
                         if (updateElement.HasChildNodes)
                             root.AppendChild(updateElement);
 
-
-                        ArrayOfTable.AppendChild(root);
+                        arrayOfTable.AppendChild(root);
                     }
                 }
-                doc.AppendChild(ArrayOfTable);
+
+                doc.AppendChild(arrayOfTable);
                 doc.Save(output);
-                //File.WriteAllText(path, xml);
+                // File.WriteAllText(path, xml);
                 Console.WriteLine("Saving To xml");
             }
             catch (Exception ex)
@@ -116,7 +108,7 @@ namespace DbDarwin.Service
         /// <param name="diffFileOutput"></param>
         public static void TransformationDiffFile(string diffFile, string tableName, string fromName, string toName, string diffFileOutput)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Table>));
+            var serializer = new XmlSerializer(typeof(List<Table>));
             List<Table> result1 = null;
             using (var reader = new StreamReader(diffFile))
                 result1 = (List<Table>)serializer.Deserialize(reader);
@@ -125,7 +117,7 @@ namespace DbDarwin.Service
             {
                 if (string.IsNullOrEmpty(tableName))
                 {
-                    var table = result1.FirstOrDefault(x => String.Equals(x.Name, fromName, StringComparison.CurrentCultureIgnoreCase));
+                    var table = result1.FirstOrDefault(x => string.Equals(x.Name, fromName, StringComparison.CurrentCultureIgnoreCase));
                     if (table != null)
                         table.SetName = toName;
                     else
@@ -136,11 +128,11 @@ namespace DbDarwin.Service
                 }
                 else
                 {
-                    var table = result1.FirstOrDefault(x => String.Equals(x.Name, tableName, StringComparison.CurrentCultureIgnoreCase));
+                    var table = result1.FirstOrDefault(x => string.Equals(x.Name, tableName, StringComparison.CurrentCultureIgnoreCase));
                     if (table != null)
                     {
                         var column = table.Update?.Column.FirstOrDefault(x =>
-                            String.Equals(x.COLUMN_NAME, fromName, StringComparison.CurrentCultureIgnoreCase));
+                            string.Equals(x.COLUMN_NAME, fromName, StringComparison.CurrentCultureIgnoreCase));
                         if (column != null)
                             column.SetName = toName;
                         else
@@ -154,9 +146,7 @@ namespace DbDarwin.Service
                 }
             }
 
-
-
-            StringWriter sw2 = new StringWriter();
+            var sw2 = new StringWriter();
             serializer.Serialize(sw2, result1);
             var xml = sw2.ToString();
             File.WriteAllText(diffFileOutput, xml);
@@ -186,7 +176,6 @@ namespace DbDarwin.Service
             List<T> mustAdd = new List<T>();
             if (typeof(T) == typeof(Column))
             {
-
                 var tempAdd = newList.Cast<Column>()
                     .Where(x => !currentList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME)).ToList();
                 mustAdd = (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
@@ -218,20 +207,17 @@ namespace DbDarwin.Service
                 }
             }
 
-
-
-
-            CompareLogic compareLogic = new CompareLogic
+            var compareLogic = new CompareLogic
             {
-                Config = { MaxDifferences = Int32.MaxValue }
+                Config = { MaxDifferences = int.MaxValue }
             };
 
             // Detect Sql Objects Changes
             foreach (T c1 in currentList)
             {
-                XmlElement sqlElement = doc.CreateElement(typeof(T).Name);
+                var sqlElement = doc.CreateElement(typeof(T).Name);
 
-                T foundObject = default(T);
+                var foundObject = default(T);
 
                 if (typeof(T) == typeof(Column))
                 {
@@ -258,7 +244,6 @@ namespace DbDarwin.Service
                         serializer1.Serialize(writer, c1, emptyNamespaces);
                         writer.Close();
                     }
-
                 }
                 else
                 {
@@ -273,26 +258,22 @@ namespace DbDarwin.Service
                             writer.Close();
                         }
 
-                        //var columnName = doc.CreateAttribute("Name");
-                        //columnName.Value = c1.GetType().GetProperty("Name").GetValue(c1).ToString();
-                        //sqlElement.Attributes.Append(columnName);
-                        //foreach (var r in result.Differences)
-                        //{
+                        // var columnName = doc.CreateAttribute("Name");
+                        // columnName.Value = c1.GetType().GetProperty("Name").GetValue(c1).ToString();
+                        // sqlElement.Attributes.Append(columnName);
+                        // foreach (var r in result.Differences)
+                        // {
                         //    var data = doc.CreateAttribute(r.PropertyName);
                         //    data.Value = r.Object2Value;
                         //    sqlElement.Attributes.Append(data);
                         //    Console.WriteLine(r.PropertyName);
                         //    Console.WriteLine(r.Object1TypeName + ":" + r.Object1Value);
                         //    Console.WriteLine(r.Object2TypeName + ":" + r.Object2Value);
-                        //}
-                        //naviagetorUpdate.AppendChild(sqlElement);
-
+                        // }
+                        // naviagetorUpdate.AppendChild(sqlElement);
                     }
-
-
                 }
             }
         }
-
     }
 }
