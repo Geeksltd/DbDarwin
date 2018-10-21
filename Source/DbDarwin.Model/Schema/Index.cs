@@ -21,11 +21,11 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute]
         public string Columns { get; set; }
 
-        [XmlAttribute]
+        [XmlIgnore]
         public int index_id { get; set; }
 
         [XmlAttribute]
-        public byte type { get; set; }
+        public string type { get; set; }
 
         [XmlAttribute]
         public string type_desc { get; set; }

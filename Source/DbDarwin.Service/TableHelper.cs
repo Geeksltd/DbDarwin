@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using Olive;
 
 namespace DbDarwin.Service
 {
@@ -40,7 +41,15 @@ namespace DbDarwin.Service
                             }
                             else
 
-                                propertyInfo.SetValue(obj, Convert.ChangeType(row[prop.Name], propertyInfo.PropertyType), null);
+                            {
+                                var result = Convert.ChangeType(row[prop.Name], propertyInfo.PropertyType);
+                                if (propertyInfo.PropertyType == typeof(string) && (row[prop.Name] == null || row[prop.Name].ToString().IsEmpty()))
+                                    propertyInfo.SetValue(obj, null, null);
+                                else
+                                    propertyInfo.SetValue(obj, result, null);
+
+
+                            }
                         }
                         catch (Exception ex)
                         {
