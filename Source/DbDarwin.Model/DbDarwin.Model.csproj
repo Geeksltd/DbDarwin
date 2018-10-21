@@ -4,4 +4,9 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="GCop.All.Geeks" Version="2.3.9" />
+    <PackageReference Include="Olive" Version="1.0.121" />
+  </ItemGroup>
+
 </Project>
