@@ -1,7 +1,7 @@
-﻿using DbDarwin.Service;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DbDarwin.Service;
 
 namespace DbDarwin
 {
@@ -47,37 +47,17 @@ namespace DbDarwin
             diffFile = ReadArgument("-diff", argList, "-diff parameter is requirement");
             // Read -out parameter
             migrateSqlFile = ReadArgument("-out", argList, "-out parameter is requirement");
-
             // Read table name parameter
-            var table = argList.FirstOrDefault(x => x.ToLower().StartsWith("table"));
-            tableName = !string.IsNullOrEmpty(table) ?
-                table.Split(new[] { '=' }).LastOrDefault()?.Trim(new[] { '\"' }) :
-                null;
+            tableName = ReadArgument("table", argList, string.Empty, false);
+            // Read from name parameter
+            fromName = ReadArgument("from", argList, "from parameter is requirement");
+            // Read from name parameter
+            toName = ReadArgument("to", argList, "to parameter is requirement");
 
-            // Read from parameter
-            var fromParam = argList.FirstOrDefault(x => x.ToLower().StartsWith("from"));
-            if (!string.IsNullOrEmpty(fromParam))
-                fromName = fromParam.Split(new[] { '=' }).LastOrDefault()?.Trim(new[] { '\"' });
-            else
-            {
-                fromName = null;
-                Console.WriteLine("from parameter is requirement");
-                Console.ReadLine();
-            }
 
-            // Read to parameter
-            var toParam = argList.FirstOrDefault(x => x.ToLower().StartsWith("to"));
-            if (!string.IsNullOrEmpty(toParam))
-                toName = toParam.Split(new[] { '=' }).LastOrDefault()?.Trim(new[] { '\"' });
-            else
-            {
-                toName = null;
-                Console.WriteLine("to parameter is requirement");
-                Console.ReadLine();
-            }
 
             return !string.IsNullOrEmpty(diffFile) &&
-                   !string.IsNullOrEmpty(fromParam) &&
+                   !string.IsNullOrEmpty(fromName) &&
                    !string.IsNullOrEmpty(migrateSqlFile) &&
                    !string.IsNullOrEmpty(fromName) &&
                    !string.IsNullOrEmpty(toName);
@@ -119,10 +99,10 @@ namespace DbDarwin
                    !string.IsNullOrEmpty(outputFile);
         }
 
-        static string ReadArgument(string argument, List<string> argList, string message)
+        static string ReadArgument(string argument, List<string> argList, string message, bool requirement = true)
         {
             var index = argList.IndexOf(argument);
-            if (index == -1)
+            if (index == -1 && requirement)
             {
                 Console.WriteLine(message);
                 Console.ReadLine();
