@@ -1,6 +1,6 @@
 ﻿namespace DbDarwin.Model.Schema
 {
-    public class system_columns
+    public class SystemColumns
     {
         public int object_id { get; set; }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DbDarwin.Service;
+using Olive;
 
 namespace DbDarwin
 {
@@ -10,37 +11,37 @@ namespace DbDarwin
         static void Main(string[] args)
         {
             var argList = args.ToList();
-            if (argList.Count > 0)
+            if (argList.Any())
             {
                 var first = args.First();
-                if (!string.IsNullOrEmpty(first))
+                if (first.HasAny())
                 {
                     if (first.ToLower() == "extract-schema")
                     {
-                        if (ValidateArgumentExtaractSchema(argList, out var connection, out var outputFile))
+                        if (IsArgumentExtractSchemaValid(argList, out var connection, out var outputFile))
                             ExtractSchemaService.ExtractSchema(connection, outputFile);
                     }
                     else if (first.ToLower() == "generate-diff")
                     {
-                        if (ValidateArgumentGenerateDiff(argList, out var currentFile, out var newSchemaFile,
+                        if (IsArgumentGenerateValid(argList, out var currentFile, out var newSchemaFile,
                             out var outputFile))
                             CompareSchemaService.StartCompare(currentFile, newSchemaFile, outputFile);
                     }
                     else if (first.ToLower() == "generate-script")
                     {
-                        if (ValidateArgumentGenerateScript(argList, out var diffFile, out var migrateSqlFile))
+                        if (IsArgumentGenerateScriptValid(argList, out var diffFile, out var migrateSqlFile))
                             GenerateScriptService.GenerateScript(diffFile, migrateSqlFile);
                     }
                     else if (first.ToLower() == "rename")
                     {
-                        if (ValidateArgumentTransformation(argList, out var diffFile, out var tableName, out var fromName, out var toName, out var diffFileOutput))
+                        if (IsArgumentTransformationValid(argList, out var diffFile, out var tableName, out var fromName, out var toName, out var diffFileOutput))
                             CompareSchemaService.TransformationDiffFile(diffFile, tableName, fromName, toName, diffFileOutput);
                     }
                 }
             }
         }
 
-        public static bool ValidateArgumentTransformation(List<string> argList, out string diffFile, out string tableName, out string fromName, out string toName, out string migrateSqlFile)
+        static bool IsArgumentTransformationValid(List<string> argList, out string diffFile, out string tableName, out string fromName, out string toName, out string migrateSqlFile)
         {
             Console.WriteLine("Start generate migration script...");
             // Read -diff parameter
@@ -56,14 +57,14 @@ namespace DbDarwin
 
 
 
-            return !string.IsNullOrEmpty(diffFile) &&
-                   !string.IsNullOrEmpty(fromName) &&
-                   !string.IsNullOrEmpty(migrateSqlFile) &&
-                   !string.IsNullOrEmpty(fromName) &&
-                   !string.IsNullOrEmpty(toName);
+            return diffFile.HasValue() &&
+                   fromName.HasValue() &&
+                   migrateSqlFile.HasValue() &&
+                   fromName.HasValue() &&
+                   toName.HasValue();
         }
 
-        static bool ValidateArgumentGenerateScript(List<string> argList, out string diffFile, out string migrateSqlFile)
+        static bool IsArgumentGenerateScriptValid(List<string> argList, out string diffFile, out string migrateSqlFile)
         {
             Console.WriteLine("Start generate migration script...");
             // Read -diff parameter
@@ -71,10 +72,10 @@ namespace DbDarwin
             // Read -out parameter
             migrateSqlFile = ReadArgument("-out", argList, "-out parameter is requirement");
 
-            return !string.IsNullOrEmpty(diffFile) && !string.IsNullOrEmpty(migrateSqlFile);
+            return diffFile.HasValue() && migrateSqlFile.HasValue();
         }
 
-        static bool ValidateArgumentExtaractSchema(List<string> argList, out string connection, out string outputFile)
+        static bool IsArgumentExtractSchemaValid(List<string> argList, out string connection, out string outputFile)
         {
             Console.WriteLine("Start Extract Schema...");
             // Read -connect parameter
@@ -82,10 +83,10 @@ namespace DbDarwin
             // Read -out parameter
             outputFile = ReadArgument("-out", argList, "-out parameter is requirement");
 
-            return !string.IsNullOrEmpty(connection) && !string.IsNullOrEmpty(outputFile);
+            return connection.HasValue() && outputFile.HasValue();
         }
 
-        static bool ValidateArgumentGenerateDiff(List<string> argList, out string currentFile, out string newSchemaFile, out string outputFile)
+        static bool IsArgumentGenerateValid(List<string> argList, out string currentFile, out string newSchemaFile, out string outputFile)
         {
             Console.WriteLine("Start generate the differences...");
             // Read -from parameter
@@ -95,8 +96,8 @@ namespace DbDarwin
             // Read -out parameter
             outputFile = ReadArgument("-out", argList, "-out parameter is requirement");
 
-            return !string.IsNullOrEmpty(currentFile) && !string.IsNullOrEmpty(newSchemaFile) &&
-                   !string.IsNullOrEmpty(outputFile);
+            return currentFile.HasValue() && newSchemaFile.HasValue() &&
+                   outputFile.HasValue();
         }
 
         static string ReadArgument(string argument, List<string> argList, string message, bool requirement = true)
@@ -108,7 +109,6 @@ namespace DbDarwin
                 Console.ReadLine();
                 return string.Empty;
             }
-
             if (argList.Count > index + 1)
                 return argList[index + 1];
             return string.Empty;

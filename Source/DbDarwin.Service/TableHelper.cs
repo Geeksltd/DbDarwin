@@ -19,7 +19,7 @@ namespace DbDarwin.Service
         {
             try
             {
-                List<T> list = new List<T>();
+                var list = new List<T>();
 
                 foreach (DataRow row in table.Rows)
                 {
@@ -31,13 +31,13 @@ namespace DbDarwin.Service
                         {
                             var propertyInfo = obj.GetType().GetProperty(prop.Name);
 
-                            var t = propertyInfo.PropertyType;
-                            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+                            var currentType = propertyInfo.PropertyType;
+                            if (currentType.IsGenericType && currentType.GetGenericTypeDefinition() == typeof(Nullable<>))
                             {
                                 if (row[prop.Name] == null || row[prop.Name] == DBNull.Value)
                                     propertyInfo.SetValue(obj, default(T), null);
                                 else
-                                    propertyInfo.SetValue(obj, Convert.ChangeType(row[prop.Name], Nullable.GetUnderlyingType(t)), null);
+                                    propertyInfo.SetValue(obj, Convert.ChangeType(row[prop.Name], Nullable.GetUnderlyingType(currentType)), null);
                             }
                             else
 
@@ -51,7 +51,7 @@ namespace DbDarwin.Service
 
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             continue;
                         }
@@ -62,9 +62,10 @@ namespace DbDarwin.Service
 
                 return list;
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
+                Console.WriteLine(ex.Message);
+                return new List<T>();
             }
         }
     }

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
+using Olive;
 
 namespace DbDarwin.Service
 {
@@ -36,7 +37,7 @@ namespace DbDarwin.Service
             {
                 foreach (var table in diffFile)
                 {
-                    if (!string.IsNullOrEmpty(table.SetName))
+                    if (table.SetName.HasValue())
                     {
                         sb.AppendLine();
                         sb.AppendLine();
@@ -52,33 +53,33 @@ namespace DbDarwin.Service
                     if (table.Remove != null)
                     {
                         sb.AppendLine("GO");
-                        if (table.Remove.Index.Count > 0)
+                        if (table.Remove.Index.Any())
                             sb.Append(GenerateRemoveIndexes(table.Remove.Index, table.Name));
-                        if (table.Remove.ForeignKey.Count > 0)
+                        if (table.Remove.ForeignKey.Any())
                             sb.Append(GenerateRemoveForeignKey(table.Remove.ForeignKey, table.Name));
-                        if (table.Remove.Column.Count > 0)
+                        if (table.Remove.Column.Any())
                             sb.Append(GenerateRemoveColumns(table.Remove.Column, table.Name));
                     }
 
                     if (table.Add != null)
                     {
                         sb.AppendLine("GO");
-                        if (table.Add.Column.Count > 0)
+                        if (table.Add.Column.Any())
                             sb.Append(GenerateNewColumns(table.Add.Column, table.Name));
-                        if (table.Add.Index.Count > 0)
+                        if (table.Add.Index.Any())
                             sb.Append(GenerateNewIndexes(table.Add.Index, table.Name));
-                        if (table.Add.ForeignKey.Count > 0)
+                        if (table.Add.ForeignKey.Any())
                             sb.Append(GenerateNewForeignKey(table.Add.ForeignKey, table.Name));
                     }
 
                     if (table.Update != null)
                     {
                         sb.AppendLine("GO");
-                        if (table.Update.Column.Count > 0)
+                        if (table.Update.Column.Any())
                             sb.Append(GenerateUpdateColumns(table.Update.Column, table.Name));
-                        if (table.Update.Index.Count > 0)
+                        if (table.Update.Index.Any())
                             sb.Append(GenerateUpdateIndexes(table.Update.Index, table.Name));
-                        if (table.Update.ForeignKey.Count > 0)
+                        if (table.Update.ForeignKey.Any())
                             sb.Append(GenerateUpdateForeignKey(table.Update.ForeignKey, table.Name));
                     }
                 }
@@ -89,7 +90,7 @@ namespace DbDarwin.Service
             File.WriteAllText(outputFile, sb.ToString());
         }
 
-        static string GenerateUpdateForeignKey(List<ForeignKey> foreignKeys, string tableName)
+        static string GenerateUpdateForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -102,7 +103,7 @@ namespace DbDarwin.Service
                     Config = { MaxDifferences = int.MaxValue }
                 };
 
-                if (!string.IsNullOrEmpty(key.SetName))
+                if (key.SetName.HasValue())
                 {
                     sb.AppendLine();
                     sb.AppendLine();
@@ -121,7 +122,7 @@ namespace DbDarwin.Service
                 if (!resultCompare.AreEqual)
                 {
                     sb.AppendLine(string.Format("ALTER TABLE {0} DROP CONSTRAINT {1}", tableName, key.Name));
-                    sb.AppendLine(GenerateNewForeignKey(new List<ForeignKey>() { key }, tableName));
+                    sb.AppendLine(GenerateNewForeignKey(new List<ForeignKey> { key }, tableName));
                 }
 
                 sb.AppendLine();
@@ -144,7 +145,7 @@ namespace DbDarwin.Service
                     Config = { MaxDifferences = int.MaxValue }
                 };
 
-                if (!string.IsNullOrEmpty(index.SetName))
+                if (index.SetName.HasValue())
                 {
                     sb.AppendLine();
                     sb.AppendLine();
@@ -161,7 +162,7 @@ namespace DbDarwin.Service
 
                 var resultCompare = compareLogic.Compare(new Index(), index);
                 if (!resultCompare.AreEqual)
-                    sb.AppendLine(GenerateNewIndexes(new List<Index>() { index }, tableName));
+                    sb.AppendLine(GenerateNewIndexes(new List<Index> { index }, tableName));
                 sb.AppendLine();
                 sb.AppendLine("GO");
             }
@@ -182,7 +183,7 @@ namespace DbDarwin.Service
                     Config = { MaxDifferences = int.MaxValue }
                 };
 
-                if (!string.IsNullOrEmpty(column.SetName))
+                if (column.SetName.HasValue())
                 {
                     sb.AppendLine();
                     sb.AppendLine();
@@ -216,7 +217,7 @@ namespace DbDarwin.Service
                                 var typeLen = string.Empty;
                                 if (IsTypeHaveLength(column.DATA_TYPE))
                                 {
-                                    if (!string.IsNullOrEmpty(column.CHARACTER_MAXIMUM_LENGTH))
+                                    if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
                                         typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
                                 }
 
@@ -226,6 +227,8 @@ namespace DbDarwin.Service
                                     typeLen,
                                     column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
                                 break;
+                            default:
+                                continue;
 
                         }
                     }
@@ -240,7 +243,7 @@ namespace DbDarwin.Service
 
         public static bool IsTypeHaveLength(string type)
         {
-            List<string> types = new List<string>()
+            var types = new List<string>
             {
                  "bigint", "bit", "date", "datetime", "float", "geography", "geometry", "hierarchyid", "image", "int",
                 "money", "ntext", "real", "smalldatetime", "smallint", "smallmoney", "sql_variant", "text", "timestamp",
@@ -253,10 +256,10 @@ namespace DbDarwin.Service
         /// <summary>
         /// Generate Drop ForeignKeys
         /// </summary>
-        /// <param name="foreignKeys"></param>
-        /// <param name="tableName"></param>
-        /// <returns></returns>
-        static string GenerateRemoveForeignKey(List<ForeignKey> foreignKeys, string tableName)
+        /// <param name="foreignKeys">foreignKeys for remove</param>
+        /// <param name="tableName">Table Name</param>
+        /// <returns>sql script</returns>
+        static string GenerateRemoveForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -277,8 +280,8 @@ namespace DbDarwin.Service
         /// </summary>
         /// <param name="tableName">Table Name</param>
         /// <param name="indexes">Index Collection for this table</param>
-        /// <returns></returns>
-        static string GenerateRemoveIndexes(List<Index> indexes, string tableName)
+        /// <returns>sql script to remove object</returns>
+        static string GenerateRemoveIndexes(IEnumerable<Index> indexes, string tableName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -294,7 +297,7 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        static string GenerateRemoveColumns(List<Column> columns, string tableName)
+        static string GenerateRemoveColumns(IEnumerable<Column> columns, string tableName)
         {
             var sb = new StringBuilder();
 
@@ -317,7 +320,7 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        static string GenerateNewForeignKey(List<ForeignKey> foreignKey, string tableName)
+        static string GenerateNewForeignKey(IEnumerable<ForeignKey> foreignKey, string tableName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -355,17 +358,17 @@ namespace DbDarwin.Service
                 sb.Append("\t");
                 var column = columns[index];
                 sb.AppendFormat("{0} {1}{2} {3}", column.COLUMN_NAME, column.DATA_TYPE,
-                    string.IsNullOrEmpty(column.CHARACTER_MAXIMUM_LENGTH)
+                    column.CHARACTER_MAXIMUM_LENGTH.IsEmpty()
                         ? ""
                         : "(" + column.CHARACTER_MAXIMUM_LENGTH + ")",
                     column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
-                if (columns.Count > 1 && index < columns.Count - 1)
+                if (columns.HasMany() && index < columns.Count - 1)
                     sb.AppendLine(",");
             }
 
             sb.AppendLine();
             sb.AppendLine("GO");
-            if (columns.Count > 0)
+            if (columns.Any())
             {
                 sb.Append($"ALTER TABLE {name} SET (LOCK_ESCALATION = TABLE)");
                 sb.AppendLine();
@@ -375,26 +378,25 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        static string GenerateNewIndexes(List<Index> indexes, string tableName)
+        static string GenerateNewIndexes(IEnumerable<Index> indexes, string tableName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
             sb.AppendLine("-------------------- Create New Indexes -------------------");
             sb.AppendLine("-----------------------------------------------------------");
-            for (var i = 0; i < indexes.Count; i++)
+            foreach (var index in indexes)
             {
                 sb.AppendLine("GO");
-                var index = indexes[i];
                 sb.AppendFormat("CREATE {0} NONCLUSTERED INDEX [{1}] ON {2}", index.is_unique.ToBoolean() ? "UNIQUE" : string.Empty,
                     index.Name, tableName);
                 sb.AppendLine("(");
 
-                var spited = index.Columns.Split(new char[] { '|' });
-                for (var index1 = 0; index1 < spited.Length; index1++)
+                var columnsSpited = index.Columns.Split(new char[] { '|' });
+                for (var index1 = 0; index1 < columnsSpited.Length; index1++)
                 {
-                    var c = spited[index1];
-                    sb.Append($"[{c}] ASC");
-                    if (spited.Length > 1 && index1 < spited.Length - 1)
+                    var columnName = columnsSpited[index1];
+                    sb.Append($"[{columnName}] ASC");
+                    if (columnsSpited.Length > 1 && index1 < columnsSpited.Length - 1)
                         sb.AppendLine(",");
                 }
 
@@ -406,7 +408,7 @@ namespace DbDarwin.Service
 
                 sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.To_ON_OFF());
 
-                if (!string.IsNullOrEmpty(index.ignore_dup_key) && index.is_padded.To_ON_OFF() == "ON")
+                if (index.ignore_dup_key.HasAny() && index.is_padded.To_ON_OFF() == "ON")
                 {
                     if (index.is_unique.ToBoolean())
                         sb.AppendFormat(", IGNORE_DUP_KEY = {0}", index.is_padded.To_ON_OFF());
@@ -414,9 +416,9 @@ namespace DbDarwin.Service
                         Console.WriteLine("Ignore duplicate values is valid only for unique indexes");
                 }
 
-                if (!string.IsNullOrEmpty(index.allow_row_locks))
+                if (index.allow_row_locks.HasAny())
                     sb.AppendFormat(", ALLOW_ROW_LOCKS = {0}", index.allow_row_locks.To_ON_OFF());
-                if (!string.IsNullOrEmpty(index.allow_page_locks))
+                if (index.allow_page_locks.HasAny())
                     sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", index.allow_page_locks.To_ON_OFF());
                 if (index.fill_factor > 0)
                     sb.AppendFormat(", FILLFACTOR = {0}", index.fill_factor);

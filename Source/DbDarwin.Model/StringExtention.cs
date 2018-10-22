@@ -14,7 +14,7 @@ namespace DbDarwin.Model
         public static bool ToBoolean(this string str)
         {
             if (str.IsEmpty()) return false;
-            return str.ToLower().Trim() == "true" ? true : false;
+            return str.ToLower().Trim() == "true";
         }
     }
 }

@@ -3,7 +3,7 @@
     /// <summary>
     /// sys.index_columns
     /// </summary>
-    public class index_columns
+    public class IndexColumns
     {
         public int object_id { get; set; }
 
