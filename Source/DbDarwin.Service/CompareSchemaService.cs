@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -25,60 +26,11 @@ namespace DbDarwin.Service
         {
             try
             {
-                var serializer = new XmlSerializer(typeof(List<Table>));
-                List<Table> oldSchema = null;
-                List<Table> newSchema = null;
-                using (var reader = new StreamReader(currentFileName))
-                    oldSchema = (List<Table>)serializer.Deserialize(reader);
-                using (var reader = new StreamReader(newSchemaFilePath))
-                    newSchema = (List<Table>)serializer.Deserialize(reader);
+                var oldSchema = LoadXMLFile(currentFileName);
+                var newSchema = LoadXMLFile(newSchemaFilePath);
 
-                var doc = new XDocument
-                {
-                    Declaration = new XDeclaration("1.0", "UTF-8", "true")
-                };
-                var arrayOfTable = new XElement("ArrayOfTable");
+                CompareAndSave(oldSchema, newSchema, output);
 
-                foreach (var r1 in oldSchema)
-                {
-                    var foundTable = newSchema.FirstOrDefault(x => x.Name == r1.Name);
-                    if (foundTable == null)
-                    {
-                        // Must Delete
-                    }
-                    else
-                    {
-                        var root = new XElement("Table");
-                        root.SetAttributeValue(nameof(r1.Name), r1.Name);
-
-                        var add = new XElement("add");
-                        var navigatorAdd = add.CreateNavigator();
-
-                        var removeColumn = new XElement("remove");
-                        var navigatorRemove = removeColumn.CreateNavigator();
-
-                        var updateElement = new XElement("update");
-                        var navigatorUpdate = updateElement.CreateNavigator();
-
-                        GenerateDifference<Column>(r1.Column, foundTable.Column, navigatorAdd, navigatorRemove, navigatorUpdate);
-                        GenerateDifference<Index>(r1.Index, foundTable.Index, navigatorAdd, navigatorRemove, navigatorUpdate);
-                        GenerateDifference<ForeignKey>(r1.ForeignKey, foundTable.ForeignKey, navigatorAdd, navigatorRemove, navigatorUpdate);
-
-                        if (add.IsEmpty)
-                            root.Add(add);
-
-                        if (removeColumn.IsEmpty)
-                            root.Add(removeColumn);
-
-                        if (updateElement.IsEmpty)
-                            root.Add(updateElement);
-
-                        arrayOfTable.Add(root);
-                    }
-                }
-
-                doc.Add(arrayOfTable);
-                doc.Save(output);
                 Console.WriteLine("Saving To xml");
             }
             catch (Exception ex)
@@ -92,8 +44,64 @@ namespace DbDarwin.Service
             {
                 GC.Collect();
             }
-
             return true;
+        }
+
+        private static void CompareAndSave(IEnumerable<Table> oldSchema, IReadOnlyCollection<Table> newSchema, string output)
+        {
+            var doc = new XDocument
+            {
+                Declaration = new XDeclaration("1.0", "UTF-8", "true")
+            };
+            var arrayOfTable = new XElement("ArrayOfTable");
+
+            foreach (var r1 in oldSchema)
+            {
+                var foundTable = newSchema.FirstOrDefault(x => x.Name == r1.Name);
+                if (foundTable == null)
+                {
+                    // Must Delete
+                }
+                else
+                {
+                    var root = new XElement("Table");
+                    root.SetAttributeValue(nameof(r1.Name), r1.Name);
+
+                    var add = new XElement("add");
+                    var navigatorAdd = add.CreateWriter();
+
+                    var removeColumn = new XElement("remove");
+                    var navigatorRemove = removeColumn.CreateWriter();
+
+                    var updateElement = new XElement("update");
+                    var navigatorUpdate = updateElement.CreateWriter();
+
+                    GenerateDifference<Column>(r1.Column, foundTable.Column, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<Index>(r1.Index, foundTable.Index, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<ForeignKey>(r1.ForeignKey, foundTable.ForeignKey, navigatorAdd, navigatorRemove, navigatorUpdate);
+
+                    if (!add.IsEmpty)
+                        root.Add(add);
+
+                    if (!removeColumn.IsEmpty)
+                        root.Add(removeColumn);
+
+                    if (!updateElement.IsEmpty)
+                        root.Add(updateElement);
+
+                    arrayOfTable.Add(root);
+                }
+            }
+
+            doc.Add(arrayOfTable);
+            doc.Save(output);
+        }
+
+        private static List<Table> LoadXMLFile(string currentFileName)
+        {
+            var serializer = new XmlSerializer(typeof(List<Table>));
+            using (var reader = new StreamReader(currentFileName))
+                return (List<Table>)serializer.Deserialize(reader);
         }
 
         /// <summary>
@@ -152,6 +160,18 @@ namespace DbDarwin.Service
             File.WriteAllText(diffFileOutput, xml);
         }
 
+        public static XElement ToXElement<T>(object obj)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (TextWriter streamWriter = new StreamWriter(memoryStream))
+                {
+                    var xmlSerializer = new XmlSerializer(typeof(T));
+                    xmlSerializer.Serialize(streamWriter, obj);
+                    return XElement.Parse(Encoding.ASCII.GetString(memoryStream.ToArray()));
+                }
+            }
+        }
         /// <summary>
         /// compare objects
         /// </summary>
@@ -164,39 +184,19 @@ namespace DbDarwin.Service
         /// <param name="navigatorRemove">refers to remove element XML</param>
         /// <param name="navigatorUpdate">refers to update element XML</param>
         public static void GenerateDifference<T>(List<T> currentList, List<T> newList,
-            XPathNavigator navigatorAdd, XPathNavigator navigatorRemove, XPathNavigator navigatorUpdate)
+            XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
             var emptyNamespaces = new XmlSerializerNamespaces(new[] {
                 XmlQualifiedName.Empty,
             });
 
-            #region Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
-
-            object tempAdd = null;
-            if (typeof(T) == typeof(Column))
-            {
-                tempAdd = newList.Cast<Column>()
-                   .Except(x => currentList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME)).ToList();
-
-            }
-            else if (typeof(T) == typeof(Index))
-            {
-                tempAdd = newList.Cast<Index>()
-                   .Except(x => currentList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
-            }
-            else if (typeof(T) == typeof(ForeignKey))
-            {
-                tempAdd = newList.Cast<ForeignKey>()
-                   .Except(x => currentList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList().Contains(x.CONSTRAINT_NAME)).ToList();
-            }
-            var mustAdd = (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
-
-            #endregion
+            // Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
+            var mustAdd = FindNewComponent<T>(currentList, newList);
 
             // Add new objects to xml
             foreach (T sqlObject in mustAdd)
             {
-                using (var writer = navigatorAdd.AppendChild())
+                using (var writer = navigatorAdd)
                 {
                     var serializer1 = new XmlSerializer(sqlObject.GetType());
                     writer.WriteWhitespace("");
@@ -224,7 +224,7 @@ namespace DbDarwin.Service
                 var foundObject = (T)Convert.ChangeType(found, typeof(T));
                 if (foundObject == null)
                 {
-                    using (var writer = navigatorRemove.AppendChild())
+                    using (var writer = navigatorRemove)
                     {
                         var serializer1 = new XmlSerializer(c1.GetType());
                         writer.WriteWhitespace("");
@@ -237,7 +237,7 @@ namespace DbDarwin.Service
                     var result = compareLogic.Compare(c1, foundObject);
                     if (!result.AreEqual)
                     {
-                        using (var writer = navigatorUpdate.AppendChild())
+                        using (var writer = navigatorUpdate)
                         {
                             var serializer1 = new XmlSerializer(foundObject.GetType());
                             writer.WriteWhitespace("");
@@ -247,6 +247,21 @@ namespace DbDarwin.Service
                     }
                 }
             }
+        }
+
+        private static List<T> FindNewComponent<T>(List<T> currentList, List<T> newList)
+        {
+            object tempAdd = null;
+            if (typeof(T) == typeof(Column))
+                tempAdd = newList.Cast<Column>()
+                    .Where(x => !currentList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME)).ToList();
+            else if (typeof(T) == typeof(Index))
+                tempAdd = newList.Cast<Index>()
+                    .Where(x => !currentList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
+            else if (typeof(T) == typeof(ForeignKey))
+                tempAdd = newList.Cast<ForeignKey>()
+                    .Where(x => !currentList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList().Contains(x.CONSTRAINT_NAME)).ToList();
+            return (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
         }
     }
 }

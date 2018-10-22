@@ -42,8 +42,8 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void GenerateScripts()
         {
-            GenerateScriptService.GenerateScript(@"F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin\bin\Debug\netcoreapp2.1\Diff v2.xml",
-                //AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+            GenerateScriptService.GenerateScript(
+                AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
                 AppContext.BaseDirectory + "\\output.sql"
                 );
 

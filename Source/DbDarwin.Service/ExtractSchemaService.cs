@@ -11,6 +11,7 @@ namespace DbDarwin.Service
 {
     public class ExtractSchemaService
     {
+
         /// <summary>
         /// extract table schema
         /// </summary>
@@ -28,54 +29,21 @@ namespace DbDarwin.Service
 
                     sql.Open();
                     var allTables = sql.GetSchema("Tables");
-                    var referencesMapped = new List<ForeignKey>();
-                    var systemColumnsMapped = new List<SystemColumns>();
-                    var indexColumnsMapped = new List<IndexColumns>();
-                    var columnsMapped = new List<Column>();
-                    var indexMapped = new List<Index>();
-                    var objectMapped = new List<SqlObject>();
 
-                    using (var da = new SqlDataAdapter())
-                    {
-                        da.SelectCommand = new SqlCommand { Connection = sql };
+                    /// Fetch All Refrences from SQL
+                    var referencesMapped = LoadData<ForeignKey>(sql, "References", Properties.Resources.REFERENTIAL_CONSTRAINTS);
+                    /// Fetch All index_columns from SQL
+                    var indexColumnsMapped = LoadData<IndexColumns>(sql, "index_columns", "SELECT * FROM sys.index_columns");
+                    /// fetch COLUMNS schema
+                    var columnsMapped = LoadData<Column>(sql, "Columns", "select * from INFORMATION_SCHEMA.COLUMNS");
+                    /// Fetch All Index from SQL
+                    var indexMapped = LoadData<Index>(sql, "index_columns", "SELECT * FROM sys.indexes");
+                    /// Fetch All sys.columns from SQL
+                    var systemColumnsMapped = LoadData<SystemColumns>(sql, "allSysColumns", "SELECT * FROM sys.columns");
+                    /// Fetch All Objects from SQL
+                    var objectMapped = LoadData<SqlObject>(sql, "sys.object", "SELECT * FROM sys.objects");
 
-                        // Get All Columns Database
-                        var allColumns = new DataTable("Columns");
-                        var allIndex = new DataTable("Indexes");
-                        var allSqlObjects = new DataTable("Objects");
-                        var allReferences = new DataTable("References");
-                        var allIndexColumns = new DataTable("index_columns");
-                        var allSysColumns = new DataTable("sys.columns");
 
-                        /// fetch COLUMNS schema
-                        da.SelectCommand.CommandText = "select * from INFORMATION_SCHEMA.COLUMNS";
-                        da.Fill(allColumns);
-                        columnsMapped = allColumns.DataTableToList<Column>();
-                        /// Fetch All Index from SQL
-                        da.SelectCommand.CommandText = "SELECT * FROM sys.indexes";
-                        da.Fill(allIndex);
-                        indexMapped = allIndex.DataTableToList<Index>();
-
-                        /// Fetch All Objects from SQL
-                        da.SelectCommand.CommandText = "SELECT * FROM sys.objects";
-                        da.Fill(allSqlObjects);
-                        objectMapped = allSqlObjects.DataTableToList<SqlObject>();
-
-                        /// Fetch All index_columns from SQL
-                        da.SelectCommand.CommandText = "SELECT * FROM sys.index_columns";
-                        da.Fill(allIndexColumns);
-                        indexColumnsMapped = allIndexColumns.DataTableToList<IndexColumns>();
-
-                        /// Fetch All sys.columns from SQL
-                        da.SelectCommand.CommandText = "SELECT * FROM sys.columns";
-                        da.Fill(allSysColumns);
-                        systemColumnsMapped = allSysColumns.DataTableToList<SystemColumns>();
-
-                        /// Fetch All Refrences from SQL
-                        da.SelectCommand.CommandText = Properties.Resources.REFERENTIAL_CONSTRAINTS;
-                        da.Fill(allReferences);
-                        referencesMapped = allReferences.DataTableToList<ForeignKey>();
-                    }
                     // Create Table Model
                     foreach (DataRow row in allTables.Rows)
                     {
@@ -136,6 +104,20 @@ namespace DbDarwin.Service
             }
 
             return true;
+        }
+
+        public static List<T> LoadData<T>(SqlConnection connection, string tableName, string sqlScript) where T : class, new()
+        {
+            using (var da = new SqlDataAdapter())
+            {
+                da.SelectCommand = new SqlCommand { Connection = connection };
+                var dataTable = new DataTable(tableName);
+                da.SelectCommand.CommandText = sqlScript;
+                da.Fill(dataTable);
+                return dataTable.DataTableToList<T>();
+
+
+            }
         }
 
         private static void SaveToFile(IEnumerable<Model.Table> tables, string fileOutput)
