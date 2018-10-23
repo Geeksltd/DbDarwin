@@ -209,30 +209,22 @@ namespace DbDarwin.Service
             };
 
             // Detect Sql Objects Changes
-            foreach (T c1 in currentList)
+            foreach (T currentObject in currentList)
             {
-                object found = null;
-                if (typeof(T) == typeof(Column))
-                    found = newList.Cast<Column>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
-                else if (typeof(T) == typeof(Index))
-                    found = newList.Cast<Index>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
-                else if (typeof(T) == typeof(ForeignKey))
-                    found = newList.Cast<ForeignKey>().FirstOrDefault(x => x.Name == c1.GetType().GetProperty("Name").GetValue(c1).ToString());
-
-                var foundObject = (T)Convert.ChangeType(found, typeof(T));
+                var foundObject = FindRemoveOrUpdate<T>(currentObject, newList);
                 if (foundObject == null)
                 {
                     using (var writer = navigatorRemove)
                     {
-                        var serializer1 = new XmlSerializer(c1.GetType());
+                        var serializer1 = new XmlSerializer(currentObject.GetType());
                         writer.WriteWhitespace("");
-                        serializer1.Serialize(writer, c1, emptyNamespaces);
+                        serializer1.Serialize(writer, currentObject, emptyNamespaces);
                         writer.Close();
                     }
                 }
                 else
                 {
-                    var result = compareLogic.Compare(c1, foundObject);
+                    var result = compareLogic.Compare(currentObject, foundObject);
                     if (!result.AreEqual)
                     {
                         using (var writer = navigatorUpdate)
@@ -245,6 +237,18 @@ namespace DbDarwin.Service
                     }
                 }
             }
+        }
+
+        private static object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
+        {
+            object found = null;
+            if (typeof(T) == typeof(Column))
+                found = newList.Cast<Column>().FirstOrDefault(x => x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+            else if (typeof(T) == typeof(Index))
+                found = newList.Cast<Index>().FirstOrDefault(x => x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+            else if (typeof(T) == typeof(ForeignKey))
+                found = newList.Cast<ForeignKey>().FirstOrDefault(x => x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+            return (T)Convert.ChangeType(found, typeof(T));
         }
 
         private static List<T> FindNewComponent<T>(List<T> currentList, List<T> newList)
