@@ -22,8 +22,6 @@ namespace DbDarwin.UnitTestProject
                 ConnectionString = "Data Source=EPIPC;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "xml2.xml"
             });
-            GenerateDiff();
-            GenerateScripts();
         }
 
         [TestMethod]
