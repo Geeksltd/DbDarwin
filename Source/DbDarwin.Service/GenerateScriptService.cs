@@ -132,7 +132,7 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        static string GenerateUpdateIndexes(List<Index> indexes, string tableName)
+        static string GenerateUpdateIndexes(IEnumerable<Index> indexes, string tableName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -170,7 +170,7 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        static string GenerateUpdateColumns(List<Column> columns, string tableName)
+        static string GenerateUpdateColumns(IEnumerable<Column> columns, string tableName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -343,7 +343,7 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        static string GenerateNewColumns(List<Column> columns, string name)
+        static string GenerateNewColumns(IEnumerable<Column> columns, string name)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -353,19 +353,19 @@ namespace DbDarwin.Service
             sb.AppendFormat("ALTER TABLE {0} ADD ", name);
 
             sb.AppendLine();
-            for (var index = 0; index < columns.Count; index++)
+
+            var columnsBuilder = new StringBuilder();
+            foreach (var column in columns)
             {
-                sb.Append("\t");
-                var column = columns[index];
-                sb.AppendFormat("{0} {1}{2} {3}", column.COLUMN_NAME, column.DATA_TYPE,
+                columnsBuilder.Append("\t");
+                columnsBuilder.AppendFormat("{0} {1}{2} {3}", column.COLUMN_NAME, column.DATA_TYPE,
                     column.CHARACTER_MAXIMUM_LENGTH.IsEmpty()
                         ? ""
                         : "(" + column.CHARACTER_MAXIMUM_LENGTH + ")",
                     column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
-                if (columns.HasMany() && index < columns.Count - 1)
-                    sb.AppendLine(",");
+                columnsBuilder.AppendLine(",");
             }
-
+            sb.Append(columnsBuilder.ToString().Trim(new[] { ',' }));
             sb.AppendLine();
             sb.AppendLine("GO");
             if (columns.Any())

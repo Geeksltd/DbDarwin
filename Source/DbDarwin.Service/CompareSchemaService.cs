@@ -23,14 +23,14 @@ namespace DbDarwin.Service
         /// <param name="currentFileName">Current XML File</param>
         /// <param name="newSchemaFilePath">New XML File Want To Compare</param>
         /// <param name="output">Output File XML diff</param>
-        public static bool StartCompare(string currentFileName, string newSchemaFilePath, string output)
+        public static bool StartCompare(GenerateDiffFile model)
         {
             try
             {
-                var oldSchema = LoadXMLFile(currentFileName);
-                var newSchema = LoadXMLFile(newSchemaFilePath);
+                var oldSchema = LoadXMLFile(model.CurrentFile);
+                var newSchema = LoadXMLFile(model.NewSchemaFile);
 
-                CompareAndSave(oldSchema, newSchema, output);
+                CompareAndSave(oldSchema, newSchema, model.OutputFile);
 
                 Console.WriteLine("Saving To xml");
             }
@@ -115,51 +115,59 @@ namespace DbDarwin.Service
         /// <param name="diffFileOutput">Output new XML file diff</param>
         public static void TransformationDiffFile(Transformation model)
         {
-        
-            var serializer = new XmlSerializer(typeof(List<Table>));
-            List<Table> result1 = null;
-            using (var reader = new StreamReader(model.CurrentDiffFile))
-                result1 = (List<Table>)serializer.Deserialize(reader);
 
-            if (result1 != null)
+            var serializer = new XmlSerializer(typeof(List<Table>));
+            List<Table> currentDiffSchema = null;
+            using (var reader = new StreamReader(model.CurrentDiffFile))
+                currentDiffSchema = (List<Table>)serializer.Deserialize(reader);
+
+            if (currentDiffSchema != null)
             {
                 if (model.TableName.HasValue())
                 {
-                    var table = result1.FirstOrDefault(x => string.Equals(x.Name, model.FromName, StringComparison.CurrentCultureIgnoreCase));
+                    var table = currentDiffSchema.FirstOrDefault(x =>
+                        string.Equals(x.Name, model.FromName, StringComparison.CurrentCultureIgnoreCase));
                     if (table != null)
                         table.SetName = model.ToName;
                     else
                     {
                         table = new Table { Name = model.FromName, SetName = model.ToName };
-                        result1.Add(table);
+                        currentDiffSchema.Add(table);
                     }
                 }
                 else
                 {
-                    var table = result1.FirstOrDefault(x => string.Equals(x.Name, model.TableName, StringComparison.CurrentCultureIgnoreCase));
+                    var table = currentDiffSchema.FirstOrDefault(x =>
+                        string.Equals(x.Name, model.TableName, StringComparison.CurrentCultureIgnoreCase));
                     if (table != null)
                     {
-                        var column = table.Update?.Column.FirstOrDefault(x =>
-                            string.Equals(x.COLUMN_NAME, model.FromName, StringComparison.CurrentCultureIgnoreCase));
-                        if (column != null)
-                            column.SetName = model.ToName;
+                        if (table.Update == null)
+                        {
+                            var column = new Column { COLUMN_NAME = model.FromName, SetName = model.ToName };
+                            table.Update = new Table();
+                            table.Update.Column.Add(column);
+                        }
                         else
                         {
-                            column = new Column { COLUMN_NAME = model.FromName, SetName = model.ToName };
-                            if (table.Update == null)
-                                table.Update = new Table();
-
-                            table.Update.Column.Add(column);
-
+                            var column = table.Update.Column.FirstOrDefault(x =>
+                                string.Equals(x.COLUMN_NAME, model.FromName,
+                                    StringComparison.CurrentCultureIgnoreCase));
+                            SetColumnName(column, model);
                         }
                     }
                 }
             }
 
+
             var sw2 = new StringWriter();
-            serializer.Serialize(sw2, result1);
+            serializer.Serialize(sw2, currentDiffSchema);
             var xml = sw2.ToString();
             File.WriteAllText(model.MigrateSqlFile, xml);
+        }
+
+        private static void SetColumnName(Column column, Transformation model)
+        {
+            if (column != null) column.SetName = model.ToName;
         }
 
         public static XElement ToXElement<T>(object obj)

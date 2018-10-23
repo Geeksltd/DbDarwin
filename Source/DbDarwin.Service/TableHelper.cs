@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using Olive;
 
 namespace DbDarwin.Service
@@ -51,9 +52,9 @@ namespace DbDarwin.Service
 
                             }
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-                            continue;
+                            Trace.WriteLine(ex.Message);
                         }
                     }
 

@@ -13,6 +13,8 @@ namespace DbDarwin.Model
     [XmlRoot("Table")]
     public class Table
     {
+
+
         [XmlAttribute]
         public string Name { get; set; }
 
@@ -37,9 +39,6 @@ namespace DbDarwin.Model
 
         [XmlElement("update")]
         public Table Update { get; set; }
-
-
-
     }
 
 

@@ -29,10 +29,12 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void GenerateDiff()
         {
-            CompareSchemaService.StartCompare(
-                AppDomain.CurrentDomain.BaseDirectory + "\\" + "xml1.xml",
-                AppDomain.CurrentDomain.BaseDirectory + "\\" + "xml2.xml",
-                AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
+            CompareSchemaService.StartCompare(new GenerateDiffFile
+            {
+                CurrentFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "xml1.xml",
+                NewSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "xml2.xml",
+                OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
+            });
             Assert.IsTrue(true);
         }
 

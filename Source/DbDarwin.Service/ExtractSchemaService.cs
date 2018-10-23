@@ -124,7 +124,7 @@ namespace DbDarwin.Service
 
         private static void SaveToFile(IEnumerable<Model.Table> tables, string fileOutput)
         {
-            var ser = new XmlSerializer(typeof(List<DbDarwin.Model.Table>));
+            var ser = new XmlSerializer(typeof(List<Model.Table>));
             var sw2 = new StringWriter();
             ser.Serialize(sw2, tables);
             var xml = sw2.ToString();

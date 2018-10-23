@@ -25,9 +25,9 @@ namespace DbDarwin
                     }
                     else if (first.ToLower() == "generate-diff")
                     {
-                        if (IsArgumentGenerateValid(argList, out var currentFile, out var newSchemaFile,
-                            out var outputFile))
-                            CompareSchemaService.StartCompare(currentFile, newSchemaFile, outputFile);
+                        var model = IsArgumentGenerateDiffFileValid(argList);
+                        if (model.IsValid)
+                            CompareSchemaService.StartCompare(model);
                     }
                     else if (first.ToLower() == "generate-script")
                     {
@@ -54,12 +54,12 @@ namespace DbDarwin
             // Read -out parameter
             model.MigrateSqlFile = ReadArgument("-out", argList, "-out parameter is requirement");
             // Read table name parameter
-            model.TableName = ReadArgument("table", argList, string.Empty, false);
+            var notRequerment = false;
+            model.TableName = ReadArgument("table", argList, string.Empty, notRequerment);
             // Read from name parameter
             model.FromName = ReadArgument("from", argList, "from parameter is requirement");
             // Read from name parameter
             model.ToName = ReadArgument("to", argList, "to parameter is requirement");
-
             return model;
         }
 
@@ -78,30 +78,28 @@ namespace DbDarwin
 
         static ExtractSchema IsArgumentExtractSchemaValid(List<string> argList)
         {
-            var model = new ExtractSchema();
             Console.WriteLine("Start Extract Schema...");
-            // Read -connect parameter
-            model.ConnectionString = ReadArgument("-connect", argList, "-connect parameter is requirement");
-            // Read -out parameter
-            model.OutputFile = ReadArgument("-out", argList, "-out parameter is requirement");
-
-            return model;
-
-
+            return new ExtractSchema
+            {
+                // Read -connect parameter
+                ConnectionString = ReadArgument("-connect", argList, "-connect parameter is requirement"),
+                // Read -out parameter
+                OutputFile = ReadArgument("-out", argList, "-out parameter is requirement")
+            };
         }
 
-        static bool IsArgumentGenerateValid(List<string> argList, out string currentFile, out string newSchemaFile, out string outputFile)
+        static GenerateDiffFile IsArgumentGenerateDiffFileValid(List<string> argList)
         {
             Console.WriteLine("Start generate the differences...");
-            // Read -from parameter
-            currentFile = ReadArgument("-from", argList, "-from parameter is requirement");
-            // Read -to parameter
-            newSchemaFile = ReadArgument("-to", argList, "-to parameter is requirement");
-            // Read -out parameter
-            outputFile = ReadArgument("-out", argList, "-out parameter is requirement");
-
-            return currentFile.HasValue() && newSchemaFile.HasValue() &&
-                   outputFile.HasValue();
+            return new GenerateDiffFile
+            {
+                // Read -from parameter
+                CurrentFile = ReadArgument("-from", argList, "-from parameter is requirement"),
+                // Read -to parameter
+                NewSchemaFile = ReadArgument("-to", argList, "-to parameter is requirement"),
+                // Read -out parameter
+                OutputFile = ReadArgument("-out", argList, "-out parameter is requirement")
+            };
         }
 
         static string ReadArgument(string argument, List<string> argList, string message, bool requirement = true)
