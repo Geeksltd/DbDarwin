@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using DbDarwin.Model.Command;
 
 namespace DbDarwin.Service
 {
@@ -18,13 +19,14 @@ namespace DbDarwin.Service
         /// <param name="connectionString">Connection string</param>
         /// <param name="fileOutput">output file</param>
         /// <returns>can be successful it is true</returns>
-        public static bool ExtractSchema(string connectionString, string fileOutput)
+        public static bool ExtractSchema(ExtractSchema model)
         {
+
             // Create Connection to database
             var tables = new List<DbDarwin.Model.Table>();
             try
             {
-                using (var sql = new System.Data.SqlClient.SqlConnection(connectionString))
+                using (var sql = new System.Data.SqlClient.SqlConnection(model.ConnectionString))
                 {
 
                     sql.Open();
@@ -88,7 +90,7 @@ namespace DbDarwin.Service
                     }
 
                     // Create Serialize Object and save as XML file
-                    SaveToFile(tables, fileOutput);
+                    SaveToFile(tables, model.OutputFile);
                 }
             }
             catch (Exception ex)

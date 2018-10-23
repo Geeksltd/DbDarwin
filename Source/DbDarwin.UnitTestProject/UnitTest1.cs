@@ -1,6 +1,7 @@
 using DbDarwin.Service;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using DbDarwin.Model.Command;
 
 namespace DbDarwin.UnitTestProject
 {
@@ -10,8 +11,17 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void ExtractSchema()
         {
-            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30", "xml1.xml");
-            ExtractSchemaService.ExtractSchema(@"Data Source=EPIPC;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30", "xml2.xml");
+            ExtractSchemaService.ExtractSchema(new ExtractSchema
+            {
+                ConnectionString = "Data Source=EPIPC;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
+                OutputFile = "xml1.xml"
+            }
+            );
+            ExtractSchemaService.ExtractSchema(new ExtractSchema
+            {
+                ConnectionString = "Data Source=EPIPC;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30",
+                OutputFile = "xml2.xml"
+            });
             GenerateDiff();
             GenerateScripts();
         }
@@ -29,13 +39,14 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void TransformationForRenameTableNameDiff()
         {
-            CompareSchemaService.TransformationDiffFile(
-
-                AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
-                "Table_1",
-                "343",
-                "3434",
-                AppDomain.CurrentDomain.BaseDirectory + "\\diff2.xml");
+            CompareSchemaService.TransformationDiffFile(new Transformation
+            {
+                CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                TableName = "Table_1",
+                FromName = "343",
+                ToName = "3434",
+                MigrateSqlFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff2.xml"
+            });
             Assert.IsTrue(true);
         }
 
@@ -43,10 +54,11 @@ namespace DbDarwin.UnitTestProject
         public void GenerateScripts()
         {
             GenerateScriptService.GenerateScript(
-                AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
-                AppContext.BaseDirectory + "\\output.sql"
-                );
-
+                new GenerateScript
+                {
+                    CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                    MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
+                });
             Assert.IsTrue(true);
         }
     }

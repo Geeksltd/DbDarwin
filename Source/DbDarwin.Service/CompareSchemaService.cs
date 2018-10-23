@@ -10,6 +10,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Xml.XPath;
+using DbDarwin.Model.Command;
 using GCop.Core;
 
 namespace DbDarwin.Service
@@ -112,38 +113,39 @@ namespace DbDarwin.Service
         /// <param name="fromName">First Name</param>
         /// <param name="toName">Replace Name</param>
         /// <param name="diffFileOutput">Output new XML file diff</param>
-        public static void TransformationDiffFile(string diffFile, string tableName, string fromName, string toName, string diffFileOutput)
+        public static void TransformationDiffFile(Transformation model)
         {
+        
             var serializer = new XmlSerializer(typeof(List<Table>));
             List<Table> result1 = null;
-            using (var reader = new StreamReader(diffFile))
+            using (var reader = new StreamReader(model.CurrentDiffFile))
                 result1 = (List<Table>)serializer.Deserialize(reader);
 
             if (result1 != null)
             {
-                if (tableName.HasValue())
+                if (model.TableName.HasValue())
                 {
-                    var table = result1.FirstOrDefault(x => string.Equals(x.Name, fromName, StringComparison.CurrentCultureIgnoreCase));
+                    var table = result1.FirstOrDefault(x => string.Equals(x.Name, model.FromName, StringComparison.CurrentCultureIgnoreCase));
                     if (table != null)
-                        table.SetName = toName;
+                        table.SetName = model.ToName;
                     else
                     {
-                        table = new Table { Name = fromName, SetName = toName };
+                        table = new Table { Name = model.FromName, SetName = model.ToName };
                         result1.Add(table);
                     }
                 }
                 else
                 {
-                    var table = result1.FirstOrDefault(x => string.Equals(x.Name, tableName, StringComparison.CurrentCultureIgnoreCase));
+                    var table = result1.FirstOrDefault(x => string.Equals(x.Name, model.TableName, StringComparison.CurrentCultureIgnoreCase));
                     if (table != null)
                     {
                         var column = table.Update?.Column.FirstOrDefault(x =>
-                            string.Equals(x.COLUMN_NAME, fromName, StringComparison.CurrentCultureIgnoreCase));
+                            string.Equals(x.COLUMN_NAME, model.FromName, StringComparison.CurrentCultureIgnoreCase));
                         if (column != null)
-                            column.SetName = toName;
+                            column.SetName = model.ToName;
                         else
                         {
-                            column = new Column { COLUMN_NAME = fromName, SetName = toName };
+                            column = new Column { COLUMN_NAME = model.FromName, SetName = model.ToName };
                             if (table.Update == null)
                                 table.Update = new Table();
 
@@ -157,7 +159,7 @@ namespace DbDarwin.Service
             var sw2 = new StringWriter();
             serializer.Serialize(sw2, result1);
             var xml = sw2.ToString();
-            File.WriteAllText(diffFileOutput, xml);
+            File.WriteAllText(model.MigrateSqlFile, xml);
         }
 
         public static XElement ToXElement<T>(object obj)
@@ -254,13 +256,13 @@ namespace DbDarwin.Service
             object tempAdd = null;
             if (typeof(T) == typeof(Column))
                 tempAdd = newList.Cast<Column>()
-                    .Where(x => !currentList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME)).ToList();
+                    .Except(x => currentList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME)).ToList();
             else if (typeof(T) == typeof(Index))
                 tempAdd = newList.Cast<Index>()
-                    .Where(x => !currentList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
+                    .Except(x => currentList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
             else if (typeof(T) == typeof(ForeignKey))
                 tempAdd = newList.Cast<ForeignKey>()
-                    .Where(x => !currentList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList().Contains(x.CONSTRAINT_NAME)).ToList();
+                    .Except(x => currentList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList().Contains(x.CONSTRAINT_NAME)).ToList();
             return (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
         }
     }

@@ -7,21 +7,21 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
+using DbDarwin.Model.Command;
 using Olive;
 
 namespace DbDarwin.Service
 {
     public class GenerateScriptService
     {
-        public static void GenerateScript(string diffrenceXMLFile, string outputFile)
+        public static void GenerateScript(GenerateScript model)
         {
             var serializer = new XmlSerializer(typeof(List<Table>));
             List<Table> diffFile = null;
-            using (var reader = new StreamReader(diffrenceXMLFile))
+            using (var reader = new StreamReader(model.CurrentDiffFile))
                 diffFile = (List<Table>)serializer.Deserialize(reader);
 
             var sb = new StringBuilder();
-
             sb.AppendLine("BEGIN TRANSACTION");
             sb.AppendLine("SET QUOTED_IDENTIFIER ON");
             sb.AppendLine("SET ARITHABORT ON");
@@ -87,7 +87,7 @@ namespace DbDarwin.Service
 
             sb.AppendLine("COMMIT");
 
-            File.WriteAllText(outputFile, sb.ToString());
+            File.WriteAllText(model.MigrateSqlFile, sb.ToString());
         }
 
         static string GenerateUpdateForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName)
