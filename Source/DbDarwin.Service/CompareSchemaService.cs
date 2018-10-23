@@ -170,18 +170,6 @@ namespace DbDarwin.Service
             if (column != null) column.SetName = model.ToName;
         }
 
-        public static XElement ToXElement<T>(object obj)
-        {
-            using (var memoryStream = new MemoryStream())
-            {
-                using (TextWriter streamWriter = new StreamWriter(memoryStream))
-                {
-                    var xmlSerializer = new XmlSerializer(typeof(T));
-                    xmlSerializer.Serialize(streamWriter, obj);
-                    return XElement.Parse(Encoding.ASCII.GetString(memoryStream.ToArray()));
-                }
-            }
-        }
         /// <summary>
         /// compare objects
         /// </summary>
