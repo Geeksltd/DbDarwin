@@ -30,7 +30,10 @@ namespace DbDarwin.Service
                 var oldSchema = LoadXMLFile(model.CurrentFile);
                 var newSchema = LoadXMLFile(model.NewSchemaFile);
 
-                CompareAndSave(oldSchema, newSchema, model.OutputFile);
+                CompareAndSave(
+                    oldSchema.OrderBy(x => x.Name).AsQueryable(),
+                    newSchema.OrderBy(x => x.Name).AsQueryable(),
+                    model.OutputFile);
 
                 Console.WriteLine("Saving To xml");
             }
@@ -45,10 +48,11 @@ namespace DbDarwin.Service
             {
                 GC.Collect();
             }
+
             return true;
         }
 
-        private static void CompareAndSave(IEnumerable<Table> oldSchema, IReadOnlyCollection<Table> newSchema, string output)
+        private static void CompareAndSave(IEnumerable<Table> oldSchema, IEnumerable<Table> newSchema, string output)
         {
             var doc = new XDocument
             {
@@ -77,9 +81,16 @@ namespace DbDarwin.Service
                     var updateElement = new XElement("update");
                     var navigatorUpdate = updateElement.CreateWriter();
 
-                    GenerateDifference<Column>(sourceTable.Column, foundTable.Column, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifference<Index>(sourceTable.Index, foundTable.Index, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifference<ForeignKey>(sourceTable.ForeignKey, foundTable.ForeignKey, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<Index>(
+                        sourceTable.PrimaryKey == null ? new List<Index>() : new List<Index> { sourceTable.PrimaryKey },
+                        foundTable.PrimaryKey == null ? new List<Index>() : new List<Index> { foundTable.PrimaryKey }, navigatorAdd,
+                        navigatorRemove, navigatorUpdate);
+                    GenerateDifference<Column>(sourceTable.Column, foundTable.Column, navigatorAdd, navigatorRemove,
+                        navigatorUpdate);
+                    GenerateDifference<Index>(sourceTable.Index, foundTable.Index, navigatorAdd, navigatorRemove,
+                        navigatorUpdate);
+                    GenerateDifference<ForeignKey>(sourceTable.ForeignKey, foundTable.ForeignKey, navigatorAdd,
+                        navigatorRemove, navigatorUpdate);
 
                     navigatorAdd.Flush();
                     navigatorAdd.Close();
@@ -193,7 +204,8 @@ namespace DbDarwin.Service
         public static void GenerateDifference<T>(List<T> currentList, List<T> newList,
             XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
-            var emptyNamespaces = new XmlSerializerNamespaces(new[] {
+            var emptyNamespaces = new XmlSerializerNamespaces(new[]
+            {
                 XmlQualifiedName.Empty,
             });
 
@@ -201,12 +213,13 @@ namespace DbDarwin.Service
             var mustAdd = FindNewComponent<T>(currentList, newList);
 
             // Add new objects to xml
-            foreach (T sqlObject in mustAdd)
-            {
-                var serializer1 = new XmlSerializer(sqlObject.GetType());
-                navigatorAdd.WriteWhitespace("");
-                serializer1.Serialize(navigatorAdd, sqlObject, emptyNamespaces);
-            }
+            if (mustAdd != null)
+                foreach (T sqlObject in mustAdd)
+                {
+                    var serializer1 = new XmlSerializer(sqlObject.GetType());
+                    navigatorAdd.WriteWhitespace("");
+                    serializer1.Serialize(navigatorAdd, sqlObject, emptyNamespaces);
+                }
 
             var compareLogic = new CompareLogic
             {
@@ -214,52 +227,63 @@ namespace DbDarwin.Service
             };
 
             // Detect Sql Objects Changes
-            foreach (T currentObject in currentList)
-            {
-                var foundObject = FindRemoveOrUpdate<T>(currentObject, newList);
-                if (foundObject == null)
+            if (currentList != null)
+                foreach (T currentObject in currentList)
                 {
-                    var serializer1 = new XmlSerializer(currentObject.GetType());
-                    navigatorRemove.WriteWhitespace("");
-                    serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
-                }
-                else
-                {
-                    var result = compareLogic.Compare(currentObject, foundObject);
-                    if (!result.AreEqual)
+                    var foundObject = FindRemoveOrUpdate<T>(currentObject, newList);
+                    if (foundObject == null)
                     {
-                        var serializer1 = new XmlSerializer(foundObject.GetType());
-                        navigatorUpdate.WriteWhitespace("");
-                        serializer1.Serialize(navigatorUpdate, foundObject, emptyNamespaces);
+                        var serializer1 = new XmlSerializer(currentObject.GetType());
+                        navigatorRemove.WriteWhitespace("");
+                        serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
+                    }
+                    else
+                    {
+                        var result = compareLogic.Compare(currentObject, foundObject);
+                        if (!result.AreEqual)
+                        {
+                            var serializer1 = new XmlSerializer(foundObject.GetType());
+                            navigatorUpdate.WriteWhitespace("");
+                            serializer1.Serialize(navigatorUpdate, foundObject, emptyNamespaces);
+                        }
                     }
                 }
-            }
         }
 
         private static object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
         {
             object found = null;
             if (typeof(T) == typeof(Column))
-                found = newList.Cast<Column>().FirstOrDefault(x => x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+                found = newList.Cast<Column>().FirstOrDefault(x =>
+                    x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
             else if (typeof(T) == typeof(Index))
-                found = newList.Cast<Index>().FirstOrDefault(x => x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+                found = newList.Cast<Index>().FirstOrDefault(x =>
+                    x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
             else if (typeof(T) == typeof(ForeignKey))
-                found = newList.Cast<ForeignKey>().FirstOrDefault(x => x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+                found = newList.Cast<ForeignKey>().FirstOrDefault(x =>
+                    x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
             return (T)Convert.ChangeType(found, typeof(T));
         }
 
         private static List<T> FindNewComponent<T>(List<T> currentList, List<T> newList)
         {
             object tempAdd = null;
+            if (newList == null)
+                return new List<T>();
+            if (currentList == null)
+                return newList;
             if (typeof(T) == typeof(Column))
                 tempAdd = newList.Cast<Column>()
-                    .Except(x => currentList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME)).ToList();
+                    .Except(x => currentList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME))
+                    .ToList();
             else if (typeof(T) == typeof(Index))
                 tempAdd = newList.Cast<Index>()
                     .Except(x => currentList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
             else if (typeof(T) == typeof(ForeignKey))
                 tempAdd = newList.Cast<ForeignKey>()
-                    .Except(x => currentList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList().Contains(x.CONSTRAINT_NAME)).ToList();
+                    .Except(x =>
+                        currentList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList()
+                            .Contains(x.CONSTRAINT_NAME)).ToList();
             return (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
         }
     }

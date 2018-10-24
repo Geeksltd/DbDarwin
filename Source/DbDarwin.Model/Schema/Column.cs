@@ -31,14 +31,14 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "ColumnDefault")]
         public string COLUMN_DEFAULT { get; set; }
 
-        [DefaultValue("YES")]
+        // [DefaultValue("YES")]
         [XmlAttribute(AttributeName = "IsNullable")]
         public string IS_NULLABLE { get; set; }
 
-        public bool ShouldSerializeIS_NULLABLE()
-        {
-            return IS_NULLABLE.HasValue() && IS_NULLABLE == "NO";
-        }
+        //public bool ShouldSerializeIS_NULLABLE()
+        //{
+        //    return IS_NULLABLE.HasValue() && IS_NULLABLE == "NO";
+        //}
 
         [XmlAttribute(AttributeName = "DataType")]
         public string DATA_TYPE { get; set; }

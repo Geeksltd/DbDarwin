@@ -26,6 +26,10 @@ namespace DbDarwin.Model
 
         [XmlElement("Index")]
         public List<Index> Index { get; set; }
+
+        [XmlElement("PrimaryKey")]
+        public PrimaryKey PrimaryKey { get; set; }
+
         [XmlElement("ForeignKey")]
         public List<ForeignKey> ForeignKey { get; set; }
 
@@ -39,6 +43,7 @@ namespace DbDarwin.Model
 
         [XmlElement("update")]
         public Table Update { get; set; }
+
     }
 
 

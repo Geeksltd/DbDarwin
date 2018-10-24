@@ -46,6 +46,12 @@ namespace DbDarwin.Service
                     var objectMapped = LoadData<SqlObject>(sql, "sys.object", "SELECT * FROM sys.objects");
 
 
+                    var constraintInformation = (from ind in indexMapped
+                                                 join ic in indexColumnsMapped on new { ind.object_id, ind.index_id } equals new
+                                                 { ic.object_id, ic.index_id }
+                                                 join col in systemColumnsMapped on new { ic.object_id, ic.column_id } equals new
+                                                 { col.object_id, col.column_id }
+                                                 select new ConstraintInformationModel { Index = ind, IndexColumn = ic, SystemColumn = col }).ToList();
                     // Create Table Model
                     foreach (DataRow row in allTables.Rows)
                     {
@@ -55,24 +61,8 @@ namespace DbDarwin.Service
                         var tableId = objectMapped.Where(x => x.name == tableName).Select(x => x.object_id)
                             .FirstOrDefault();
 
-                        var result = (from ind in indexMapped
-                                      join ic in indexColumnsMapped on new { ind.object_id, ind.index_id } equals new
-                                      { ic.object_id, ic.index_id }
-                                      join col in systemColumnsMapped on new { ic.object_id, ic.column_id } equals new
-                                      { col.object_id, col.column_id }
-                                      where ind.object_id == tableId
-                                      select new { ind, ic, col }).ToList().GroupBy(x => x.ind.name);
-
-                        var existsIndex = new List<Index>();
-                        foreach (var index in result)
-                        {
-                            var resultIndex = index.FirstOrDefault()?.ind;
-                            if (resultIndex != null)
-                                resultIndex.Columns = index.ToList().OrderBy(x => x.ic.key_ordinal)
-                                    .Select(x => x.col.name)
-                                    .Aggregate((x, y) => x + "|" + y).Trim('|');
-                            existsIndex.Add(resultIndex);
-                        }
+                        var indexes = FetchIndexes(constraintInformation, tableId);
+                        var primaryKey = FetchPrimary(constraintInformation, tableId);
 
                         var myDt = new DbDarwin.Model.Table
                         {
@@ -81,7 +71,8 @@ namespace DbDarwin.Service
                                     x.TABLE_NAME == row["TABLE_NAME"].ToString() &&
                                     x.TABLE_SCHEMA == row["TABLE_SCHEMA"].ToString())
                                 .ToList(),
-                            Index = existsIndex,
+                            Index = indexes,
+                            PrimaryKey = primaryKey,
                             ForeignKey = referencesMapped.Where(x =>
                                 x.CONSTRAINT_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList()
 
@@ -90,7 +81,7 @@ namespace DbDarwin.Service
                     }
 
                     // Create Serialize Object and save as XML file
-                    SaveToFile(tables, model.OutputFile);
+                    SaveToFile(tables.OrderBy(x => x.Name).ToList(), model.OutputFile);
                 }
             }
             catch (Exception ex)
@@ -106,6 +97,43 @@ namespace DbDarwin.Service
             }
 
             return true;
+        }
+
+        private static List<Index> FetchIndexes(List<ConstraintInformationModel> constraintInformation, int tableId)
+        {
+            var indexRows = constraintInformation
+                .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "False")
+                .GroupBy(x => x.Index.name);
+            var existsIndex = new List<Index>();
+            foreach (var index in indexRows)
+            {
+                var resultIndex = index.FirstOrDefault()?.Index;
+                if (resultIndex != null)
+                    resultIndex.Columns = index.ToList().OrderBy(x => x.IndexColumn.key_ordinal)
+                        .Select(x => x.SystemColumn.name)
+                        .Aggregate((x, y) => x + "|" + y).Trim('|');
+                existsIndex.Add(resultIndex);
+            }
+
+            return existsIndex;
+        }
+
+        private static PrimaryKey FetchPrimary(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
+        {
+            var indexRows = constraintInformation
+                .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "True")
+                .GroupBy(x => x.Index.name);
+            var index = indexRows.FirstOrDefault();
+            if (index != null)
+            {
+                var resultIndex = index.FirstOrDefault()?.Index;
+                if (resultIndex != null)
+                    resultIndex.Columns = index.ToList().OrderBy(x => x.IndexColumn.key_ordinal)
+                        .Select(x => x.SystemColumn.name)
+                        .Aggregate((x, y) => x + "|" + y).Trim('|');
+                return (PrimaryKey)resultIndex;
+            }
+            return null;
         }
 
         public static List<T> LoadData<T>(SqlConnection connection, string tableName, string sqlScript) where T : class, new()

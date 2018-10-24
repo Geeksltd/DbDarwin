@@ -69,4 +69,11 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "FilterDefinition")]
         public string filter_definition { get; set; }
     }
+
+
+    [Serializable]
+    public class PrimaryKey : Index
+    {
+
+    }
 }
