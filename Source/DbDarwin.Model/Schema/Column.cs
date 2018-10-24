@@ -1,5 +1,7 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Xml.Serialization;
+using Olive;
 
 namespace DbDarwin.Model.Schema
 {
@@ -29,8 +31,14 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "ColumnDefault")]
         public string COLUMN_DEFAULT { get; set; }
 
+        // [DefaultValue("Dog")] 
         [XmlAttribute(AttributeName = "IsNullable")]
         public string IS_NULLABLE { get; set; }
+
+        public bool ShouldSerializeIS_NULLABLE()
+        {
+            return IS_NULLABLE.HasValue() && IS_NULLABLE == "NO";
+        }
 
         [XmlAttribute(AttributeName = "DataType")]
         public string DATA_TYPE { get; set; }
