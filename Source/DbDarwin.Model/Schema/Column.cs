@@ -23,61 +23,61 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "Name")]
         public string COLUMN_NAME { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "OrdinalPosition")]
         public string ORDINAL_POSITION { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "ColumnDefault")]
         public string COLUMN_DEFAULT { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "IsNullable")]
         public string IS_NULLABLE { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "DataType")]
         public string DATA_TYPE { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "CharacterMaximumLength")]
         public string CHARACTER_MAXIMUM_LENGTH { get; set; }
 
-        [XmlAttribute]
+        [XmlIgnore]
         public string CHARACTER_OCTET_LENGTH { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "NumericPrecision")]
         public string NUMERIC_PRECISION { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "NumericPrecisionRadix")]
         public string NUMERIC_PRECISION_RADIX { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "NumericScale")]
         public string NUMERIC_SCALE { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "DatetimePrecision")]
         public string DATETIME_PRECISION { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "CharacterSetCatalog")]
         public string CHARACTER_SET_CATALOG { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "CharacterSetSchema")]
         public string CHARACTER_SET_SCHEMA { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "CharacterSetName")]
         public string CHARACTER_SET_NAME { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "CollationCatalog")]
         public string COLLATION_CATALOG { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "CollationSchema")]
         public string COLLATION_SCHEMA { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "CollationName")]
         public string COLLATION_NAME { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "DomainCatalog")]
         public string DOMAIN_CATALOG { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "DomainSchema")]
         public string DOMAIN_SCHEMA { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "DomainName")]
         public string DOMAIN_NAME { get; set; }
     }
 }

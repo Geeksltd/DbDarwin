@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbDarwin.Service", "DbDarwi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbDarwin.Model", "DbDarwin.Model\DbDarwin.Model.csproj", "{8DD4DD82-4CE1-4C84-83D4-846A821E6DB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbDarwin.UnitTestProject", "DbDarwin.UnitTestProject\DbDarwin.UnitTestProject.csproj", "{C847A8BF-B7C1-48D1-B90F-351E7CA571C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbDarwin.UnitTestProject", "DbDarwin.UnitTestProject\DbDarwin.UnitTestProject.csproj", "{C847A8BF-B7C1-48D1-B90F-351E7CA571C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -17,46 +17,51 @@ namespace DbDarwin.Model.Schema
         [XmlIgnore]
         public string CONSTRAINT_CATALOG { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "ConstraintSchema")]
         public string CONSTRAINT_SCHEMA { get; set; }
 
         public string Name => CONSTRAINT_NAME;
+
         [XmlAttribute(AttributeName = "Name")]
         public string CONSTRAINT_NAME { get; set; }
 
         [XmlIgnore]
         public string UNIQUE_CONSTRAINT_CATALOG { get; set; }
+
         [XmlIgnore]
         public string UNIQUE_CONSTRAINT_SCHEMA { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "UniqueConstraintName")]
         public string UNIQUE_CONSTRAINT_NAME { get; set; }
-        [XmlAttribute]
+
+        [XmlAttribute(AttributeName = "MatchOption")]
         public string MATCH_OPTION { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "UpdateRule")]
         public string UPDATE_RULE { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "DeleteRule")]
         public string DELETE_RULE { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "TableName")]
         public string TABLE_NAME { get; set; }
-        [XmlAttribute]
+
+        [XmlAttribute(AttributeName = "ColumnName")]
         public string COLUMN_NAME { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "OrdinalPosition")]
         public int ORDINAL_POSITION { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "RefTableSchema")]
         public string Ref_TABLE_SCHEMA { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "RefTableName")]
         public string Ref_TABLE_NAME { get; set; }
-        [XmlAttribute]
+
+        [XmlAttribute(AttributeName = "RefColumnName")]
         public string Ref_COLUMN_NAME { get; set; }
 
-        [XmlAttribute]
+        [XmlAttribute(AttributeName = "RefOrdinalPosition")]
         public int Ref_ORDINAL_POSITION { get; set; }
     }
 }

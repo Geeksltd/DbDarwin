@@ -13,7 +13,7 @@ namespace DbDarwin.UnitTestProject
         {
             ExtractSchemaService.ExtractSchema(new ExtractSchema
             {
-                ConnectionString = "Data Source=EPIPC;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
+                ConnectionString = "Data Source=EPIPC;Initial Catalog=MSharp.Mvc2.Temp;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "xml1.xml"
             }
             );
