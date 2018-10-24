@@ -31,7 +31,7 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "ColumnDefault")]
         public string COLUMN_DEFAULT { get; set; }
 
-        // [DefaultValue("Dog")] 
+        [DefaultValue("YES")]
         [XmlAttribute(AttributeName = "IsNullable")]
         public string IS_NULLABLE { get; set; }
 

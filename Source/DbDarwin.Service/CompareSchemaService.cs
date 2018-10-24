@@ -56,9 +56,9 @@ namespace DbDarwin.Service
             };
             var arrayOfTable = new XElement("ArrayOfTable");
 
-            foreach (var r1 in oldSchema)
+            foreach (var sourceTable in oldSchema)
             {
-                var foundTable = newSchema.FirstOrDefault(x => x.Name == r1.Name);
+                var foundTable = newSchema.FirstOrDefault(x => x.Name == sourceTable.Name);
                 if (foundTable == null)
                 {
                     // Must Delete
@@ -66,7 +66,7 @@ namespace DbDarwin.Service
                 else
                 {
                     var root = new XElement("Table");
-                    root.SetAttributeValue(nameof(r1.Name), r1.Name);
+                    root.SetAttributeValue(nameof(sourceTable.Name), sourceTable.Name);
 
                     var add = new XElement("add");
                     var navigatorAdd = add.CreateWriter();
@@ -77,9 +77,18 @@ namespace DbDarwin.Service
                     var updateElement = new XElement("update");
                     var navigatorUpdate = updateElement.CreateWriter();
 
-                    GenerateDifference<Column>(r1.Column, foundTable.Column, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifference<Index>(r1.Index, foundTable.Index, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifference<ForeignKey>(r1.ForeignKey, foundTable.ForeignKey, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<Column>(sourceTable.Column, foundTable.Column, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<Index>(sourceTable.Index, foundTable.Index, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<ForeignKey>(sourceTable.ForeignKey, foundTable.ForeignKey, navigatorAdd, navigatorRemove, navigatorUpdate);
+
+                    navigatorAdd.Flush();
+                    navigatorAdd.Close();
+
+                    navigatorRemove.Flush();
+                    navigatorRemove.Close();
+
+                    navigatorUpdate.Flush();
+                    navigatorUpdate.Close();
 
                     if (!add.IsEmpty)
                         root.Add(add);
@@ -194,13 +203,9 @@ namespace DbDarwin.Service
             // Add new objects to xml
             foreach (T sqlObject in mustAdd)
             {
-                using (var writer = navigatorAdd)
-                {
-                    var serializer1 = new XmlSerializer(sqlObject.GetType());
-                    writer.WriteWhitespace("");
-                    serializer1.Serialize(writer, sqlObject, emptyNamespaces);
-                    writer.Close();
-                }
+                var serializer1 = new XmlSerializer(sqlObject.GetType());
+                navigatorAdd.WriteWhitespace("");
+                serializer1.Serialize(navigatorAdd, sqlObject, emptyNamespaces);
             }
 
             var compareLogic = new CompareLogic
@@ -214,26 +219,18 @@ namespace DbDarwin.Service
                 var foundObject = FindRemoveOrUpdate<T>(currentObject, newList);
                 if (foundObject == null)
                 {
-                    using (var writer = navigatorRemove)
-                    {
-                        var serializer1 = new XmlSerializer(currentObject.GetType());
-                        writer.WriteWhitespace("");
-                        serializer1.Serialize(writer, currentObject, emptyNamespaces);
-                        writer.Close();
-                    }
+                    var serializer1 = new XmlSerializer(currentObject.GetType());
+                    navigatorRemove.WriteWhitespace("");
+                    serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
                 }
                 else
                 {
                     var result = compareLogic.Compare(currentObject, foundObject);
                     if (!result.AreEqual)
                     {
-                        using (var writer = navigatorUpdate)
-                        {
-                            var serializer1 = new XmlSerializer(foundObject.GetType());
-                            writer.WriteWhitespace("");
-                            serializer1.Serialize(writer, foundObject, emptyNamespaces);
-                            writer.Close();
-                        }
+                        var serializer1 = new XmlSerializer(foundObject.GetType());
+                        navigatorUpdate.WriteWhitespace("");
+                        serializer1.Serialize(navigatorUpdate, foundObject, emptyNamespaces);
                     }
                 }
             }
