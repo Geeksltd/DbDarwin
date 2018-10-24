@@ -121,7 +121,7 @@ namespace DbDarwin.Service
                 var resultCompare = compareLogic.Compare(new Index(), key);
                 if (!resultCompare.AreEqual)
                 {
-                    sb.AppendLine(string.Format("ALTER TABLE {0} DROP CONSTRAINT {1}", tableName, key.Name));
+                    sb.AppendLine(string.Format("ALTER TABLE {0} DROP CONSTRAINT [{1}]", tableName, key.Name));
                     sb.AppendLine(GenerateNewForeignKey(new List<ForeignKey> { key }, tableName));
                 }
 
