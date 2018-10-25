@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using DbDarwin.Model.Command;
+using PowerMapper;
 
 namespace DbDarwin.Service
 {
@@ -131,7 +132,7 @@ namespace DbDarwin.Service
                     resultIndex.Columns = index.ToList().OrderBy(x => x.IndexColumn.key_ordinal)
                         .Select(x => x.SystemColumn.name)
                         .Aggregate((x, y) => x + "|" + y).Trim('|');
-                return (PrimaryKey)resultIndex;
+                return resultIndex.MapTo<PrimaryKey>();
             }
             return null;
         }

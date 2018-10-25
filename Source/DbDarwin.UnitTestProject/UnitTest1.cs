@@ -15,8 +15,7 @@ namespace DbDarwin.UnitTestProject
             {
                 ConnectionString = "Data Source=EPIPC;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "xml1.xml"
-            }
-            );
+            });
             ExtractSchemaService.ExtractSchema(new ExtractSchema
             {
                 ConnectionString = "Data Source=EPIPC;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30",
@@ -36,6 +35,29 @@ namespace DbDarwin.UnitTestProject
             Assert.IsTrue(true);
         }
 
+
+
+        [TestMethod]
+        public void GenerateScripts()
+        {
+            GenerateScriptService.GenerateScript(
+                new GenerateScript
+                {
+                    CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                    MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
+                });
+            Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        public void TestAll()
+        {
+            ExtractSchema();
+            GenerateDiff();
+            GenerateScripts();
+            Assert.IsTrue(true);
+        }
+
         [TestMethod]
         public void TransformationForRenameTableNameDiff()
         {
@@ -47,18 +69,6 @@ namespace DbDarwin.UnitTestProject
                 ToName = "3434",
                 MigrateSqlFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff2.xml"
             });
-            Assert.IsTrue(true);
-        }
-
-        [TestMethod]
-        public void GenerateScripts()
-        {
-            GenerateScriptService.GenerateScript(
-                new GenerateScript
-                {
-                    CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
-                    MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
-                });
             Assert.IsTrue(true);
         }
     }

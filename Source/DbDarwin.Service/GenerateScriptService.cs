@@ -66,6 +66,8 @@ namespace DbDarwin.Service
                         sb.AppendLine("GO");
                         if (table.Add.Column.Any())
                             sb.Append(GenerateNewColumns(table.Add.Column, table.Name));
+                        if (table.Add.PrimaryKey != null)
+                            sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name));
                         if (table.Add.Index.Any())
                             sb.Append(GenerateNewIndexes(table.Add.Index, table.Name));
                         if (table.Add.ForeignKey.Any())
@@ -88,6 +90,50 @@ namespace DbDarwin.Service
             sb.AppendLine("COMMIT");
 
             File.WriteAllText(model.MigrateSqlFile, sb.ToString());
+        }
+
+        private static string GenerateNewPrimaryKey(PrimaryKey key, string tableName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Create New PrimaryKey ---------------");
+            sb.AppendLine("-----------------------------------------------------------");
+
+
+            sb.AppendLine("GO");
+            sb.AppendLine(string.Format("ALTER TABLE [{0}]  WITH CHECK ADD CONSTRAINT", tableName));
+            sb.AppendLine(string.Format("\t[{0}] PRIMARY KEY {1}", key.Name, key.type_desc));
+            sb.AppendLine("\t(");
+            sb.AppendLine("\t" + key.Columns.Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Aggregate((x, y) => $"[{x}] {(y.HasValue() ? $", [{y}]" : "")}").Trim(new[] { ',' }));
+            sb.Append("\t)");
+            sb.Append(" WITH ( ");
+
+            sb.AppendFormat("PAD_INDEX = {0}", key.is_padded.To_ON_OFF());
+
+
+            if (key.ignore_dup_key.HasAny() && key.ignore_dup_key.To_ON_OFF() == "OFF")
+            {
+                if (!key.is_unique.ToBoolean())
+                    sb.AppendFormat(", IGNORE_DUP_KEY = {0}", key.ignore_dup_key.To_ON_OFF());
+                else
+                    Console.WriteLine("Ignore duplicate values ON not valid primary key");
+            }
+
+            if (key.allow_row_locks.HasAny())
+                sb.AppendFormat(", ALLOW_ROW_LOCKS = {0}", key.allow_row_locks.To_ON_OFF());
+            if (key.allow_page_locks.HasAny())
+                sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", key.allow_page_locks.To_ON_OFF());
+            if (key.fill_factor > 0)
+                sb.AppendFormat(", FILLFACTOR = {0}", key.fill_factor);
+
+
+            sb.AppendLine(") ON [PRIMARY]");
+            sb.AppendLine("GO");
+            sb.AppendLine($"ALTER TABLE {tableName} SET (LOCK_ESCALATION = TABLE)");
+
+
+            return sb.ToString();
         }
 
         static string GenerateUpdateForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName)
@@ -329,7 +375,7 @@ namespace DbDarwin.Service
             foreach (var key in foreignKey)
             {
                 sb.AppendLine("GO");
-                sb.AppendFormat("ALTER TABLE [{0}]  WITH CHECK ADD  CONSTRAINT [{1}] FOREIGN KEY([{2}]) \r\n", tableName, key.Name, key.COLUMN_NAME);
+                sb.AppendFormat("ALTER TABLE [{0}]  WITH CHECK ADD CONSTRAINT [{1}] FOREIGN KEY([{2}]) \r\n", tableName, key.Name, key.COLUMN_NAME);
                 sb.AppendFormat("REFERENCES [{0}] ", key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
 
                 sb.AppendLine(string.Format("([{0}]) ON UPDATE {1} ON DELETE {2} ", key.COLUMN_NAME, key.UPDATE_RULE,
@@ -387,8 +433,11 @@ namespace DbDarwin.Service
             foreach (var index in indexes)
             {
                 sb.AppendLine("GO");
-                sb.AppendFormat("CREATE {0} NONCLUSTERED INDEX [{1}] ON {2}", index.is_unique.ToBoolean() ? "UNIQUE" : string.Empty,
-                    index.Name, tableName);
+                sb.AppendFormat("CREATE {0} {1} INDEX [{2}] ON {3}", index.is_unique.ToBoolean() ? "UNIQUE" : string.Empty,
+                    index.type_desc,
+                    index.Name,
+                    tableName);
+
                 sb.AppendLine("(");
 
                 var columnsSpited = index.Columns.Split(new char[] { '|' });
@@ -408,10 +457,10 @@ namespace DbDarwin.Service
 
                 sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.To_ON_OFF());
 
-                if (index.ignore_dup_key.HasAny() && index.is_padded.To_ON_OFF() == "ON")
+                if (index.ignore_dup_key.HasAny() && index.ignore_dup_key.To_ON_OFF() == "ON")
                 {
                     if (index.is_unique.ToBoolean())
-                        sb.AppendFormat(", IGNORE_DUP_KEY = {0}", index.is_padded.To_ON_OFF());
+                        sb.AppendFormat(", IGNORE_DUP_KEY = {0}", index.ignore_dup_key.To_ON_OFF());
                     else
                         Console.WriteLine("Ignore duplicate values is valid only for unique indexes");
                 }

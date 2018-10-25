@@ -2111,7 +2111,8 @@
           "CompareNETObjects": "4.57.0",
           "DbDarwin.Model": "1.0.0",
           "GCop.All.Geeks": "2.3.9",
-          "Olive": "1.0.121"
+          "Olive": "1.0.121",
+          "PowerMapper": "1.0.0"
         },
         "compile": {
           "bin/placeholder/DbDarwin.Service.dll": {}
