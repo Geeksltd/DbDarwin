@@ -25,7 +25,8 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "Name")]
         public string COLUMN_NAME { get; set; }
 
-        [XmlAttribute(AttributeName = "OrdinalPosition")]
+        [XmlIgnore]
+        //[XmlAttribute(AttributeName = "OrdinalPosition")]
         public string ORDINAL_POSITION { get; set; }
 
         [XmlAttribute(AttributeName = "ColumnDefault")]
