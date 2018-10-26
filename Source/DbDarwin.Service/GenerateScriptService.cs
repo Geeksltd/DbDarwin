@@ -92,13 +92,41 @@ namespace DbDarwin.Service
             File.WriteAllText(model.MigrateSqlFile, sb.ToString());
         }
 
+
+        /// <summary>
+        /// Find PK name by table name and delete PK
+        /// </summary>
+        /// <param name="tableName">Table Name</param>
+        /// <returns>SQL Script</returns>
+        public static string GenerateDeletePkBeforeAddOrUpdate(string tableName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("------------------------------------------------------------------");
+            sb.AppendLine("------------- Remove PrimaryKey Before Add Or Update -------------");
+            sb.AppendLine("------------------------------------------------------------------");
+            sb.AppendFormat(@"
+IF EXISTS (SELECT name FROM sys.key_constraints WHERE type = 'PK' AND OBJECT_NAME(parent_object_id) = N'{0}')
+BEGIN
+	PRINT 'Found one PK on table {0} and must delete it before add new or update'
+	DECLARE @SQLString nvarchar(MAX)
+	DECLARE @ContraintName nvarchar(1000) = (SELECT name FROM sys.key_constraints WHERE type = 'PK' AND OBJECT_NAME(parent_object_id) = N'{0}')
+	SET @SQLString = N'ALTER TABLE [{0}] DROP CONSTRAINT ['+ @ContraintName+']'
+	EXECUTE sp_executesql @SQLString
+END
+", tableName);
+            return sb.ToString();
+        }
+
         private static string GenerateNewPrimaryKey(PrimaryKey key, string tableName)
         {
             var sb = new StringBuilder();
+
+
+            sb.AppendLine(GenerateDeletePkBeforeAddOrUpdate(tableName));
+
             sb.AppendLine("-----------------------------------------------------------");
             sb.AppendLine("-------------------- Create New PrimaryKey ---------------");
             sb.AppendLine("-----------------------------------------------------------");
-
 
             sb.AppendLine("GO");
             sb.AppendLine(string.Format("ALTER TABLE [{0}]  WITH CHECK ADD CONSTRAINT", tableName));
