@@ -81,9 +81,9 @@ namespace DbDarwin.Service
                     var updateElement = new XElement("update");
                     var navigatorUpdate = updateElement.CreateWriter();
 
-                    GenerateDifference<Index>(
-                        sourceTable.PrimaryKey == null ? new List<Index>() : new List<Index> { sourceTable.PrimaryKey },
-                        foundTable.PrimaryKey == null ? new List<Index>() : new List<Index> { foundTable.PrimaryKey }, navigatorAdd,
+                    GenerateDifference<PrimaryKey>(
+                        sourceTable.PrimaryKey == null ? new List<PrimaryKey>() : new List<PrimaryKey> { sourceTable.PrimaryKey },
+                        foundTable.PrimaryKey == null ? new List<PrimaryKey>() : new List<PrimaryKey> { foundTable.PrimaryKey }, navigatorAdd,
                         navigatorRemove, navigatorUpdate);
                     GenerateDifference<Column>(sourceTable.Column, foundTable.Column, navigatorAdd, navigatorRemove,
                         navigatorUpdate);

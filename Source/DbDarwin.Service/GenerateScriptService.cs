@@ -133,7 +133,8 @@ END
             sb.AppendLine(string.Format("\t[{0}] PRIMARY KEY {1}", key.Name, key.type_desc));
             sb.AppendLine("\t(");
             sb.AppendLine("\t" + key.Columns.Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Aggregate((x, y) => $"[{x}] {(y.HasValue() ? $", [{y}]" : "")}").Trim(new[] { ',' }));
+                              .Aggregate((x, y) => $"[{x}] {(y.HasValue() ? $", [{y}]" : "")}")
+                              .Trim(new[] { ',' }));
             sb.Append("\t)");
             sb.Append(" WITH ( ");
 
@@ -280,6 +281,10 @@ END
                         switch (dif.PropertyName)
                         {
                             case nameof(column.CHARACTER_MAXIMUM_LENGTH):
+                            case nameof(column.NUMERIC_PRECISION):
+                            case nameof(column.NUMERIC_SCALE):
+                            case nameof(column.DATA_TYPE):
+
                                 sb.AppendLine();
                                 sb.AppendLine();
                                 sb.AppendLine();
@@ -291,15 +296,21 @@ END
                                 var typeLen = string.Empty;
                                 if (IsTypeHaveLength(column.DATA_TYPE))
                                 {
-                                    if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
-                                        typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
-                                }
+                                    switch (column.DATA_TYPE.ToLower())
+                                    {
+                                        case "decimal":
+                                        case "numeric":
+                                            typeLen = $"({column.NUMERIC_PRECISION},{column.NUMERIC_SCALE})";
+                                            break;
+                                        default:
+                                            if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
+                                                typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
+                                            break;
+                                    }
 
-                                sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2} {3} {4};", tableName,
-                                    column.Name,
-                                    column.DATA_TYPE,
-                                    typeLen,
-                                    column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                                }
+                                sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name, column.DATA_TYPE);
+                                sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
                                 break;
                             default:
                                 continue;
@@ -432,14 +443,30 @@ END
             foreach (var column in columns)
             {
                 columnsBuilder.Append("\t");
-                columnsBuilder.AppendFormat("{0} {1}{2} {3}", column.COLUMN_NAME, column.DATA_TYPE,
-                    column.CHARACTER_MAXIMUM_LENGTH.IsEmpty()
-                        ? ""
-                        : "(" + column.CHARACTER_MAXIMUM_LENGTH + ")",
-                    column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                columnsBuilder.AppendFormat("{0} {1}", column.COLUMN_NAME, column.DATA_TYPE);
+
+                var typeLen = string.Empty;
+                if (IsTypeHaveLength(column.DATA_TYPE))
+                {
+                    switch (column.DATA_TYPE.ToLower())
+                    {
+                        case "decimal":
+                        case "numeric":
+                            typeLen = $"({column.NUMERIC_PRECISION},{column.NUMERIC_SCALE})";
+                            break;
+                        default:
+                            if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
+                                typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
+                            break;
+                    }
+
+
+                }
+                columnsBuilder.AppendFormat("{0} {1}", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+
                 columnsBuilder.AppendLine(",");
             }
-            sb.Append(columnsBuilder.ToString().Trim(new[] { ',' }));
+            sb.Append(columnsBuilder.ToString().Trim(new[] { ',', '\r', '\n' }));
             sb.AppendLine();
             sb.AppendLine("GO");
             if (columns.Any())
