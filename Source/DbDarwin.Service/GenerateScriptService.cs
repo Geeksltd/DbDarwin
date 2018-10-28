@@ -276,14 +276,17 @@ END
                 var resultCompare = compareLogic.Compare(new Column(), column);
                 if (!resultCompare.AreEqual)
                 {
-                    var listPropetyChanged = resultCompare.Differences.Select(x => x.PropertyName);
-                    var detectChanges = new List<string>()
+                    var listPropetyChanged = resultCompare.Differences.Select(x => x.PropertyName).ToList();
+                    var detectChanges = new List<string>
                     {
-                        nameof(column.CHARACTER_MAXIMUM_LENGTH), nameof(column.NUMERIC_PRECISION), nameof(column
-                            .NUMERIC_SCALE),
-                        nameof(column.DATA_TYPE)
+                        nameof(column.CHARACTER_MAXIMUM_LENGTH),
+                        nameof(column.NUMERIC_PRECISION),
+                        nameof(column.NUMERIC_SCALE),
+                        nameof(column.DATA_TYPE),
+                        nameof(column.COLUMN_DEFAULT),
                     };
-                    if (listPropetyChanged.Intersect(detectChanges).Any())
+                    var intersected = listPropetyChanged.Intersect(detectChanges).ToList();
+                    if (intersected.Any())
                     {
 
                         sb.AppendLine();
@@ -294,10 +297,26 @@ END
                         sb.AppendLine();
                         sb.AppendLine();
                         sb.AppendLine("GO");
-                        var typeLen = GenerateLength(column);
-                        sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name,
-                            column.DATA_TYPE);
-                        sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+
+
+                 
+                            var typeLen = GenerateLength(column);
+                            sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name,
+                                column.DATA_TYPE);
+                            sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                            sb.AppendLine();
+                            sb.AppendLine("GO");
+                        
+
+                        if (listPropetyChanged.Contains(nameof(column.COLUMN_DEFAULT)))
+                        {
+                            sb.AppendLine();
+                            sb.AppendLine(string.Format(
+                                "ALTER TABLE [{0}] ADD  CONSTRAINT [DF_{0}_{1}]  DEFAULT {2} FOR [{1}]", tableName,
+                                column.Name, column.COLUMN_DEFAULT));
+                            sb.AppendLine("GO");
+                        }
+
                     }
                 }
                 sb.AppendLine();
