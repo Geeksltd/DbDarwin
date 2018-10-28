@@ -294,26 +294,7 @@ END
                         sb.AppendLine();
                         sb.AppendLine();
                         sb.AppendLine("GO");
-                        var typeLen = string.Empty;
-                        if (IsTypeHaveLength(column.DATA_TYPE))
-                        {
-                            switch (column.DATA_TYPE.ToLower())
-                            {
-                                case "decimal":
-                                case "numeric":
-                                    typeLen = $"({column.NUMERIC_PRECISION},{column.NUMERIC_SCALE})";
-                                    break;
-                                case "datetimeoffset":
-                                case "datetime2":
-                                    typeLen = $"({column.DATETIME_PRECISION})";
-                                    break;
-                                default:
-                                    if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
-                                        typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
-                                    break;
-                            }
-                        }
-
+                        var typeLen = GenerateLength(column);
                         sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name,
                             column.DATA_TYPE);
                         sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
@@ -427,14 +408,39 @@ END
             return sb.ToString();
         }
 
-        static string GenerateNewColumns(IEnumerable<Column> columns, string name)
+        static string GenerateLength(Column column)
+        {
+            var typeLen = string.Empty;
+            if (IsTypeHaveLength(column.DATA_TYPE))
+            {
+                switch (column.DATA_TYPE.ToLower())
+                {
+                    case "decimal":
+                    case "numeric":
+                        typeLen = $"({column.NUMERIC_PRECISION},{column.NUMERIC_SCALE})";
+                        break;
+                    case "datetimeoffset":
+                    case "datetime2":
+                        typeLen = $"({column.DATETIME_PRECISION})";
+                        break;
+                    default:
+                        if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
+                            typeLen = $"({(column.CHARACTER_MAXIMUM_LENGTH == "-1" ? "MAX" : column.CHARACTER_MAXIMUM_LENGTH)})";
+                        break;
+                }
+            }
+            return typeLen;
+
+        }
+
+        static string GenerateNewColumns(IEnumerable<Column> columns, string tableName)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
             sb.AppendLine("-------------------- Create New Columns -------------------");
             sb.AppendLine("-----------------------------------------------------------");
 
-            sb.AppendFormat("ALTER TABLE {0} ADD ", name);
+            sb.AppendFormat("ALTER TABLE {0} ADD ", tableName);
 
             sb.AppendLine();
 
@@ -442,39 +448,22 @@ END
             foreach (var column in columns)
             {
                 columnsBuilder.Append("\t");
-                columnsBuilder.AppendFormat("{0} {1}", column.COLUMN_NAME, column.DATA_TYPE);
-
-                var typeLen = string.Empty;
-                if (IsTypeHaveLength(column.DATA_TYPE))
-                {
-                    switch (column.DATA_TYPE.ToLower())
-                    {
-                        case "decimal":
-                        case "numeric":
-                            typeLen = $"({column.NUMERIC_PRECISION},{column.NUMERIC_SCALE})";
-                            break;
-                        case "datetimeoffset":
-                        case "datetime2":
-                            typeLen = $"({column.DATETIME_PRECISION})";
-                            break;
-                        default:
-                            if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
-                                typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
-                            break;
-                    }
-
-
-                }
+                columnsBuilder.AppendFormat("[{0}] [{1}]", column.COLUMN_NAME, column.DATA_TYPE);
+                var typeLen = GenerateLength(column);
                 columnsBuilder.AppendFormat("{0} {1}", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                if (column.COLUMN_DEFAULT.HasValue())
+                    columnsBuilder.AppendFormat(" CONSTRAINT [DF_{0}_{1}] DEFAULT ({2})", tableName, column.Name, column.COLUMN_DEFAULT);
 
                 columnsBuilder.AppendLine(",");
             }
             sb.Append(columnsBuilder.ToString().Trim(new[] { ',', '\r', '\n' }));
             sb.AppendLine();
             sb.AppendLine("GO");
+
+
             if (columns.Any())
             {
-                sb.Append($"ALTER TABLE {name} SET (LOCK_ESCALATION = TABLE)");
+                sb.Append($"ALTER TABLE {tableName} SET (LOCK_ESCALATION = TABLE)");
                 sb.AppendLine();
                 sb.AppendLine("GO");
             }
