@@ -276,53 +276,52 @@ END
                 var resultCompare = compareLogic.Compare(new Column(), column);
                 if (!resultCompare.AreEqual)
                 {
-                    foreach (var dif in resultCompare.Differences)
+                    var listPropetyChanged = resultCompare.Differences.Select(x => x.PropertyName);
+                    var detectChanges = new List<string>()
                     {
-                        switch (dif.PropertyName)
+                        nameof(column.CHARACTER_MAXIMUM_LENGTH), nameof(column.NUMERIC_PRECISION), nameof(column
+                            .NUMERIC_SCALE),
+                        nameof(column.DATA_TYPE)
+                    };
+                    if (listPropetyChanged.Intersect(detectChanges).Any())
+                    {
+
+                        sb.AppendLine();
+                        sb.AppendLine();
+                        sb.AppendLine();
+                        sb.AppendLine("GO");
+                        sb.AppendLine("PRINT 'Updating Column Type and Length...'");
+                        sb.AppendLine();
+                        sb.AppendLine();
+                        sb.AppendLine("GO");
+                        var typeLen = string.Empty;
+                        if (IsTypeHaveLength(column.DATA_TYPE))
                         {
-                            case nameof(column.CHARACTER_MAXIMUM_LENGTH):
-                            case nameof(column.NUMERIC_PRECISION):
-                            case nameof(column.NUMERIC_SCALE):
-                            case nameof(column.DATA_TYPE):
-
-                                sb.AppendLine();
-                                sb.AppendLine();
-                                sb.AppendLine();
-                                sb.AppendLine("GO");
-                                sb.AppendLine("PRINT 'Updating Column Type and Length...'");
-                                sb.AppendLine();
-                                sb.AppendLine();
-                                sb.AppendLine("GO");
-                                var typeLen = string.Empty;
-                                if (IsTypeHaveLength(column.DATA_TYPE))
-                                {
-                                    switch (column.DATA_TYPE.ToLower())
-                                    {
-                                        case "decimal":
-                                        case "numeric":
-                                            typeLen = $"({column.NUMERIC_PRECISION},{column.NUMERIC_SCALE})";
-                                            break;
-                                        default:
-                                            if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
-                                                typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
-                                            break;
-                                    }
-
-                                }
-                                sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name, column.DATA_TYPE);
-                                sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
-                                break;
-                            default:
-                                continue;
-
+                            switch (column.DATA_TYPE.ToLower())
+                            {
+                                case "decimal":
+                                case "numeric":
+                                    typeLen = $"({column.NUMERIC_PRECISION},{column.NUMERIC_SCALE})";
+                                    break;
+                                case "datetimeoffset":
+                                case "datetime2":
+                                    typeLen = $"({column.DATETIME_PRECISION})";
+                                    break;
+                                default:
+                                    if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
+                                        typeLen = "(" + column.CHARACTER_MAXIMUM_LENGTH + ")";
+                                    break;
+                            }
                         }
+
+                        sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name,
+                            column.DATA_TYPE);
+                        sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
                     }
                 }
-
                 sb.AppendLine();
                 sb.AppendLine("GO");
             }
-
             return sb.ToString();
         }
 
@@ -453,6 +452,10 @@ END
                         case "decimal":
                         case "numeric":
                             typeLen = $"({column.NUMERIC_PRECISION},{column.NUMERIC_SCALE})";
+                            break;
+                        case "datetimeoffset":
+                        case "datetime2":
+                            typeLen = $"({column.DATETIME_PRECISION})";
                             break;
                         default:
                             if (column.CHARACTER_MAXIMUM_LENGTH.HasValue())
