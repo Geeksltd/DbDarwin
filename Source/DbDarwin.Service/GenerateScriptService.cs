@@ -319,7 +319,8 @@ END
                         sb.AppendLine();
                         sb.AppendLine("GO");
 
-
+                        sb.AppendLine(GenerateDeleteConstraintBeforeAddOrUpdate(tableName,
+                            $"DF_{tableName}_{column.Name}"));
 
                         var typeLen = GenerateLength(column);
                         sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name,
@@ -331,8 +332,7 @@ END
 
                         if (listPropetyChanged.Contains(nameof(column.COLUMN_DEFAULT)))
                         {
-                            sb.AppendLine(GenerateDeleteConstraintBeforeAddOrUpdate(tableName,
-                                $"DF_{tableName}_{column.Name}"));
+
                             sb.AppendLine();
                             sb.AppendLine(string.Format(
                                 "ALTER TABLE [{0}] ADD  CONSTRAINT [DF_{0}_{1}]  DEFAULT {2} FOR [{1}]", tableName,
