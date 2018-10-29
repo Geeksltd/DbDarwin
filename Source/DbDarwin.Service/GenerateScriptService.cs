@@ -117,6 +117,27 @@ END
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Find Constraint by table name and delete Constraint
+        /// </summary>
+        /// <param name="tableName">Table Name</param>
+        /// <param name="constraintName">Constraint name</param>
+        /// <returns>SQL Script</returns>
+        public static string GenerateDeleteConstraintBeforeAddOrUpdate(string tableName, string constraintName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("------------------------------------------------------------------");
+            sb.AppendLine("------------- Remove Constraint Before Add Or Update -------------");
+            sb.AppendLine("------------------------------------------------------------------");
+            sb.AppendFormat(@"
+IF EXISTS (SELECT name FROM sys.default_constraints WHERE type = 'D' AND OBJECT_NAME(parent_object_id) = N'{0}' and name = N'{1}')
+BEGIN
+	ALTER TABLE [{0}] DROP CONSTRAINT [{1}];
+END
+", tableName, constraintName);
+            return sb.ToString();
+        }
+
         private static string GenerateNewPrimaryKey(PrimaryKey key, string tableName)
         {
             var sb = new StringBuilder();
@@ -299,17 +320,19 @@ END
                         sb.AppendLine("GO");
 
 
-                 
-                            var typeLen = GenerateLength(column);
-                            sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name,
-                                column.DATA_TYPE);
-                            sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
-                            sb.AppendLine();
-                            sb.AppendLine("GO");
-                        
+
+                        var typeLen = GenerateLength(column);
+                        sb.AppendFormat("ALTER TABLE [{0}] ALTER COLUMN [{1}] {2}", tableName, column.Name,
+                            column.DATA_TYPE);
+                        sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                        sb.AppendLine();
+                        sb.AppendLine("GO");
+
 
                         if (listPropetyChanged.Contains(nameof(column.COLUMN_DEFAULT)))
                         {
+                            sb.AppendLine(GenerateDeleteConstraintBeforeAddOrUpdate(tableName,
+                                $"DF_{tableName}_{column.Name}"));
                             sb.AppendLine();
                             sb.AppendLine(string.Format(
                                 "ALTER TABLE [{0}] ADD  CONSTRAINT [DF_{0}_{1}]  DEFAULT {2} FOR [{1}]", tableName,
