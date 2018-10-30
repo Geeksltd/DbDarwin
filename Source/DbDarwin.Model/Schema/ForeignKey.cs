@@ -31,6 +31,7 @@ namespace DbDarwin.Model.Schema
         [XmlIgnore]
         public string UNIQUE_CONSTRAINT_SCHEMA { get; set; }
 
+        [XmlIgnore]
         [XmlAttribute(AttributeName = "UniqueConstraintName")]
         public string UNIQUE_CONSTRAINT_NAME { get; set; }
 

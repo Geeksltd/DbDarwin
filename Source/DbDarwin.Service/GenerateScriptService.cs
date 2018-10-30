@@ -437,11 +437,8 @@ END
             {
                 sb.AppendLine("GO");
                 sb.AppendFormat("ALTER TABLE [{0}]  WITH CHECK ADD CONSTRAINT [{1}] FOREIGN KEY([{2}]) \r\n", tableName, key.Name, key.COLUMN_NAME);
-                sb.AppendFormat("REFERENCES [{0}] ", key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
-
-                sb.AppendLine(string.Format("([{0}]) ON UPDATE {1} ON DELETE {2} ", key.COLUMN_NAME, key.UPDATE_RULE,
-                    key.DELETE_RULE));
-
+                sb.AppendFormat("REFERENCES [{0}] ([{1}]) ", key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
+                sb.AppendLine(string.Format("ON UPDATE {0} ON DELETE {1} ", key.UPDATE_RULE, key.DELETE_RULE));
                 sb.AppendLine("\r\nGO");
                 sb.AppendFormat("ALTER TABLE [{0}] CHECK CONSTRAINT [{1}]", tableName, key.Name);
                 sb.AppendLine("\r\nGO");
