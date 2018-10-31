@@ -27,12 +27,12 @@ namespace DbDarwin.Service
         {
             try
             {
-                var oldSchema = LoadXMLFile(model.CurrentFile);
-                var newSchema = LoadXMLFile(model.NewSchemaFile);
+                var targetSchema = LoadXMLFile(model.TargetSchemaFile);
+                var sourceSchema = LoadXMLFile(model.SourceSchemaFile);
 
                 CompareAndSave(
-                    oldSchema.OrderBy(x => x.Name).AsQueryable(),
-                    newSchema.OrderBy(x => x.Name).AsQueryable(),
+                    sourceSchema.OrderBy(x => x.Name).AsQueryable(),
+                    targetSchema.OrderBy(x => x.Name).AsQueryable(),
                     model.OutputFile);
 
                 Console.WriteLine("Saving To xml");
@@ -52,7 +52,7 @@ namespace DbDarwin.Service
             return true;
         }
 
-        private static void CompareAndSave(IEnumerable<Table> oldSchema, IEnumerable<Table> newSchema, string output)
+        private static void CompareAndSave(IEnumerable<Table> sourceSchema,IEnumerable<Table> targetSchema,  string output)
         {
             var doc = new XDocument
             {
@@ -60,9 +60,9 @@ namespace DbDarwin.Service
             };
             var arrayOfTable = new XElement("ArrayOfTable");
 
-            foreach (var sourceTable in oldSchema)
+            foreach (var sourceTable in sourceSchema)
             {
-                var foundTable = newSchema.FirstOrDefault(x => x.Name == sourceTable.Name);
+                var foundTable = targetSchema.FirstOrDefault(x => x.Name == sourceTable.Name);
                 if (foundTable == null)
                 {
                     // Must Delete
@@ -85,11 +85,11 @@ namespace DbDarwin.Service
                         sourceTable.PrimaryKey == null ? new List<PrimaryKey>() : new List<PrimaryKey> { sourceTable.PrimaryKey },
                         foundTable.PrimaryKey == null ? new List<PrimaryKey>() : new List<PrimaryKey> { foundTable.PrimaryKey }, navigatorAdd,
                         navigatorRemove, navigatorUpdate);
-                    GenerateDifference<Column>(sourceTable.Column, foundTable.Column, navigatorAdd, navigatorRemove,
+                    GenerateDifference<Column>(sourceTable.Columns, foundTable.Columns, navigatorAdd, navigatorRemove,
                         navigatorUpdate);
-                    GenerateDifference<Index>(sourceTable.Index, foundTable.Index, navigatorAdd, navigatorRemove,
+                    GenerateDifference<Index>(sourceTable.Indexes, foundTable.Indexes, navigatorAdd, navigatorRemove,
                         navigatorUpdate);
-                    GenerateDifference<ForeignKey>(sourceTable.ForeignKey, foundTable.ForeignKey, navigatorAdd,
+                    GenerateDifference<ForeignKey>(sourceTable.ForeignKeys, foundTable.ForeignKeys, navigatorAdd,
                         navigatorRemove, navigatorUpdate);
 
                     navigatorAdd.Flush();
@@ -165,11 +165,11 @@ namespace DbDarwin.Service
                         {
                             var column = new Column { COLUMN_NAME = model.FromName, SetName = model.ToName };
                             table.Update = new Table();
-                            table.Update.Column.Add(column);
+                            table.Update.Columns.Add(column);
                         }
                         else
                         {
-                            var column = table.Update.Column.FirstOrDefault(x =>
+                            var column = table.Update.Columns.FirstOrDefault(x =>
                                 string.Equals(x.COLUMN_NAME, model.FromName,
                                     StringComparison.CurrentCultureIgnoreCase));
                             SetColumnName(column, model);

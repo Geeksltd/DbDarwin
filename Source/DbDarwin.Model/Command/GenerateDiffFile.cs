@@ -7,11 +7,11 @@ namespace DbDarwin.Model.Command
 {
     public class GenerateDiffFile
     {
-        public string CurrentFile { get; set; }
-        public string NewSchemaFile { get; set; }
+        public string SourceSchemaFile { get; set; }
+        public string TargetSchemaFile { get; set; }
         public string OutputFile { get; set; }
 
-        public bool IsValid => CurrentFile.HasValue() && NewSchemaFile.HasValue() &&
+        public bool IsValid => TargetSchemaFile.HasValue() && SourceSchemaFile.HasValue() &&
                                OutputFile.HasValue();
     }
 }

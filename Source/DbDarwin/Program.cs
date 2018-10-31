@@ -94,9 +94,9 @@ namespace DbDarwin
             return new GenerateDiffFile
             {
                 // Read -from parameter
-                CurrentFile = ReadArgument("-from", argList, "-from parameter is requirement"),
+                TargetSchemaFile = ReadArgument("-from", argList, "-from parameter is requirement"),
                 // Read -to parameter
-                NewSchemaFile = ReadArgument("-to", argList, "-to parameter is requirement"),
+                SourceSchemaFile = ReadArgument("-to", argList, "-to parameter is requirement"),
                 // Read -out parameter
                 OutputFile = ReadArgument("-out", argList, "-out parameter is requirement")
             };

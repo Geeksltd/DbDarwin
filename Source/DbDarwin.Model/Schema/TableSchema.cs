@@ -6,11 +6,11 @@ using System.Text;
 using System.Xml.Serialization;
 using DbDarwin.Model.Schema;
 
-namespace DbDarwin.Model
+namespace DbDarwin.Model.Schema
 {
 
-
-    [XmlRoot("Table")]
+    //[XmlRoot("Table")]
+    [Serializable]
     public class Table
     {
 
@@ -22,16 +22,18 @@ namespace DbDarwin.Model
         public string SetName { get; set; }
 
         [XmlElement("Column")]
-        public List<Column> Column { get; set; }
+        public List<Column> Columns { get; set; }
 
         [XmlElement("Index")]
-        public List<Index> Index { get; set; }
+        public List<Index> Indexes { get; set; }
+
+        [XmlElement("ForeignKey")]
+        public List<ForeignKey> ForeignKeys { get; set; }
 
         [XmlElement("PrimaryKey")]
         public PrimaryKey PrimaryKey { get; set; }
 
-        [XmlElement("ForeignKey")]
-        public List<ForeignKey> ForeignKey { get; set; }
+
 
 
 

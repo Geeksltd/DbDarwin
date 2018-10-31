@@ -24,7 +24,7 @@ namespace DbDarwin.Service
         {
 
             // Create Connection to database
-            var tables = new List<DbDarwin.Model.Table>();
+            var database = new Database();
             try
             {
                 using (var sql = new System.Data.SqlClient.SqlConnection(model.ConnectionString))
@@ -54,6 +54,8 @@ namespace DbDarwin.Service
                                                  { col.object_id, col.column_id }
                                                  select new ConstraintInformationModel { Index = ind, IndexColumn = ic, SystemColumn = col }).ToList();
                     // Create Table Model
+                    if (allTables.Rows.Count > 0)
+                        database.Tables = new List<Table>();
                     foreach (DataRow row in allTables.Rows)
                     {
                         var schemaTable = row["TABLE_SCHEMA"].ToString();
@@ -65,24 +67,26 @@ namespace DbDarwin.Service
                         var indexes = FetchIndexes(constraintInformation, tableId);
                         var primaryKey = FetchPrimary(constraintInformation, tableId);
 
-                        var myDt = new DbDarwin.Model.Table
+                        var myDt = new DbDarwin.Model.Schema.Table
                         {
                             Name = row["TABLE_NAME"].ToString(),
-                            Column = columnsMapped.Where(x =>
+                            Columns = columnsMapped.Where(x =>
                                     x.TABLE_NAME == row["TABLE_NAME"].ToString() &&
                                     x.TABLE_SCHEMA == row["TABLE_SCHEMA"].ToString())
                                 .ToList(),
-                            Index = indexes,
+                            Indexes = indexes,
                             PrimaryKey = primaryKey,
-                            ForeignKey = referencesMapped.Where(x =>
+                            ForeignKeys = referencesMapped.Where(x =>
                                 x.CONSTRAINT_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList()
 
                         };
-                        tables.Add(myDt);
+                        database.Tables.Add(myDt);
                     }
 
+                    database.Tables = database.Tables.OrderBy(x => x.Name).ToList();
+
                     // Create Serialize Object and save as XML file
-                    SaveToFile(tables.OrderBy(x => x.Name).ToList(), model.OutputFile);
+                    SaveToFile(database, model.OutputFile);
                 }
             }
             catch (Exception ex)
@@ -151,11 +155,11 @@ namespace DbDarwin.Service
             }
         }
 
-        private static void SaveToFile(IEnumerable<Model.Table> tables, string fileOutput)
+        private static void SaveToFile(Database database, string fileOutput)
         {
-            var ser = new XmlSerializer(typeof(List<Model.Table>));
+            var ser = new XmlSerializer(typeof(Database));
             var sw2 = new StringWriter();
-            ser.Serialize(sw2, tables);
+            ser.Serialize(sw2, database);
             var xml = sw2.ToString();
             var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
             File.WriteAllText(path, xml);

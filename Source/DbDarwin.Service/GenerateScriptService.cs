@@ -53,36 +53,36 @@ namespace DbDarwin.Service
                     if (table.Remove != null)
                     {
                         sb.AppendLine("GO");
-                        if (table.Remove.Index.Any())
-                            sb.Append(GenerateRemoveIndexes(table.Remove.Index, table.Name));
-                        if (table.Remove.ForeignKey.Any())
-                            sb.Append(GenerateRemoveForeignKey(table.Remove.ForeignKey, table.Name));
-                        if (table.Remove.Column.Any())
-                            sb.Append(GenerateRemoveColumns(table.Remove.Column, table.Name));
+                        if (table.Remove.Indexes.Any())
+                            sb.Append(GenerateRemoveIndexes(table.Remove.Indexes, table.Name));
+                        if (table.Remove.ForeignKeys.Any())
+                            sb.Append(GenerateRemoveForeignKey(table.Remove.ForeignKeys, table.Name));
+                        if (table.Remove.Columns.Any())
+                            sb.Append(GenerateRemoveColumns(table.Remove.Columns, table.Name));
                     }
 
                     if (table.Add != null)
                     {
                         sb.AppendLine("GO");
-                        if (table.Add.Column.Any())
-                            sb.Append(GenerateNewColumns(table.Add.Column, table.Name));
+                        if (table.Add.Columns.Any())
+                            sb.Append(GenerateNewColumns(table.Add.Columns, table.Name));
                         if (table.Add.PrimaryKey != null)
                             sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name));
-                        if (table.Add.Index.Any())
-                            sb.Append(GenerateNewIndexes(table.Add.Index, table.Name));
-                        if (table.Add.ForeignKey.Any())
-                            sb.Append(GenerateNewForeignKey(table.Add.ForeignKey, table.Name));
+                        if (table.Add.Indexes.Any())
+                            sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name));
+                        if (table.Add.ForeignKeys.Any())
+                            sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name));
                     }
 
                     if (table.Update != null)
                     {
                         sb.AppendLine("GO");
-                        if (table.Update.Column.Any())
-                            sb.Append(GenerateUpdateColumns(table.Update.Column, table.Name));
-                        if (table.Update.Index.Any())
-                            sb.Append(GenerateUpdateIndexes(table.Update.Index, table.Name));
-                        if (table.Update.ForeignKey.Any())
-                            sb.Append(GenerateUpdateForeignKey(table.Update.ForeignKey, table.Name));
+                        if (table.Update.Columns.Any())
+                            sb.Append(GenerateUpdateColumns(table.Update.Columns, table.Name));
+                        if (table.Update.Indexes.Any())
+                            sb.Append(GenerateUpdateIndexes(table.Update.Indexes, table.Name));
+                        if (table.Update.ForeignKeys.Any())
+                            sb.Append(GenerateUpdateForeignKey(table.Update.ForeignKeys, table.Name));
                     }
                 }
             }

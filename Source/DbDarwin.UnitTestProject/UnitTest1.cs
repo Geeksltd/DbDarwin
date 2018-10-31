@@ -30,8 +30,8 @@ namespace DbDarwin.UnitTestProject
         {
             CompareSchemaService.StartCompare(new GenerateDiffFile
             {
-                NewSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
-                CurrentFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
+                SourceSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
+                TargetSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
                 OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
             });
             Assert.IsTrue(true);
