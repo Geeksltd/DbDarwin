@@ -225,12 +225,12 @@ namespace DbDarwin.Service
         /// <typeparam name="T">Type can Column , Index , ForeignKey</typeparam>
         /// <param name="doc">must be current XDocument</param>
         /// <param name="root">root xml element</param>
-        /// <param name="currentList">Current Diff List Data</param>
-        /// <param name="newList">must be compare data</param>
+        /// <param name="targetData">Current Diff List Data</param>
+        /// <param name="sourceData">must be compare data</param>
         /// <param name="navigatorAdd">refers to add element XML</param>
         /// <param name="navigatorRemove">refers to remove element XML</param>
         /// <param name="navigatorUpdate">refers to update element XML</param>
-        public static void GenerateDifference<T>(List<T> currentList, List<T> newList,
+        public static void GenerateDifference<T>(List<T> sourceData, List<T> targetData,
             XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
             var emptyNamespaces = new XmlSerializerNamespaces(new[]
@@ -239,7 +239,7 @@ namespace DbDarwin.Service
             });
 
             // Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
-            var mustAdd = FindNewComponent<T>(currentList, newList);
+            var mustAdd = FindNewComponent<T>(targetData, sourceData);
 
             // Add new objects to xml
             if (mustAdd != null)
@@ -256,10 +256,10 @@ namespace DbDarwin.Service
             };
 
             // Detect Sql Objects Changes
-            if (currentList != null)
-                foreach (T currentObject in currentList)
+            if (targetData != null)
+                foreach (T currentObject in targetData)
                 {
-                    var foundObject = FindRemoveOrUpdate<T>(currentObject, newList);
+                    var foundObject = FindRemoveOrUpdate<T>(currentObject, sourceData);
                     if (foundObject == null)
                     {
                         var serializer1 = new XmlSerializer(currentObject.GetType());
@@ -291,27 +291,31 @@ namespace DbDarwin.Service
             else if (typeof(T) == typeof(ForeignKey))
                 found = newList.Cast<ForeignKey>().FirstOrDefault(x =>
                     x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+            else if (typeof(T) == typeof(PrimaryKey))
+                found = newList.Cast<PrimaryKey>().FirstOrDefault(x =>
+                    x.Columns == currentObject.GetType().GetProperty("Columns").GetValue(currentObject).ToString());
+
             return (T)Convert.ChangeType(found, typeof(T));
         }
 
-        private static List<T> FindNewComponent<T>(List<T> currentList, List<T> newList)
+        private static List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
         {
             object tempAdd = null;
-            if (newList == null)
+            if (sourceList == null)
                 return new List<T>();
-            if (currentList == null)
-                return newList;
+            if (targetList == null)
+                return sourceList;
             if (typeof(T) == typeof(Column))
-                tempAdd = newList.Cast<Column>()
-                    .Except(x => currentList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME))
+                tempAdd = sourceList.Cast<Column>()
+                    .Except(x => targetList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME))
                     .ToList();
             else if (typeof(T) == typeof(Index))
-                tempAdd = newList.Cast<Index>()
-                    .Except(x => currentList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
+                tempAdd = sourceList.Cast<Index>()
+                    .Except(x => targetList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
             else if (typeof(T) == typeof(ForeignKey))
-                tempAdd = newList.Cast<ForeignKey>()
+                tempAdd = sourceList.Cast<ForeignKey>()
                     .Except(x =>
-                        currentList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList()
+                        targetList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList()
                             .Contains(x.CONSTRAINT_NAME)).ToList();
             return (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
         }
