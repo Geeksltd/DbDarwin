@@ -59,7 +59,12 @@ namespace DbDarwin.Service
                 Declaration = new XDeclaration("1.0", "UTF-8", "true")
             };
             var rootDatabase = new XElement("Database");
-            var rootUpdate = new XElement("update");
+
+            var updateTables = new XElement("update");
+            var addTables = new XElement("add");
+            var removeTables = new XElement("remove");
+
+
 
             foreach (var sourceTable in sourceSchema.Tables)
             {
@@ -68,7 +73,13 @@ namespace DbDarwin.Service
 
                 if (foundTable == null)
                 {
-                    // Must Add New
+                    using (var navigatorAdd = addTables.CreateWriter())
+                    {
+                        var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+                        var serializer1 = new XmlSerializer(sourceTable.GetType());
+                        navigatorAdd.WriteWhitespace("");
+                        serializer1.Serialize(navigatorAdd, sourceTable, emptyNamespaces);
+                    }
                 }
                 else
                 {
@@ -115,10 +126,22 @@ namespace DbDarwin.Service
 
                     if (!updateElement.IsEmpty)
                         root.Add(updateElement);
-                    rootUpdate.Add(root);
+                    updateTables.Add(root);
                 }
             }
-            rootDatabase.Add(rootUpdate);
+            var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.Name).ToList().Contains(c.Name)).ToList();
+            using (var navigatorAdd = removeTables.CreateWriter())
+            {
+                var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+                var serializer1 = new XmlSerializer(mustRemove.GetType());
+                navigatorAdd.WriteWhitespace("");
+                serializer1.Serialize(navigatorAdd, mustRemove, emptyNamespaces);
+            }
+
+
+            rootDatabase.Add(updateTables);
+            rootDatabase.Add(addTables);
+            rootDatabase.Add(removeTables);
             doc.Add(rootDatabase);
 
             doc.Save(output);
