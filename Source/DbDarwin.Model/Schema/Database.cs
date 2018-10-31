@@ -13,12 +13,12 @@ namespace DbDarwin.Model.Schema
         public List<Table> Tables { get; set; }
 
         [XmlElement("add")]
-        public Table Add { get; set; }
+        public Database Add { get; set; }
 
         [XmlElement("remove")]
-        public Table Remove { get; set; }
+        public Database Remove { get; set; }
 
         [XmlElement("update")]
-        public Table Update { get; set; }
+        public Database Update { get; set; }
     }
 }

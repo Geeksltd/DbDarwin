@@ -31,8 +31,8 @@ namespace DbDarwin.Service
                 var sourceSchema = LoadXMLFile(model.SourceSchemaFile);
 
                 CompareAndSave(
-                    sourceSchema.OrderBy(x => x.Name).AsQueryable(),
-                    targetSchema.OrderBy(x => x.Name).AsQueryable(),
+                    sourceSchema,
+                    targetSchema,
                     model.OutputFile);
 
                 Console.WriteLine("Saving To xml");
@@ -52,23 +52,28 @@ namespace DbDarwin.Service
             return true;
         }
 
-        private static void CompareAndSave(IEnumerable<Table> sourceSchema,IEnumerable<Table> targetSchema,  string output)
+        private static void CompareAndSave(Database sourceSchema, Database targetSchema, string output)
         {
             var doc = new XDocument
             {
                 Declaration = new XDeclaration("1.0", "UTF-8", "true")
             };
-            var arrayOfTable = new XElement("ArrayOfTable");
+            var rootDatabase = new XElement("Database");
+            var rootUpdate = new XElement("update");
 
-            foreach (var sourceTable in sourceSchema)
+            foreach (var sourceTable in sourceSchema.Tables)
             {
-                var foundTable = targetSchema.FirstOrDefault(x => x.Name == sourceTable.Name);
+
+                var foundTable = targetSchema.Tables.FirstOrDefault(x => x.Name == sourceTable.Name);
+
                 if (foundTable == null)
                 {
-                    // Must Delete
+                    // Must Add New
                 }
                 else
                 {
+
+
                     var root = new XElement("Table");
                     root.SetAttributeValue(nameof(sourceTable.Name), sourceTable.Name);
 
@@ -92,6 +97,7 @@ namespace DbDarwin.Service
                     GenerateDifference<ForeignKey>(sourceTable.ForeignKeys, foundTable.ForeignKeys, navigatorAdd,
                         navigatorRemove, navigatorUpdate);
 
+
                     navigatorAdd.Flush();
                     navigatorAdd.Close();
 
@@ -109,20 +115,20 @@ namespace DbDarwin.Service
 
                     if (!updateElement.IsEmpty)
                         root.Add(updateElement);
-
-                    arrayOfTable.Add(root);
+                    rootUpdate.Add(root);
                 }
             }
+            rootDatabase.Add(rootUpdate);
+            doc.Add(rootDatabase);
 
-            doc.Add(arrayOfTable);
             doc.Save(output);
         }
 
-        private static List<Table> LoadXMLFile(string currentFileName)
+        private static Database LoadXMLFile(string currentFileName)
         {
-            var serializer = new XmlSerializer(typeof(List<Table>));
+            var serializer = new XmlSerializer(typeof(Database));
             using (var reader = new StreamReader(currentFileName))
-                return (List<Table>)serializer.Deserialize(reader);
+                return (Database)serializer.Deserialize(reader);
         }
 
         /// <summary>
