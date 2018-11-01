@@ -53,6 +53,8 @@ namespace DbDarwin.Service
                     if (table.Remove != null)
                     {
                         sb.AppendLine("GO");
+                        if (table.Remove.PrimaryKey != null)
+                            sb.Append(GenerateDeletePkBeforeAddOrUpdate(table.Name));
                         if (table.Remove.Indexes.Any())
                             sb.Append(GenerateRemoveIndexes(table.Remove.Indexes, table.Name));
                         if (table.Remove.ForeignKeys.Any())

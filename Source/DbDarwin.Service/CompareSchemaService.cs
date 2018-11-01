@@ -58,6 +58,7 @@ namespace DbDarwin.Service
             {
                 Declaration = new XDeclaration("1.0", "UTF-8", "true")
             };
+            var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
             var rootDatabase = new XElement("Database");
 
             var updateTables = new XElement("update");
@@ -75,7 +76,7 @@ namespace DbDarwin.Service
                 {
                     using (var navigatorAdd = addTables.CreateWriter())
                     {
-                        var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+
                         var serializer1 = new XmlSerializer(sourceTable.GetType());
                         navigatorAdd.WriteWhitespace("");
                         serializer1.Serialize(navigatorAdd, sourceTable, emptyNamespaces);
@@ -97,10 +98,27 @@ namespace DbDarwin.Service
                     var updateElement = new XElement("update");
                     var navigatorUpdate = updateElement.CreateWriter();
 
-                    GenerateDifference<PrimaryKey>(
-                        sourceTable.PrimaryKey == null ? new List<PrimaryKey>() : new List<PrimaryKey> { sourceTable.PrimaryKey },
-                        foundTable.PrimaryKey == null ? new List<PrimaryKey>() : new List<PrimaryKey> { foundTable.PrimaryKey }, navigatorAdd,
-                        navigatorRemove, navigatorUpdate);
+
+
+                    if (sourceTable.PrimaryKey == null && foundTable.PrimaryKey != null)
+                    {
+                        var serializer1 = new XmlSerializer(foundTable.PrimaryKey.GetType());
+                        navigatorRemove.WriteWhitespace("");
+                        serializer1.Serialize(navigatorRemove, foundTable.PrimaryKey, emptyNamespaces);
+                    }
+                    else
+                    {
+                        GenerateDifference<PrimaryKey>(
+                            sourceTable.PrimaryKey == null
+                                ? new List<PrimaryKey>()
+                                : new List<PrimaryKey> { sourceTable.PrimaryKey },
+                            foundTable.PrimaryKey == null
+                                ? new List<PrimaryKey>()
+                                : new List<PrimaryKey> { foundTable.PrimaryKey }, navigatorAdd,
+                            navigatorRemove, navigatorUpdate);
+                    }
+
+
                     GenerateDifference<Column>(sourceTable.Columns, foundTable.Columns, navigatorAdd, navigatorRemove,
                         navigatorUpdate);
                     GenerateDifference<Index>(sourceTable.Indexes, foundTable.Indexes, navigatorAdd, navigatorRemove,
@@ -132,7 +150,6 @@ namespace DbDarwin.Service
             var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.Name).ToList().Contains(c.Name)).ToList();
             using (var navigatorAdd = removeTables.CreateWriter())
             {
-                var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
                 var serializer1 = new XmlSerializer(mustRemove.GetType());
                 navigatorAdd.WriteWhitespace("");
                 serializer1.Serialize(navigatorAdd, mustRemove, emptyNamespaces);
@@ -257,6 +274,7 @@ namespace DbDarwin.Service
 
             // Detect Sql Objects Changes
             if (targetData != null)
+            {
                 foreach (T currentObject in sourceData)
                 {
                     var serializer1 = new XmlSerializer(currentObject.GetType());
@@ -284,6 +302,19 @@ namespace DbDarwin.Service
                         }
                     }
                 }
+
+
+                //foreach (T currentObject in targetData)
+                //{
+                //    var serializer1 = new XmlSerializer(currentObject.GetType());
+                //    var foundObject = FindRemoveOrUpdate<T>(currentObject, targetData);
+                //    if (foundObject == null)
+                //    {
+                //        navigatorRemove.WriteWhitespace("");
+                //        serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
+                //    }
+                //}
+            }
         }
 
         private static object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
