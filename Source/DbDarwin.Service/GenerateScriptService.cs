@@ -16,10 +16,10 @@ namespace DbDarwin.Service
     {
         public static void GenerateScript(GenerateScript model)
         {
-            var serializer = new XmlSerializer(typeof(List<Table>));
-            List<Table> diffFile = null;
+            var serializer = new XmlSerializer(typeof(Database));
+            Database diffFile = null;
             using (var reader = new StreamReader(model.CurrentDiffFile))
-                diffFile = (List<Table>)serializer.Deserialize(reader);
+                diffFile = (Database)serializer.Deserialize(reader);
 
             var sb = new StringBuilder();
             sb.AppendLine("BEGIN TRANSACTION");
@@ -35,7 +35,7 @@ namespace DbDarwin.Service
 
             if (diffFile != null)
             {
-                foreach (var table in diffFile)
+                foreach (var table in diffFile.Update.Tables)
                 {
                     if (table.SetName.HasValue())
                     {
@@ -79,6 +79,8 @@ namespace DbDarwin.Service
                         sb.AppendLine("GO");
                         if (table.Update.Columns.Any())
                             sb.Append(GenerateUpdateColumns(table.Update.Columns, table.Name));
+                        if (table.Update.PrimaryKey != null)
+                            sb.Append(GenerateNewPrimaryKey(table.Update.PrimaryKey, table.Name));
                         if (table.Update.Indexes.Any())
                             sb.Append(GenerateUpdateIndexes(table.Update.Indexes, table.Name));
                         if (table.Update.ForeignKeys.Any())

@@ -239,7 +239,7 @@ namespace DbDarwin.Service
             });
 
             // Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
-            var mustAdd = FindNewComponent<T>(targetData, sourceData);
+            var mustAdd = FindNewComponent<T>(sourceData, targetData);
 
             // Add new objects to xml
             if (mustAdd != null)
@@ -257,23 +257,30 @@ namespace DbDarwin.Service
 
             // Detect Sql Objects Changes
             if (targetData != null)
-                foreach (T currentObject in targetData)
+                foreach (T currentObject in sourceData)
                 {
-                    var foundObject = FindRemoveOrUpdate<T>(currentObject, sourceData);
+                    var serializer1 = new XmlSerializer(currentObject.GetType());
+                    var foundObject = FindRemoveOrUpdate<T>(currentObject, targetData);
                     if (foundObject == null)
                     {
-                        var serializer1 = new XmlSerializer(currentObject.GetType());
-                        navigatorRemove.WriteWhitespace("");
-                        serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
+                        if (typeof(T) == typeof(PrimaryKey))
+                        {
+                            navigatorUpdate.WriteWhitespace("");
+                            serializer1.Serialize(navigatorUpdate, currentObject, emptyNamespaces);
+                        }
+                        else
+                        {
+                            navigatorRemove.WriteWhitespace("");
+                            serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
+                        }
                     }
                     else
                     {
                         var result = compareLogic.Compare(currentObject, foundObject);
                         if (!result.AreEqual)
                         {
-                            var serializer1 = new XmlSerializer(foundObject.GetType());
                             navigatorUpdate.WriteWhitespace("");
-                            serializer1.Serialize(navigatorUpdate, foundObject, emptyNamespaces);
+                            serializer1.Serialize(navigatorUpdate, currentObject, emptyNamespaces);
                         }
                     }
                 }
@@ -293,7 +300,7 @@ namespace DbDarwin.Service
                     x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
             else if (typeof(T) == typeof(PrimaryKey))
                 found = newList.Cast<PrimaryKey>().FirstOrDefault(x =>
-                    x.Columns == currentObject.GetType().GetProperty("Columns").GetValue(currentObject).ToString());
+                    x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
 
             return (T)Convert.ChangeType(found, typeof(T));
         }
