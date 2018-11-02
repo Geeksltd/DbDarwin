@@ -53,7 +53,11 @@ namespace DbDarwin.Service
 
                 if (table.Columns.Any())
                     sb.AppendLine(GenerateColumns(table.Columns, table.Name));
+                if (table.PrimaryKey != null)
+                    sb.AppendLine(GeneratePrimaryKeyCore(table.PrimaryKey));
+
                 sb.AppendLine(")");
+                sb.Append(" ON [PRIMARY]");
 
 
 
@@ -191,8 +195,24 @@ END
             sb.AppendLine("-----------------------------------------------------------");
 
             sb.AppendLine("GO");
-            sb.AppendLine(string.Format("ALTER TABLE [{0}]  WITH CHECK ADD CONSTRAINT", tableName));
-            sb.AppendLine(string.Format("\t[{0}] PRIMARY KEY {1}", key.Name, key.type_desc));
+            sb.AppendLine(string.Format("ALTER TABLE [{0}]  WITH CHECK ADD ", tableName));
+
+
+            sb.AppendLine(GeneratePrimaryKeyCore(key));
+
+
+
+            sb.AppendLine("GO");
+            sb.AppendLine($"ALTER TABLE {tableName} SET (LOCK_ESCALATION = TABLE)");
+
+
+            return sb.ToString();
+        }
+
+        private static string GeneratePrimaryKeyCore(PrimaryKey key)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(string.Format("CONSTRAINT [{0}] PRIMARY KEY {1}", key.Name, key.type_desc));
             sb.AppendLine("\t(");
             sb.AppendLine("\t" + key.Columns.Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries)
                               .Aggregate((x, y) => $"[{x}] {(y.HasValue() ? $", [{y}]" : "")}")
@@ -218,11 +238,7 @@ END
             if (key.fill_factor > 0)
                 sb.AppendFormat(", FILLFACTOR = {0}", key.fill_factor);
 
-
             sb.AppendLine(") ON [PRIMARY]");
-            sb.AppendLine("GO");
-            sb.AppendLine($"ALTER TABLE {tableName} SET (LOCK_ESCALATION = TABLE)");
-
 
             return sb.ToString();
         }
