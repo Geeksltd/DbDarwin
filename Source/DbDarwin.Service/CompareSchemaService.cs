@@ -148,17 +148,21 @@ namespace DbDarwin.Service
                 }
             }
             var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.Name).ToList().Contains(c.Name)).ToList();
-            using (var navigatorAdd = removeTables.CreateWriter())
+            using (var writer = removeTables.CreateWriter())
             {
-                var serializer1 = new XmlSerializer(mustRemove.GetType());
-                navigatorAdd.WriteWhitespace("");
-                serializer1.Serialize(navigatorAdd, mustRemove, emptyNamespaces);
+                foreach (var table in mustRemove)
+                {
+                    var serializer1 = new XmlSerializer(table.GetType());
+                    writer.WriteWhitespace("");
+                    serializer1.Serialize(writer, table, emptyNamespaces);
+                }
             }
 
 
             rootDatabase.Add(updateTables);
             rootDatabase.Add(addTables);
             rootDatabase.Add(removeTables);
+
             doc.Add(rootDatabase);
 
             doc.Save(output);

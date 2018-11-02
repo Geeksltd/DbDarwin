@@ -38,9 +38,22 @@ namespace DbDarwin.Service
                     sb.AppendLine(GenerateUpdateTables(diffFile.Update.Tables));
                 if (diffFile.Add?.Tables != null)
                     sb.AppendLine(GenerateAddTables(diffFile.Add.Tables));
+                if (diffFile.Remove?.Tables != null)
+                    sb.AppendLine(GenerateRemoveTables(diffFile.Remove.Tables));
             }
             sb.AppendLine("COMMIT");
             File.WriteAllText(model.MigrateSqlFile, sb.ToString());
+        }
+
+        private static string GenerateRemoveTables(IEnumerable<Table> tables)
+        {
+            var sb = new StringBuilder();
+            foreach (var table in tables)
+            {
+                sb.AppendLine("GO");
+                sb.AppendLine(string.Format("DROP TABLE [{0}]", table.Name));
+            }
+            return sb.ToString();
         }
 
         private static string GenerateAddTables(IEnumerable<Table> tables)
