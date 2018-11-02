@@ -144,7 +144,9 @@ namespace DbDarwin.Service
 
                     if (!updateElement.IsEmpty)
                         root.Add(updateElement);
-                    updateTables.Add(root);
+
+                    if (!add.IsEmpty || !removeColumn.IsEmpty || !updateElement.IsEmpty)
+                        updateTables.Add(root);
                 }
             }
             var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.Name).ToList().Contains(c.Name)).ToList();
@@ -279,6 +281,8 @@ namespace DbDarwin.Service
             // Detect Sql Objects Changes
             if (targetData != null)
             {
+                if (mustAdd != null)
+                    sourceData = sourceData.Except(x => mustAdd.Contains(x)).ToList();
                 foreach (T currentObject in sourceData)
                 {
                     var serializer1 = new XmlSerializer(currentObject.GetType());

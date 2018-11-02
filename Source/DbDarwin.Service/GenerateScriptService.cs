@@ -52,6 +52,10 @@ namespace DbDarwin.Service
                     {
                         if (table.ForeignKeys.Any())
                             sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name));
+                        if (table.Add?.ForeignKeys != null)
+                            sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name));
+
+
                     }
 
             }
