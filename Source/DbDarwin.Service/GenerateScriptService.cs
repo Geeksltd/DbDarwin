@@ -49,7 +49,6 @@ namespace DbDarwin.Service
             foreach (var table in tables)
             {
                 sb.AppendLine(string.Format("CREATE TABLE [{0}] (", table.Name));
-                //) ON [PRIMARY]	")
 
                 if (table.Columns.Any())
                     sb.AppendLine(GenerateColumns(table.Columns, table.Name));
@@ -57,9 +56,17 @@ namespace DbDarwin.Service
                     sb.AppendLine(GeneratePrimaryKeyCore(table.PrimaryKey));
 
                 sb.AppendLine(")");
-                sb.Append(" ON [PRIMARY]");
+                sb.AppendLine(" ON [PRIMARY]");
 
 
+
+                if (table.Indexes.Any())
+                {
+                    var indexExists = false;
+                    sb.AppendLine(GenerateNewIndexes(table.Indexes, table.Name, indexExists));
+                }
+                if (table.ForeignKeys.Any())
+                    sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name));
 
                 //if (table.Add != null)
                 //{
@@ -563,7 +570,7 @@ END
             return sb.ToString();
         }
 
-        static string GenerateNewIndexes(IEnumerable<Index> indexes, string tableName)
+        static string GenerateNewIndexes(IEnumerable<Index> indexes, string tableName, bool indexExists = true)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -611,7 +618,8 @@ END
                 if (index.fill_factor > 0)
                     sb.AppendFormat(", FILLFACTOR = {0}", index.fill_factor);
 
-                sb.AppendFormat(", DROP_EXISTING = ON");
+                if (indexExists)
+                    sb.AppendFormat(", DROP_EXISTING = ON");
 
                 sb.AppendLine(") ON [PRIMARY]");
             }
