@@ -32,68 +32,105 @@ namespace DbDarwin.Service
             sb.AppendLine("SET ANSI_WARNINGS ON");
             sb.AppendLine("COMMIT");
             sb.AppendLine("BEGIN TRANSACTION ");
-
             if (diffFile != null)
             {
-                foreach (var table in diffFile.Update.Tables)
+                if (diffFile.Update?.Tables != null)
+                    sb.AppendLine(GenerateUpdateTables(diffFile.Update.Tables));
+                if (diffFile.Add?.Tables != null)
+                    sb.AppendLine(GenerateAddTables(diffFile.Add.Tables));
+            }
+            sb.AppendLine("COMMIT");
+            File.WriteAllText(model.MigrateSqlFile, sb.ToString());
+        }
+
+        private static string GenerateAddTables(IEnumerable<Table> tables)
+        {
+            var sb = new StringBuilder();
+            foreach (var table in tables)
+            {
+                sb.AppendLine(string.Format("CREATE TABLE [{0}] (", table.Name));
+                //) ON [PRIMARY]	")
+
+                if (table.Columns.Any())
+                    sb.AppendLine(GenerateColumns(table.Columns, table.Name));
+                sb.AppendLine(")");
+
+
+
+                //if (table.Add != null)
+                //{
+                //    sb.AppendLine("GO");
+                //    if (table.Add.PrimaryKey != null)
+                //        sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name));
+                //    if (table.Add.Indexes.Any())
+                //        sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name));
+                //    if (table.Add.ForeignKeys.Any())
+                //        sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name));
+                //}
+
+
+            }
+            return sb.ToString();
+        }
+
+        private static string GenerateUpdateTables(IEnumerable<Table> tables)
+        {
+            var sb = new StringBuilder();
+            foreach (var table in tables)
+            {
+                if (table.SetName.HasValue())
                 {
-                    if (table.SetName.HasValue())
-                    {
-                        sb.AppendLine();
-                        sb.AppendLine();
-                        sb.AppendLine("GO");
-                        sb.AppendLine("PRINT 'Updating Table Name...'");
-                        sb.AppendLine();
-                        sb.AppendLine();
-                        sb.AppendLine("GO");
-                        sb.AppendLine(string.Format("EXECUTE sp_rename N'{0}', N'{1}', 'OBJECT' ", table.Name, table.SetName));
-                        table.Name = table.SetName;
-                    }
+                    sb.AppendLine();
+                    sb.AppendLine();
+                    sb.AppendLine("GO");
+                    sb.AppendLine("PRINT 'Updating Table Name...'");
+                    sb.AppendLine();
+                    sb.AppendLine();
+                    sb.AppendLine("GO");
+                    sb.AppendLine(string.Format("EXECUTE sp_rename N'{0}', N'{1}', 'OBJECT' ", table.Name, table.SetName));
+                    table.Name = table.SetName;
+                }
 
-                    if (table.Remove != null)
-                    {
-                        sb.AppendLine("GO");
-                        if (table.Remove.PrimaryKey != null)
-                            sb.Append(GenerateDeletePkBeforeAddOrUpdate(table.Name));
-                        if (table.Remove.Indexes.Any())
-                            sb.Append(GenerateRemoveIndexes(table.Remove.Indexes, table.Name));
-                        if (table.Remove.ForeignKeys.Any())
-                            sb.Append(GenerateRemoveForeignKey(table.Remove.ForeignKeys, table.Name));
-                        if (table.Remove.Columns.Any())
-                            sb.Append(GenerateRemoveColumns(table.Remove.Columns, table.Name));
-                    }
+                if (table.Remove != null)
+                {
+                    sb.AppendLine("GO");
+                    if (table.Remove.PrimaryKey != null)
+                        sb.Append(GenerateDeletePkBeforeAddOrUpdate(table.Name));
+                    if (table.Remove.Indexes.Any())
+                        sb.Append(GenerateRemoveIndexes(table.Remove.Indexes, table.Name));
+                    if (table.Remove.ForeignKeys.Any())
+                        sb.Append(GenerateRemoveForeignKey(table.Remove.ForeignKeys, table.Name));
+                    if (table.Remove.Columns.Any())
+                        sb.Append(GenerateRemoveColumns(table.Remove.Columns, table.Name));
+                }
 
-                    if (table.Add != null)
-                    {
-                        sb.AppendLine("GO");
-                        if (table.Add.Columns.Any())
-                            sb.Append(GenerateNewColumns(table.Add.Columns, table.Name));
-                        if (table.Add.PrimaryKey != null)
-                            sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name));
-                        if (table.Add.Indexes.Any())
-                            sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name));
-                        if (table.Add.ForeignKeys.Any())
-                            sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name));
-                    }
+                if (table.Add != null)
+                {
+                    sb.AppendLine("GO");
+                    if (table.Add.Columns.Any())
+                        sb.Append(GenerateNewColumns(table.Add.Columns, table.Name));
+                    if (table.Add.PrimaryKey != null)
+                        sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name));
+                    if (table.Add.Indexes.Any())
+                        sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name));
+                    if (table.Add.ForeignKeys.Any())
+                        sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name));
+                }
 
-                    if (table.Update != null)
-                    {
-                        sb.AppendLine("GO");
-                        if (table.Update.Columns.Any())
-                            sb.Append(GenerateUpdateColumns(table.Update.Columns, table.Name));
-                        if (table.Update.PrimaryKey != null)
-                            sb.Append(GenerateNewPrimaryKey(table.Update.PrimaryKey, table.Name));
-                        if (table.Update.Indexes.Any())
-                            sb.Append(GenerateUpdateIndexes(table.Update.Indexes, table.Name));
-                        if (table.Update.ForeignKeys.Any())
-                            sb.Append(GenerateUpdateForeignKey(table.Update.ForeignKeys, table.Name));
-                    }
+                if (table.Update != null)
+                {
+                    sb.AppendLine("GO");
+                    if (table.Update.Columns.Any())
+                        sb.Append(GenerateUpdateColumns(table.Update.Columns, table.Name));
+                    if (table.Update.PrimaryKey != null)
+                        sb.Append(GenerateNewPrimaryKey(table.Update.PrimaryKey, table.Name));
+                    if (table.Update.Indexes.Any())
+                        sb.Append(GenerateUpdateIndexes(table.Update.Indexes, table.Name));
+                    if (table.Update.ForeignKeys.Any())
+                        sb.Append(GenerateUpdateForeignKey(table.Update.ForeignKeys, table.Name));
                 }
             }
-
-            sb.AppendLine("COMMIT");
-
-            File.WriteAllText(model.MigrateSqlFile, sb.ToString());
+            return sb.ToString();
         }
 
 
@@ -382,10 +419,8 @@ END
                 sb.AppendLine();
                 sb.AppendLine("GO");
             }
-
             return sb.ToString();
         }
-
         /// <summary>
         /// Generate Drop Indexes
         /// </summary>
@@ -404,7 +439,6 @@ END
                 sb.AppendLine();
                 sb.AppendLine("GO");
             }
-
             return sb.ToString();
         }
 
@@ -476,17 +510,8 @@ END
 
         }
 
-        static string GenerateNewColumns(IEnumerable<Column> columns, string tableName)
+        static string GenerateColumns(IEnumerable<Column> columns, string tableName)
         {
-            var sb = new StringBuilder();
-            sb.AppendLine("-----------------------------------------------------------");
-            sb.AppendLine("-------------------- Create New Columns -------------------");
-            sb.AppendLine("-----------------------------------------------------------");
-
-            sb.AppendFormat("ALTER TABLE {0} ADD ", tableName);
-
-            sb.AppendLine();
-
             var columnsBuilder = new StringBuilder();
             foreach (var column in columns)
             {
@@ -496,14 +521,22 @@ END
                 columnsBuilder.AppendFormat("{0} {1}", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
                 if (column.COLUMN_DEFAULT.HasValue())
                     columnsBuilder.AppendFormat(" CONSTRAINT [DF_{0}_{1}] DEFAULT ({2})", tableName, column.Name, column.COLUMN_DEFAULT);
-
                 columnsBuilder.AppendLine(",");
             }
-            sb.Append(columnsBuilder.ToString().Trim(new[] { ',', '\r', '\n' }));
+            return columnsBuilder.ToString().Trim(',', '\r', '\n');
+        }
+
+        static string GenerateNewColumns(IEnumerable<Column> columns, string tableName)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendLine("-------------------- Create New Columns -------------------");
+            sb.AppendLine("-----------------------------------------------------------");
+            sb.AppendFormat("ALTER TABLE {0} ADD ", tableName);
+            sb.AppendLine();
+            sb.AppendLine(GenerateColumns(columns, tableName));
             sb.AppendLine();
             sb.AppendLine("GO");
-
-
             if (columns.Any())
             {
                 sb.Append($"ALTER TABLE {tableName} SET (LOCK_ESCALATION = TABLE)");
