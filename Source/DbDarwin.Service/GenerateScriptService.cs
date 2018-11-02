@@ -40,6 +40,20 @@ namespace DbDarwin.Service
                     sb.AppendLine(GenerateAddTables(diffFile.Add.Tables));
                 if (diffFile.Remove?.Tables != null)
                     sb.AppendLine(GenerateRemoveTables(diffFile.Remove.Tables));
+
+                if (diffFile.Add?.Tables != null)
+                    foreach (var table in diffFile.Add.Tables)
+                    {
+                        if (table.ForeignKeys.Any())
+                            sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name));
+                    }
+                if (diffFile.Update?.Tables != null)
+                    foreach (var table in diffFile.Update.Tables)
+                    {
+                        if (table.ForeignKeys.Any())
+                            sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name));
+                    }
+
             }
             sb.AppendLine("COMMIT");
             File.WriteAllText(model.MigrateSqlFile, sb.ToString());
@@ -78,8 +92,7 @@ namespace DbDarwin.Service
                     var indexExists = false;
                     sb.AppendLine(GenerateNewIndexes(table.Indexes, table.Name, indexExists));
                 }
-                if (table.ForeignKeys.Any())
-                    sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name));
+
 
                 //if (table.Add != null)
                 //{
@@ -137,8 +150,7 @@ namespace DbDarwin.Service
                         sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name));
                     if (table.Add.Indexes.Any())
                         sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name));
-                    if (table.Add.ForeignKeys.Any())
-                        sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name));
+
                 }
 
                 if (table.Update != null)
@@ -150,8 +162,7 @@ namespace DbDarwin.Service
                         sb.Append(GenerateNewPrimaryKey(table.Update.PrimaryKey, table.Name));
                     if (table.Update.Indexes.Any())
                         sb.Append(GenerateUpdateIndexes(table.Update.Indexes, table.Name));
-                    if (table.Update.ForeignKeys.Any())
-                        sb.Append(GenerateUpdateForeignKey(table.Update.ForeignKeys, table.Name));
+
                 }
             }
             return sb.ToString();
@@ -218,7 +229,7 @@ END
             sb.AppendLine(string.Format("ALTER TABLE [{0}]  WITH CHECK ADD ", tableName));
 
 
-            sb.AppendLine(GeneratePrimaryKeyCore(key));
+            sb.AppendLine(GeneratePrimaryKeyCore(key, tableName));
 
 
 
@@ -229,10 +240,12 @@ END
             return sb.ToString();
         }
 
-        private static string GeneratePrimaryKeyCore(PrimaryKey key)
+        private static string GeneratePrimaryKeyCore(PrimaryKey key, string tableName = null)
         {
             var sb = new StringBuilder();
-            sb.AppendLine(string.Format("CONSTRAINT [{0}] PRIMARY KEY {1}", key.Name, key.type_desc));
+            if (tableName.HasValue())
+                sb.AppendFormat("CONSTRAINT [PK_{0}]", tableName);
+            sb.AppendLine(string.Format(" PRIMARY KEY {0}", key.type_desc));
             sb.AppendLine("\t(");
             sb.AppendLine("\t" + key.Columns.Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries)
                               .Aggregate((x, y) => $"[{x}] {(y.HasValue() ? $", [{y}]" : "")}")
@@ -451,8 +464,10 @@ END
             sb.AppendLine("-----------------------------------------------------------");
             foreach (var key in foreignKeys)
             {
-                sb.AppendFormat("ALTER TABLE [{0}] DROP CONSTRAINT [{1}]", tableName, tableName, key.Name);
-                sb.AppendLine();
+                sb.AppendLine(string.Format(
+                    "IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[{0}]') AND parent_object_id = OBJECT_ID(N'[{1}]'))",
+                    key.Name, tableName));
+                sb.AppendLine(string.Format("ALTER TABLE [{0}] DROP CONSTRAINT [{1}]", tableName, key.Name));
                 sb.AppendLine("GO");
             }
             return sb.ToString();

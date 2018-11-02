@@ -335,7 +335,7 @@ namespace DbDarwin.Service
                     x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
             else if (typeof(T) == typeof(PrimaryKey))
                 found = newList.Cast<PrimaryKey>().FirstOrDefault(x =>
-                    x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+                    x.Columns == currentObject.GetType().GetProperty("Columns").GetValue(currentObject).ToString());
 
             return (T)Convert.ChangeType(found, typeof(T));
         }
