@@ -275,8 +275,16 @@ namespace DbDarwin.Service
 
             var compareLogic = new CompareLogic
             {
-                Config = { MaxDifferences = int.MaxValue }
+                Config =
+                {
+                    MaxDifferences = int.MaxValue,
+                },
             };
+            if (typeof(T) == typeof(PrimaryKey))
+            {
+                compareLogic.Config.MembersToIgnore.Add("Name");
+                compareLogic.Config.MembersToIgnore.Add("name");
+            }
 
             // Detect Sql Objects Changes
             if (targetData != null)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Linq;
 using Olive;
 
 namespace DbDarwin.Service
@@ -20,31 +21,42 @@ namespace DbDarwin.Service
         {
             try
             {
+
                 var list = new List<T>();
+
+                var columns = table.Columns.Cast<DataColumn>()
+                    .Select(x => x.ColumnName)
+                    .ToArray();
+
+                //var objProperty = new T();
+                //var propertyList = objProperty
+                //    .GetType()
+                //    .GetProperties()
+                //    .Where(x => columns.Contains(x.Name))
+                //    .ToArray();
 
                 foreach (DataRow row in table.Rows)
                 {
                     var obj = new T();
 
-                    foreach (var prop in obj.GetType().GetProperties())
+
+                    foreach (var propertyInfo in obj.GetType().GetProperties())
                     {
                         try
                         {
-                            var propertyInfo = obj.GetType().GetProperty(prop.Name);
-
                             var currentType = propertyInfo.PropertyType;
                             if (currentType.IsGenericType && currentType.GetGenericTypeDefinition() == typeof(Nullable<>))
                             {
-                                if (row[prop.Name] == null || row[prop.Name] == DBNull.Value)
+                                if (row[propertyInfo.Name] == null || row[propertyInfo.Name] == DBNull.Value)
                                     propertyInfo.SetValue(obj, default(T), null);
                                 else
-                                    propertyInfo.SetValue(obj, Convert.ChangeType(row[prop.Name], Nullable.GetUnderlyingType(currentType)), null);
+                                    propertyInfo.SetValue(obj, Convert.ChangeType(row[propertyInfo.Name], Nullable.GetUnderlyingType(currentType)), null);
                             }
                             else
 
                             {
-                                var result = Convert.ChangeType(row[prop.Name], propertyInfo.PropertyType);
-                                if (propertyInfo.PropertyType == typeof(string) && (row[prop.Name] == null || row[prop.Name].ToString().IsEmpty()))
+                                var result = Convert.ChangeType(row[propertyInfo.Name], propertyInfo.PropertyType);
+                                if (propertyInfo.PropertyType == typeof(string) && (row[propertyInfo.Name] == null || row[propertyInfo.Name].ToString().IsEmpty()))
                                     propertyInfo.SetValue(obj, null, null);
                                 else
                                     propertyInfo.SetValue(obj, result, null);

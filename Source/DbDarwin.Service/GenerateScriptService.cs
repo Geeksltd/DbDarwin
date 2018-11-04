@@ -233,7 +233,7 @@ END
             sb.AppendLine(string.Format("ALTER TABLE [{0}]  WITH CHECK ADD ", tableName));
 
 
-            sb.AppendLine(GeneratePrimaryKeyCore(key, tableName));
+            sb.AppendLine(GeneratePrimaryKeyCore(key));
 
 
 
@@ -244,11 +244,11 @@ END
             return sb.ToString();
         }
 
-        private static string GeneratePrimaryKeyCore(PrimaryKey key, string tableName = null)
+        private static string GeneratePrimaryKeyCore(PrimaryKey key)
         {
             var sb = new StringBuilder();
-            if (tableName.HasValue())
-                sb.AppendFormat("CONSTRAINT [PK_{0}]", tableName);
+            if (!key.is_system_named)
+                sb.AppendFormat("CONSTRAINT [{0}]", key.name);
             sb.AppendLine(string.Format(" PRIMARY KEY {0}", key.type_desc));
             sb.AppendLine("\t(");
             sb.AppendLine("\t" + key.Columns.Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries)

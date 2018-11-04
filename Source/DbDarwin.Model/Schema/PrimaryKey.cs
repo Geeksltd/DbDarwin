@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace DbDarwin.Model.Schema
 {
+
     [Serializable]
-    public class Index
+    public class PrimaryKey
     {
         [XmlAttribute(AttributeName = "Set-Name")]
         public string SetName { get; set; }
@@ -12,9 +15,10 @@ namespace DbDarwin.Model.Schema
         [XmlIgnore]
         public int object_id { get; set; }
 
-        [XmlIgnore]
+        // [XmlIgnore]
         public string Name => name;
 
+        // [XmlIgnore]
         [XmlAttribute(AttributeName = "Name")]
         public string name { get; set; }
 
@@ -68,7 +72,8 @@ namespace DbDarwin.Model.Schema
 
         [XmlAttribute(AttributeName = "FilterDefinition")]
         public string filter_definition { get; set; }
+
+        [XmlAttribute(AttributeName = "IsSystemNamed")]
+        public bool is_system_named { get; set; }
     }
-
-
 }

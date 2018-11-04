@@ -45,6 +45,8 @@ namespace DbDarwin.Service
                     var systemColumnsMapped = LoadData<SystemColumns>(sql, "allSysColumns", "SELECT * FROM sys.columns");
                     /// Fetch All Objects from SQL
                     var objectMapped = LoadData<SqlObject>(sql, "sys.object", "SELECT * FROM sys.objects");
+                    /// Get All Key Constraint
+                    var keyConstraints = LoadData<KeyConstraint>(sql, "keyConstraints", "SELECT * FROM [sys].[key_constraints]");
 
 
                     var constraintInformation = (from ind in indexMapped
@@ -65,7 +67,7 @@ namespace DbDarwin.Service
                             .FirstOrDefault();
 
                         var indexes = FetchIndexes(constraintInformation, tableId);
-                        var primaryKey = FetchPrimary(constraintInformation, tableId);
+                        var primaryKey = FetchPrimary(constraintInformation, keyConstraints, tableId);
 
                         var myDt = new DbDarwin.Model.Schema.Table
                         {
@@ -123,7 +125,7 @@ namespace DbDarwin.Service
             return existsIndex;
         }
 
-        private static PrimaryKey FetchPrimary(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
+        private static PrimaryKey FetchPrimary(IEnumerable<ConstraintInformationModel> constraintInformation, IEnumerable<KeyConstraint> keyConstraints, int tableId)
         {
             var indexRows = constraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "True")
@@ -136,7 +138,11 @@ namespace DbDarwin.Service
                     resultIndex.Columns = index.ToList().OrderBy(x => x.IndexColumn.key_ordinal)
                         .Select(x => x.SystemColumn.name)
                         .Aggregate((x, y) => x + "|" + y).Trim('|');
-                return resultIndex.MapTo<PrimaryKey>();
+                var primaryKeys = resultIndex.MapTo<PrimaryKey>();
+                var constraint = keyConstraints.FirstOrDefault(x => x.name == primaryKeys.Name);
+                if (constraint != null)
+                    primaryKeys.is_system_named = constraint.is_system_named;
+                return primaryKeys;
             }
             return null;
         }
