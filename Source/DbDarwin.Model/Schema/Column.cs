@@ -8,6 +8,12 @@ namespace DbDarwin.Model.Schema
     [Serializable]
     public class Column
     {
+        public Column()
+        {
+            IS_NULLABLE = "YES";
+            NUMERIC_PRECISION = "10";
+            NUMERIC_SCALE = "0";
+        }
         [XmlIgnore]
         public string TABLE_CATALOG { get; set; }
 
@@ -26,7 +32,7 @@ namespace DbDarwin.Model.Schema
         public string COLUMN_NAME { get; set; }
 
         [XmlIgnore]
-        //[XmlAttribute(AttributeName = "OrdinalPosition")]
+        [XmlAttribute(AttributeName = "OrdinalPosition")]
         public string ORDINAL_POSITION { get; set; }
 
         [XmlAttribute(AttributeName = "ColumnDefault")]
@@ -38,7 +44,7 @@ namespace DbDarwin.Model.Schema
 
         public bool ShouldSerializeIS_NULLABLE()
         {
-            return IS_NULLABLE.HasValue() && IS_NULLABLE == "NO";
+            return IS_NULLABLE.HasValue() && IS_NULLABLE.ToUpper() == "NO";
         }
 
         [XmlAttribute(AttributeName = "DataType")]
@@ -50,14 +56,27 @@ namespace DbDarwin.Model.Schema
         [XmlIgnore]
         public string CHARACTER_OCTET_LENGTH { get; set; }
 
-        [XmlAttribute(AttributeName = "NumericPrecision")]
+        [DefaultValue("10")]
+        [XmlAttribute(AttributeName = "Precision")]
         public string NUMERIC_PRECISION { get; set; }
 
+        public bool ShouldSerializeNUMERIC_PRECISION()
+        {
+            return NUMERIC_PRECISION.HasValue() && NUMERIC_PRECISION != "10";
+        }
+
+        [XmlIgnore]
         [XmlAttribute(AttributeName = "NumericPrecisionRadix")]
         public string NUMERIC_PRECISION_RADIX { get; set; }
 
-        [XmlAttribute(AttributeName = "NumericScale")]
+        [DefaultValue("0")]
+        [XmlAttribute(AttributeName = "Scale")]
         public string NUMERIC_SCALE { get; set; }
+
+        public bool ShouldSerializeNUMERIC_SCALE()
+        {
+            return NUMERIC_SCALE.HasValue() && NUMERIC_PRECISION != "0";
+        }
 
         [XmlAttribute(AttributeName = "DatetimePrecision")]
         public string DATETIME_PRECISION { get; set; }
@@ -68,6 +87,7 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "CharacterSetSchema")]
         public string CHARACTER_SET_SCHEMA { get; set; }
 
+        [XmlIgnore]
         [XmlAttribute(AttributeName = "CharacterSetName")]
         public string CHARACTER_SET_NAME { get; set; }
 

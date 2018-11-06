@@ -255,9 +255,22 @@ END
                               .Aggregate((x, y) => $"[{x}] {(y.HasValue() ? $", [{y}]" : "")}")
                               .Trim(new[] { ',' }));
             sb.Append("\t)");
-            sb.Append(" WITH ( ");
 
-            sb.AppendFormat("PAD_INDEX = {0}", key.is_padded.To_ON_OFF());
+            sb.AppendLine(PrimaryKeyOptions(key));
+
+
+
+            sb.AppendLine("ON [PRIMARY]");
+
+            return sb.ToString();
+        }
+
+        private static string PrimaryKeyOptions(PrimaryKey key)
+        {
+            var sb = new StringBuilder();
+
+            if (key.is_padded.HasValue())
+                sb.AppendFormat("PAD_INDEX = {0}", key.is_padded.To_ON_OFF());
 
 
             if (key.ignore_dup_key.HasAny() && key.ignore_dup_key.To_ON_OFF() == "OFF")
@@ -275,9 +288,7 @@ END
             if (key.fill_factor > 0)
                 sb.AppendFormat(", FILLFACTOR = {0}", key.fill_factor);
 
-            sb.AppendLine(") ON [PRIMARY]");
-
-            return sb.ToString();
+            return sb.Length > 0 ? string.Format(" WITH ({0})", sb).Trim(',', ' ') : string.Empty;
         }
 
         static string GenerateUpdateForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName)
@@ -629,34 +640,45 @@ END
 
                 sb.AppendLine(")");
                 if (index.has_filter.ToBoolean())
-                    sb.AppendFormat("WHERE {0}", index.filter_definition);
-                sb.AppendLine();
-                sb.Append(" WITH (");
+                    sb.AppendLine(string.Format("WHERE {0}", index.filter_definition));
 
-                sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.To_ON_OFF());
+                var options = IndexOptions(index, indexExists);
+                if (options.HasValue())
+                    sb.AppendLine(options);
 
-                if (index.ignore_dup_key.HasAny() && index.ignore_dup_key.To_ON_OFF() == "ON")
-                {
-                    if (index.is_unique.ToBoolean())
-                        sb.AppendFormat(", IGNORE_DUP_KEY = {0}", index.ignore_dup_key.To_ON_OFF());
-                    else
-                        Console.WriteLine("Ignore duplicate values is valid only for unique indexes");
-                }
-
-                if (index.allow_row_locks.HasAny())
-                    sb.AppendFormat(", ALLOW_ROW_LOCKS = {0}", index.allow_row_locks.To_ON_OFF());
-                if (index.allow_page_locks.HasAny())
-                    sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", index.allow_page_locks.To_ON_OFF());
-                if (index.fill_factor > 0)
-                    sb.AppendFormat(", FILLFACTOR = {0}", index.fill_factor);
-
-                if (indexExists)
-                    sb.AppendFormat(", DROP_EXISTING = ON");
-
-                sb.AppendLine(") ON [PRIMARY]");
+                sb.AppendLine("ON [PRIMARY]");
             }
 
             return sb.ToString();
+        }
+
+        private static string IndexOptions(Index index, bool indexExists)
+        {
+            var sb = new StringBuilder();
+
+
+            if (index.is_padded.HasValue())
+                sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.To_ON_OFF());
+
+            if (index.ignore_dup_key.HasAny() && index.ignore_dup_key.To_ON_OFF() == "ON")
+            {
+                if (index.is_unique.ToBoolean())
+                    sb.AppendFormat(", IGNORE_DUP_KEY = {0}", index.ignore_dup_key.To_ON_OFF());
+                else
+                    Console.WriteLine("Ignore duplicate values is valid only for unique indexes");
+            }
+
+            if (index.allow_row_locks.HasAny())
+                sb.AppendFormat(", ALLOW_ROW_LOCKS = {0}", index.allow_row_locks.To_ON_OFF());
+            if (index.allow_page_locks.HasAny())
+                sb.AppendFormat(", ALLOW_PAGE_LOCKS = {0}", index.allow_page_locks.To_ON_OFF());
+            if (index.fill_factor > 0)
+                sb.AppendFormat(", FILLFACTOR = {0}", index.fill_factor);
+
+            if (indexExists)
+                sb.AppendFormat(", DROP_EXISTING = ON");
+
+            return sb.Length > 0 ? string.Format(" WITH ({0})", sb).Trim(',', ' ') : string.Empty;
         }
     }
 }

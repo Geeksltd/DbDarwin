@@ -320,16 +320,16 @@ namespace DbDarwin.Service
                 }
 
 
-                //foreach (T currentObject in targetData)
-                //{
-                //    var serializer1 = new XmlSerializer(currentObject.GetType());
-                //    var foundObject = FindRemoveOrUpdate<T>(currentObject, targetData);
-                //    if (foundObject == null)
-                //    {
-                //        navigatorRemove.WriteWhitespace("");
-                //        serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
-                //    }
-                //}
+                foreach (T currentObject in targetData)
+                {
+                    var serializer1 = new XmlSerializer(currentObject.GetType());
+                    var foundObject = FindRemoveOrUpdate<T>(currentObject, sourceData);
+                    if (foundObject == null)
+                    {
+                        navigatorRemove.WriteWhitespace("");
+                        serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
+                    }
+                }
             }
         }
 
