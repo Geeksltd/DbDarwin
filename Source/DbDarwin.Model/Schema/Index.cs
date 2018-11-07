@@ -45,13 +45,13 @@ namespace DbDarwin.Model.Schema
             return type_desc.HasValue() && type_desc.ToLower() == "CLUSTERED".ToLower();
         }
 
-        [DefaultValue("True")]
+        [DefaultValue("False")]
         [XmlAttribute(AttributeName = "IsUnique")]
         public string is_unique { get; set; }
 
         public bool ShouldSerializeis_unique()
         {
-            return is_unique.HasValue() && is_unique.ToLower() == "false";
+            return is_unique.HasValue() && is_unique.ToLower() == "true";
         }
 
         [XmlIgnore]
@@ -71,6 +71,7 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "IsPrimaryKey")]
         public string is_primary_key { get; set; }
 
+        [XmlIgnore]
         [XmlAttribute(AttributeName = "IsUniqueConstraint")]
         public string is_unique_constraint { get; set; }
 

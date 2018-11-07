@@ -622,7 +622,8 @@ END
             foreach (var index in indexes)
             {
                 sb.AppendLine("GO");
-                sb.AppendFormat("CREATE {0} {1} INDEX [{2}] ON {3}", index.is_unique.ToBoolean() ? "UNIQUE" : string.Empty,
+                sb.AppendFormat("CREATE {0} {1} INDEX [{2}] ON {3}", index.
+                        is_unique.ToBoolean() ? "UNIQUE" : string.Empty,
                     index.type_desc,
                     index.Name,
                     tableName);
