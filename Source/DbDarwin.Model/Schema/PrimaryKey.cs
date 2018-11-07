@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using System.Xml.Serialization;
+using Olive;
 
 namespace DbDarwin.Model.Schema
 {
@@ -13,6 +14,8 @@ namespace DbDarwin.Model.Schema
         public PrimaryKey()
         {
             is_system_named = true;
+            is_unique = "True";
+            ignore_dup_key = "False";
         }
         [XmlAttribute(AttributeName = "Set-Name")]
         public string SetName { get; set; }
@@ -40,16 +43,30 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "TypeDesc")]
         public string type_desc { get; set; }
 
+        [DefaultValue("True")]
         [XmlAttribute(AttributeName = "IsUnique")]
         public string is_unique { get; set; }
+
+        public bool ShouldSerializeis_unique()
+        {
+            return is_unique.HasValue() && is_unique.ToLower() == "false";
+        }
 
         [XmlIgnore]
         [XmlAttribute(AttributeName = "DataSpaceId")]
         public string data_space_id { get; set; }
 
+        [DefaultValue("False")]
         [XmlAttribute(AttributeName = "IgnoreDupKey")]
         public string ignore_dup_key { get; set; }
 
+
+        public bool ShouldSerializeignore_dup_key()
+        {
+            return ignore_dup_key.HasValue() && ignore_dup_key.ToLower() == "true";
+        }
+
+        [XmlIgnore]
         [XmlAttribute(AttributeName = "IsPrimaryKey")]
         public string is_primary_key { get; set; }
 

@@ -273,7 +273,7 @@ END
                 sb.AppendFormat("PAD_INDEX = {0}", key.is_padded.To_ON_OFF());
 
 
-            if (key.ignore_dup_key.HasAny() && key.ignore_dup_key.To_ON_OFF() == "OFF")
+            if (key.ignore_dup_key.HasValue() && key.ignore_dup_key.ToLower() == "false")
             {
                 if (!key.is_unique.ToBoolean())
                     sb.AppendFormat(", IGNORE_DUP_KEY = {0}", key.ignore_dup_key.To_ON_OFF());
