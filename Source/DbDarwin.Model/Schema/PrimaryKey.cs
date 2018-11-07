@@ -16,6 +16,8 @@ namespace DbDarwin.Model.Schema
             is_system_named = true;
             is_unique = "True";
             ignore_dup_key = "False";
+            type_desc = "CLUSTERED";
+            is_disabled = "False";
         }
         [XmlAttribute(AttributeName = "Set-Name")]
         public string SetName { get; set; }
@@ -40,8 +42,13 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "Type")]
         public string type { get; set; }
 
+        [DefaultValue("CLUSTERED")]
         [XmlAttribute(AttributeName = "TypeDesc")]
         public string type_desc { get; set; }
+        public bool ShouldSerializetype_desc()
+        {
+            return type_desc.HasValue() && type_desc.ToLower() == "NONCLUSTERED".ToLower();
+        }
 
         [DefaultValue("True")]
         [XmlAttribute(AttributeName = "IsUnique")]
@@ -70,6 +77,7 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "IsPrimaryKey")]
         public string is_primary_key { get; set; }
 
+        [XmlIgnore]
         [XmlAttribute(AttributeName = "IsUniqueConstraint")]
         public string is_unique_constraint { get; set; }
 
@@ -82,8 +90,13 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "IsPadded")]
         public string is_padded { get; set; }
 
+        [DefaultValue("False")]
         [XmlAttribute(AttributeName = "IsDisabled")]
         public string is_disabled { get; set; }
+        public bool ShouldSerializeis_disabled()
+        {
+            return is_disabled.HasValue() && is_disabled.ToLower() == "true";
+        }
 
         [XmlIgnore]
         [XmlAttribute(AttributeName = "IsHypothetical")]

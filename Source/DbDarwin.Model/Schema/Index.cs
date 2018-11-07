@@ -1,11 +1,20 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Xml.Serialization;
+using Olive;
 
 namespace DbDarwin.Model.Schema
 {
     [Serializable]
     public class Index
     {
+        public Index()
+        {
+            is_unique = "False";
+            ignore_dup_key = "False";
+            type_desc = "NONCLUSTERED";
+            is_disabled = "False";
+        }
         [XmlAttribute(AttributeName = "Set-Name")]
         public string SetName { get; set; }
 
@@ -28,19 +37,37 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "Type")]
         public string type { get; set; }
 
+        [DefaultValue("NONCLUSTERED")]
         [XmlAttribute(AttributeName = "TypeDesc")]
         public string type_desc { get; set; }
+        public bool ShouldSerializetype_desc()
+        {
+            return type_desc.HasValue() && type_desc.ToLower() == "CLUSTERED".ToLower();
+        }
 
+        [DefaultValue("True")]
         [XmlAttribute(AttributeName = "IsUnique")]
         public string is_unique { get; set; }
+
+        public bool ShouldSerializeis_unique()
+        {
+            return is_unique.HasValue() && is_unique.ToLower() == "false";
+        }
 
         [XmlIgnore]
         [XmlAttribute(AttributeName = "DataSpaceId")]
         public string data_space_id { get; set; }
 
+        [DefaultValue("False")]
         [XmlAttribute(AttributeName = "IgnoreDupKey")]
         public string ignore_dup_key { get; set; }
 
+        public bool ShouldSerializeignore_dup_key()
+        {
+            return ignore_dup_key.HasValue() && ignore_dup_key.ToLower() == "true";
+        }
+
+        [XmlIgnore]
         [XmlAttribute(AttributeName = "IsPrimaryKey")]
         public string is_primary_key { get; set; }
 
@@ -55,8 +82,13 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "IsPadded")]
         public string is_padded { get; set; }
 
+        [DefaultValue("False")]
         [XmlAttribute(AttributeName = "IsDisabled")]
         public string is_disabled { get; set; }
+        public bool ShouldSerializeis_disabled()
+        {
+            return is_disabled.HasValue() && is_disabled.ToLower() == "true";
+        }
 
         [XmlIgnore]
         [XmlAttribute(AttributeName = "IsHypothetical")]
