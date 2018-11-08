@@ -38,7 +38,7 @@ namespace DbDarwin.Model.Schema
         public string type { get; set; }
 
         [DefaultValue("NONCLUSTERED")]
-        [XmlAttribute(AttributeName = "TypeDesc")]
+        [XmlAttribute(AttributeName = "Type")]
         public string type_desc { get; set; }
         public bool ShouldSerializetype_desc()
         {
@@ -46,7 +46,7 @@ namespace DbDarwin.Model.Schema
         }
 
         [DefaultValue("False")]
-        [XmlAttribute(AttributeName = "IsUnique")]
+        [XmlAttribute(AttributeName = "Unique")]
         public string is_unique { get; set; }
 
         public bool ShouldSerializeis_unique()

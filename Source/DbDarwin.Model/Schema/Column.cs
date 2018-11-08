@@ -40,7 +40,7 @@ namespace DbDarwin.Model.Schema
         public string COLUMN_DEFAULT { get; set; }
 
         [DefaultValue("YES")]
-        [XmlAttribute(AttributeName = "IsNullable")]
+        [XmlAttribute(AttributeName = "Nullable")]
         public string IS_NULLABLE { get; set; }
 
         public bool ShouldSerializeIS_NULLABLE()
@@ -51,7 +51,7 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "DataType")]
         public string DATA_TYPE { get; set; }
 
-        [XmlAttribute(AttributeName = "CharacterMaximumLength")]
+        [XmlAttribute(AttributeName = "CharLimit")]
         public string CHARACTER_MAXIMUM_LENGTH { get; set; }
 
         [XmlIgnore]

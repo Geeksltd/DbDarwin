@@ -17,6 +17,7 @@ namespace DbDarwin.Model.Schema
             UPDATE_RULE = "NO ACTION";
             DELETE_RULE = "NO ACTION";
             Ref_TABLE_SCHEMA = "dbo";
+            CONSTRAINT_SCHEMA = "dbo";
         }
 
         [XmlAttribute(AttributeName = "Set-Name")]
@@ -27,6 +28,10 @@ namespace DbDarwin.Model.Schema
 
         [XmlAttribute(AttributeName = "ConstraintSchema")]
         public string CONSTRAINT_SCHEMA { get; set; }
+        public bool ShouldSerializeCONSTRAINT_SCHEMA()
+        {
+            return CONSTRAINT_SCHEMA.HasValue() && CONSTRAINT_SCHEMA.ToLower() != "dbo".ToLower();
+        }
 
         public string Name => CONSTRAINT_NAME;
 
