@@ -13,13 +13,13 @@ namespace DbDarwin.UnitTestProject
         {
             ExtractSchemaService.ExtractSchema(new ExtractSchema
             {
-                ConnectionString = "Data Source=.;Initial Catalog=Pay247_Source;Integrated Security=True;Connect Timeout=30",
+                ConnectionString = "Data Source=.;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Source.xml"
             });
 
             ExtractSchemaService.ExtractSchema(new ExtractSchema
             {
-                ConnectionString = "Data Source=.;Initial Catalog=Pay247_Target;Integrated Security=True;Connect Timeout=30",
+                ConnectionString = "Data Source=.;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Target.xml"
             });
 

@@ -34,6 +34,10 @@ namespace DbDarwin.Service
             sb.AppendLine("BEGIN TRANSACTION ");
             if (diffFile != null)
             {
+                foreach (var foreignKey in diffFile.Update.Tables.Select(x => x.Update).SelectMany(c => c.ForeignKeys).ToList().GroupBy(x => x.TABLE_NAME))
+                    sb.Append(GenerateRemoveForeignKey(foreignKey.ToList(), foreignKey.Key));
+
+
                 if (diffFile.Update?.Tables != null)
                     sb.AppendLine(GenerateUpdateTables(diffFile.Update.Tables));
                 if (diffFile.Add?.Tables != null)
@@ -52,6 +56,8 @@ namespace DbDarwin.Service
                     {
                         if (table.ForeignKeys.Any())
                             sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name));
+                        if (table.Update?.ForeignKeys != null)
+                            sb.Append(GenerateNewForeignKey(table.Update.ForeignKeys, table.Name));
                         if (table.Add?.ForeignKeys != null)
                             sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name));
 
@@ -166,6 +172,8 @@ namespace DbDarwin.Service
                         sb.Append(GenerateNewPrimaryKey(table.Update.PrimaryKey, table.Name));
                     if (table.Update.Indexes.Any())
                         sb.Append(GenerateUpdateIndexes(table.Update.Indexes, table.Name));
+
+
 
                 }
             }
@@ -363,7 +371,13 @@ END
 
                 var resultCompare = compareLogic.Compare(new Index(), index);
                 if (!resultCompare.AreEqual)
+                {
+
                     sb.AppendLine(GenerateNewIndexes(new List<Index> { index }, tableName));
+                    if (index.is_disabled.ToBoolean())
+                        sb.AppendLine(string.Format("ALTER INDEX [{0}] ON [{1}] DISABLE", index.Name, tableName));
+                }
+
                 sb.AppendLine();
                 sb.AppendLine("GO");
             }
@@ -519,8 +533,8 @@ END
             sb.AppendFormat("ALTER TABLE [{0}]", tableName);
             sb.AppendLine();
             sb.Append("\t");
-            sb.AppendFormat("DROP COLUMN {0}",
-                columns.Select(x => x.Name).Aggregate((x, y) => x + ", " + y).Trim(new[] { ',' }));
+            sb.AppendFormat("DROP COLUMN {0}", columns.Select(x => x.Name).Aggregate("", (current, c) => current + $"[{c}] ,").Trim(','));
+
 
             sb.AppendLine();
             sb.AppendLine("GO");
@@ -679,7 +693,7 @@ END
             if (indexExists)
                 sb.AppendFormat(", DROP_EXISTING = ON");
 
-            return sb.Length > 0 ? string.Format(" WITH ({0})", sb).Trim(',', ' ') : string.Empty;
+            return sb.Length > 0 ? string.Format(" WITH ({0})", sb.ToString().Trim(',', ' ')) : string.Empty;
         }
     }
 }
