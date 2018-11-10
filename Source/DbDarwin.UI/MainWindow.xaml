@@ -5,12 +5,46 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DbDarwin.UI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="527.027" Width="766.555" Foreground="White" Background="{DynamicResource Background}">
+        Title="MainWindow" Height="527.027" Width="766.555" Foreground="{DynamicResource White}" Background="{DynamicResource Background}">
     <Grid>
-        <StatusBar Height="29" Margin="0" VerticalAlignment="Bottom" Background="#FF007ACC"/>
+        <StatusBar Height="26" Margin="0" VerticalAlignment="Bottom" Background="#FF007ACC">
+            <Label x:Name="label" Content="Ready" Foreground="{DynamicResource White}" HorizontalAlignment="Left" Padding="0" ScrollViewer.CanContentScroll="True" Margin="5,0,0,0" VerticalAlignment="Top"/>
+        </StatusBar>
         <ToolBar x:Name="toolBar" VerticalAlignment="Top" Height="36" Background="{DynamicResource Background}">
-            <Button x:Name="button" Content="Compare" Height="31" VerticalAlignment="Top" Width="75"/>
+            <Button x:Name="button" Content="Compare" Height="31" VerticalAlignment="Top" Width="75" Foreground="{DynamicResource White}"/>
         </ToolBar>
+        <ToolBarPanel Height="35" Margin="0,36,0,0" VerticalAlignment="Top" >
+            <Grid Height="29" Width="Auto" >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="350" />
+                    <ColumnDefinition Width="400" />
+                </Grid.ColumnDefinitions>
+                <ComboBox x:Name="SelectSource" Grid.Column="0" Grid.Row="0" Text="Select Source"
+                          IsEditable="True"
+                          IsReadOnly="False"
+                          >
+                </ComboBox>
+
+                <ComboBox x:Name="SelectTarget" Grid.Column="1" Grid.Row="0" Text="Select Target"
+                          IsEditable="True"
+                          IsReadOnly="False"
+                          Margin="10,0,0,0" >
+                    
+                </ComboBox>
+
+            </Grid>
+        </ToolBarPanel>
+        
+
+
+
+
+
+
+
 
     </Grid>
 </Window>
