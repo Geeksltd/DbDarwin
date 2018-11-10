@@ -4,6 +4,8 @@
              xmlns:local="clr-namespace:DbDarwin.UI"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+
+        <SolidColorBrush x:Key="Background" Color="#FF252526"/>
+
     </Application.Resources>
 </Application>

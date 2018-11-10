@@ -5,8 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DbDarwin.UI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="527.027" Width="766.555" Foreground="White" Background="{DynamicResource Background}">
     <Grid>
-        
+        <StatusBar Height="29" Margin="0" VerticalAlignment="Bottom" Background="#FF007ACC"/>
+        <ToolBar x:Name="toolBar" VerticalAlignment="Top" Height="36" Background="{DynamicResource Background}">
+            <Button x:Name="button" Content="Compare" Height="31" VerticalAlignment="Top" Width="75"/>
+        </ToolBar>
+
     </Grid>
 </Window>
