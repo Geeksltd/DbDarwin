@@ -24,8 +24,7 @@ namespace DbDarwin.UI
         {
             InitializeComponent();
 
-            SelectSource.Items.Add("Select Source");
-            SelectTarget.Items.Add("Select Target");
+
         }
     }
 }
