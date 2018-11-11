@@ -26,5 +26,13 @@ namespace DbDarwin.UI
 
 
         }
+
+        private void ComboBoxItem_Selected(object sender, RoutedEventArgs e)
+        {
+            if (new ConnectWindow().ShowDialog() ?? false)
+            {
+
+            }
+        }
     }
 }

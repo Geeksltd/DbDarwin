@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DbDarwin.UI"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="ConnectWindow" Height="450" Width="563.851">
 
 
@@ -21,7 +22,7 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Label  Content="Server Name:"  Grid.Column="0" Grid.Row="0"  />
         <Label  Content="Authentication:"  Grid.Column="0" Grid.Row="1"  />
@@ -31,15 +32,15 @@
         <TextBox x:Name="ServerName" Grid.Column="1"  Grid.Row="0"  TextWrapping="Wrap" Text="" Width="300"/>
 
         <ComboBox  x:Name="Authentication"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="1"  >
-            <ComboBoxItem IsSelected="True" >Windows Authentication</ComboBoxItem>
-            <ComboBoxItem IsSelected="True" >SQL Authentication</ComboBoxItem>
+            <ComboBoxItem IsSelected="True" Tag="1" >Windows Authentication</ComboBoxItem>
+            <ComboBoxItem Tag="2" >SQL Authentication</ComboBoxItem>
         </ComboBox>
 
         <TextBox x:Name="UserName" Grid.Column="1"  Grid.Row="2"  TextWrapping="Wrap" Text="" Width="300"/>
         <TextBox x:Name="Password" Grid.Column="1"  Grid.Row="3"  TextWrapping="Wrap" Text="" Width="300"/>
         <CheckBox x:Name="RememberPassword" Content="Remember Password" Grid.Column="1" Grid.Row="4" />
 
-        <ComboBox  x:Name="DatabaseName"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="5" IsEditable="True">
+        <ComboBox  x:Name="DatabaseName"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="5" IsEditable="True" DropDownOpened="DatabaseName_DropDownOpened">
         </ComboBox>
         
 

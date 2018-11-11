@@ -39,7 +39,6 @@ namespace DbDarwin.Service
                 {
                     var obj = new T();
 
-
                     foreach (var propertyInfo in obj.GetType().GetProperties())
                     {
                         try
@@ -79,6 +78,29 @@ namespace DbDarwin.Service
             {
                 Console.WriteLine(ex.Message);
                 return new List<T>();
+            }
+        }
+
+
+
+        public static List<string> DataTableToListAsString(this DataTable table)
+        {
+            try
+            {
+
+                var list = new List<string>();
+
+                var columns = table.Columns.Cast<DataColumn>()
+                    .Select(x => x.ColumnName)
+                    .ToArray();
+                foreach (DataRow row in table.Rows)
+                    list.Add(row[0].ToString());
+                return list;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return new List<string>();
             }
         }
     }

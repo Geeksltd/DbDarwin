@@ -32,21 +32,20 @@ namespace DbDarwin.Service
 
                     sql.Open();
                     var allTables = sql.GetSchema("Tables");
-
                     /// Fetch All Refrences from SQL
-                    var referencesMapped = LoadData<ForeignKey>(sql, "References", Properties.Resources.REFERENTIAL_CONSTRAINTS);
+                    var referencesMapped = SqlService.LoadData<ForeignKey>(sql, "References", Properties.Resources.REFERENTIAL_CONSTRAINTS);
                     /// Fetch All index_columns from SQL
-                    var indexColumnsMapped = LoadData<IndexColumns>(sql, "index_columns", "SELECT * FROM sys.index_columns");
+                    var indexColumnsMapped = SqlService.LoadData<IndexColumns>(sql, "index_columns", "SELECT * FROM sys.index_columns");
                     /// fetch COLUMNS schema
-                    var columnsMapped = LoadData<Column>(sql, "Columns", "select * from INFORMATION_SCHEMA.COLUMNS");
+                    var columnsMapped = SqlService.LoadData<Column>(sql, "Columns", "select * from INFORMATION_SCHEMA.COLUMNS");
                     /// Fetch All Index from SQL
-                    var indexMapped = LoadData<Index>(sql, "index_columns", "SELECT * FROM sys.indexes");
+                    var indexMapped = SqlService.LoadData<Index>(sql, "index_columns", "SELECT * FROM sys.indexes");
                     /// Fetch All sys.columns from SQL
-                    var systemColumnsMapped = LoadData<SystemColumns>(sql, "allSysColumns", "SELECT * FROM sys.columns");
+                    var systemColumnsMapped = SqlService.LoadData<SystemColumns>(sql, "allSysColumns", "SELECT * FROM sys.columns");
                     /// Fetch All Objects from SQL
-                    var objectMapped = LoadData<SqlObject>(sql, "sys.object", "SELECT * FROM sys.objects");
+                    var objectMapped = SqlService.LoadData<SqlObject>(sql, "sys.object", "SELECT * FROM sys.objects");
                     /// Get All Key Constraint
-                    var keyConstraints = LoadData<KeyConstraint>(sql, "keyConstraints", "SELECT * FROM [sys].[key_constraints]");
+                    var keyConstraints = SqlService.LoadData<KeyConstraint>(sql, "keyConstraints", "SELECT * FROM [sys].[key_constraints]");
 
 
                     var constraintInformation = (from ind in indexMapped
@@ -147,19 +146,7 @@ namespace DbDarwin.Service
             return null;
         }
 
-        public static List<T> LoadData<T>(SqlConnection connection, string tableName, string sqlScript) where T : class, new()
-        {
-            using (var da = new SqlDataAdapter())
-            {
-                da.SelectCommand = new SqlCommand { Connection = connection };
-                var dataTable = new DataTable(tableName);
-                da.SelectCommand.CommandText = sqlScript;
-                da.Fill(dataTable);
-                return dataTable.DataTableToList<T>();
 
-
-            }
-        }
 
         private static void SaveToFile(Database database, string fileOutput)
         {

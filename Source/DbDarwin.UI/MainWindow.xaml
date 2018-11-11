@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DbDarwin.UI"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="MainWindow" Height="527.027" Width="766.555" Background="#FF1C1C1C">
     <Grid>
         <StatusBar Height="26" Margin="0" VerticalAlignment="Bottom" Background="#FF007ACC">
@@ -14,10 +15,10 @@
             <Button x:Name="Button" IsEnabled="False" Content="Compare" Height="31" VerticalAlignment="Top" Width="75"/>
 
             <ComboBox  x:Name="SelectSource"  Width="250" Text="Select Source"  >
-                <ComboBoxItem IsSelected="True">Select Source...</ComboBoxItem>
+                <ComboBoxItem  Tag="1" Selected="ComboBoxItem_Selected" >Select Source...</ComboBoxItem>
             </ComboBox>
             <ComboBox  x:Name="SelectTarget" Width="250" Text="Select Target"  Margin="10,0,0,0"  >
-                <ComboBoxItem IsSelected="True">Select Target...</ComboBoxItem>
+                <ComboBoxItem >Select Target...</ComboBoxItem>
             </ComboBox>
 
 

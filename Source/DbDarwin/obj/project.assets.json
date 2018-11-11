@@ -2110,6 +2110,7 @@
         "dependencies": {
           "CompareNETObjects": "4.57.0",
           "DbDarwin.Model": "1.0.0",
+          "DbDarwin.Service.Standard": "1.0.0",
           "GCop.All.Geeks": "2.3.9",
           "Olive": "1.0.121",
           "PowerMapper": "1.0.0"
@@ -2119,6 +2120,20 @@
         },
         "runtime": {
           "bin/placeholder/DbDarwin.Service.dll": {}
+        }
+      },
+      "DbDarwin.Service.Standard/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "dependencies": {
+          "Olive": "1.0.121",
+          "System.Data.SqlClient": "4.5.1"
+        },
+        "compile": {
+          "bin/placeholder/DbDarwin.Service.Standard.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/DbDarwin.Service.Standard.dll": {}
         }
       }
     }
@@ -6794,6 +6809,11 @@
       "type": "project",
       "path": "../DbDarwin.Service/DbDarwin.Service.csproj",
       "msbuildProject": "../DbDarwin.Service/DbDarwin.Service.csproj"
+    },
+    "DbDarwin.Service.Standard/1.0.0": {
+      "type": "project",
+      "path": "../DbDarwin.Service2/DbDarwin.Service.Standard.csproj",
+      "msbuildProject": "../DbDarwin.Service2/DbDarwin.Service.Standard.csproj"
     }
   },
   "projectFileDependencyGroups": {

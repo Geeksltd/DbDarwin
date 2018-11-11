@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DbDarwin.Model\DbDarwin.Model.csproj" />
+    <ProjectReference Include="..\DbDarwin.Service2\DbDarwin.Service.Standard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
