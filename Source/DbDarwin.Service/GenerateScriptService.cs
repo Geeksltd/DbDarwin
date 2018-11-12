@@ -1,14 +1,14 @@
 ﻿using DbDarwin.Model;
+using DbDarwin.Model.Command;
 using DbDarwin.Model.Schema;
 using KellermanSoftware.CompareNetObjects;
+using Olive;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
-using DbDarwin.Model.Command;
-using Olive;
 
 namespace DbDarwin.Service
 {
@@ -34,7 +34,9 @@ namespace DbDarwin.Service
             sb.AppendLine("BEGIN TRANSACTION ");
             if (diffFile != null)
             {
-                foreach (var foreignKey in diffFile.Update.Tables.Select(x => x.Update).SelectMany(c => c.ForeignKeys).ToList().GroupBy(x => x.TABLE_NAME))
+                foreach (var foreignKey in diffFile.Update.Tables.Select(x => x.Update)
+                    .ExceptNull()
+                    .SelectMany(c => c.ForeignKeys).ToList().GroupBy(x => x.TABLE_NAME))
                     sb.Append(GenerateRemoveForeignKey(foreignKey.ToList(), foreignKey.Key));
 
 
