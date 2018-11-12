@@ -43,7 +43,7 @@ namespace DbDarwin.Service
                     /// Fetch All sys.columns from SQL
                     var systemColumnsMapped = SqlService.LoadData<SystemColumns>(sql, "allSysColumns", "SELECT * FROM sys.columns");
                     /// Fetch All Objects from SQL
-                    var objectMapped = SqlService.LoadData<SqlObject>(sql, "sys.object", "SELECT * FROM sys.objects");
+                    var objectMapped = SqlService.LoadData<SqlObject>(sql, "sys.object", "SELECT o.*, s.name as schemaName FROM sys.objects o join sys.schemas s on s.schema_id = o.schema_id");
                     /// Get All Key Constraint
                     var keyConstraints = SqlService.LoadData<KeyConstraint>(sql, "keyConstraints", "SELECT * FROM [sys].[key_constraints]");
 
@@ -62,7 +62,7 @@ namespace DbDarwin.Service
                         var schemaTable = row["TABLE_SCHEMA"].ToString();
                         var tableName = row["TABLE_NAME"].ToString();
                         Console.WriteLine(schemaTable + @"." + tableName);
-                        var tableId = objectMapped.Where(x => x.name == tableName).Select(x => x.object_id)
+                        var tableId = objectMapped.Where(x => x.schemaName == schemaTable && x.name == tableName).Select(x => x.object_id)
                             .FirstOrDefault();
 
                         var indexes = FetchIndexes(constraintInformation, tableId);
@@ -70,21 +70,22 @@ namespace DbDarwin.Service
 
                         var myDt = new DbDarwin.Model.Schema.Table
                         {
-                            Name = row["TABLE_NAME"].ToString(),
+                            Name = tableName,
+                            Schema = schemaTable,
                             Columns = columnsMapped.Where(x =>
-                                    x.TABLE_NAME == row["TABLE_NAME"].ToString() &&
-                                    x.TABLE_SCHEMA == row["TABLE_SCHEMA"].ToString())
+                                    x.TABLE_NAME == tableName &&
+                                    x.TABLE_SCHEMA == schemaTable)
                                 .ToList(),
                             Indexes = indexes,
                             PrimaryKey = primaryKey,
                             ForeignKeys = referencesMapped.Where(x =>
-                                x.CONSTRAINT_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList()
+                                x.TABLE_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList()
 
                         };
                         database.Tables.Add(myDt);
                     }
 
-                    database.Tables = database.Tables.OrderBy(x => x.Name).ToList();
+                    database.Tables = database.Tables?.OrderBy(x => x.FullName).ToList();
 
                     // Create Serialize Object and save as XML file
                     SaveToFile(database, model.OutputFile);

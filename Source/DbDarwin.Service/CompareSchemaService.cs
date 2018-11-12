@@ -70,7 +70,7 @@ namespace DbDarwin.Service
             foreach (var sourceTable in sourceSchema.Tables)
             {
 
-                var foundTable = targetSchema.Tables.FirstOrDefault(x => x.Name == sourceTable.Name);
+                var foundTable = targetSchema.Tables.FirstOrDefault(x => x.FullName == sourceTable.FullName);
 
                 if (foundTable == null)
                 {
@@ -88,6 +88,7 @@ namespace DbDarwin.Service
 
                     var root = new XElement("Table");
                     root.SetAttributeValue(nameof(sourceTable.Name), sourceTable.Name);
+                    root.SetAttributeValue(nameof(sourceTable.Schema), sourceTable.Schema);
 
                     var add = new XElement("add");
                     var navigatorAdd = add.CreateWriter();
@@ -149,7 +150,7 @@ namespace DbDarwin.Service
                         updateTables.Add(root);
                 }
             }
-            var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.Name).ToList().Contains(c.Name)).ToList();
+            var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.FullName).ToList().Contains(c.FullName)).ToList();
             using (var writer = removeTables.CreateWriter())
             {
                 foreach (var table in mustRemove)

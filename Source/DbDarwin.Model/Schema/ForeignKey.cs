@@ -18,6 +18,7 @@ namespace DbDarwin.Model.Schema
             DELETE_RULE = "NO ACTION";
             Ref_TABLE_SCHEMA = "dbo";
             CONSTRAINT_SCHEMA = "dbo";
+            TABLE_SCHEMA = "dbo";
         }
 
         [XmlAttribute(AttributeName = "Set-Name")]
@@ -64,6 +65,15 @@ namespace DbDarwin.Model.Schema
         public bool ShouldSerializeDELETE_RULE()
         {
             return DELETE_RULE.HasValue() && DELETE_RULE.ToLower() != "NO ACTION".ToLower();
+        }
+
+        public string FullTableName => TABLE_SCHEMA + "." + TABLE_NAME;
+
+        [XmlAttribute(AttributeName = "TableSchema")]
+        public string TABLE_SCHEMA { get; set; }
+        public bool ShouldSerializeTABLE_SCHEMA()
+        {
+            return TABLE_SCHEMA.HasValue() && TABLE_SCHEMA.ToLower() != "dbo".ToLower();
         }
 
         [XmlAttribute(AttributeName = "TableName")]

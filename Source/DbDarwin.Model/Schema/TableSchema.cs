@@ -5,6 +5,7 @@ using System.Data;
 using System.Text;
 using System.Xml.Serialization;
 using DbDarwin.Model.Schema;
+using Olive;
 
 namespace DbDarwin.Model.Schema
 {
@@ -13,13 +14,28 @@ namespace DbDarwin.Model.Schema
     [Serializable]
     public class Table
     {
+        public Table()
+        {
+            Schema = "dbo";
+        }
 
+        public string FullName => Schema + "." + Name;
 
         [XmlAttribute]
         public string Name { get; set; }
 
+        [XmlAttribute]
+        public string Schema { get; set; }
+
+        public bool ShouldSerializeSchema()
+        {
+            return Schema.HasValue() && Schema.ToLower() != "dbo".ToLower();
+        }
+
         [XmlAttribute("Set-Name")]
         public string SetName { get; set; }
+
+
 
         [XmlElement("Column")]
         public List<Column> Columns { get; set; }
