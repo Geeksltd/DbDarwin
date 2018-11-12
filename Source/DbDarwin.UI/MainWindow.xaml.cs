@@ -27,11 +27,36 @@ namespace DbDarwin.UI
 
         }
 
-        private void ComboBoxItem_Selected(object sender, RoutedEventArgs e)
-        {
-            if (new ConnectWindow().ShowDialog() ?? false)
-            {
 
+        private void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SelectSource.SelectedItem != null && ((ComboBoxItem)SelectSource.SelectedItem).Tag.ToString() == "1")
+            {
+                var result = new ConnectWindow().ShowDialog();
+                if (result ?? false)
+                {
+
+                }
+                else
+                {
+                    SelectSource.SelectedIndex = -1;
+                }
+            }
+        }
+
+        private void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SelectTarget.SelectedItem != null && ((ComboBoxItem)SelectTarget.SelectedItem).Tag.ToString() == "1")
+            {
+                var result = new ConnectWindow().ShowDialog();
+                if (result ?? false)
+                {
+
+                }
+                else
+                {
+                    SelectTarget.SelectedIndex = -1;
+                }
             }
         }
     }

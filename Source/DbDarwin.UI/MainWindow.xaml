@@ -14,11 +14,11 @@
         <ToolBar x:Name="ToolBar" VerticalAlignment="Top" Height="36">
             <Button x:Name="Button" IsEnabled="False" Content="Compare" Height="31" VerticalAlignment="Top" Width="75"/>
 
-            <ComboBox  x:Name="SelectSource"  Width="250" Text="Select Source"  >
-                <ComboBoxItem  Tag="1" Selected="ComboBoxItem_Selected" >Select Source...</ComboBoxItem>
+            <ComboBox  x:Name="SelectSource"  Width="250" Text="Select Source" SelectionChanged="SelectSource_SelectionChanged"  >
+                <ComboBoxItem  Tag="1" >Select Source...</ComboBoxItem>
             </ComboBox>
-            <ComboBox  x:Name="SelectTarget" Width="250" Text="Select Target"  Margin="10,0,0,0"  >
-                <ComboBoxItem >Select Target...</ComboBoxItem>
+            <ComboBox  x:Name="SelectTarget" Width="250" Text="Select Target"  Margin="10,0,0,0" SelectionChanged="SelectTarget_SelectionChanged"  >
+                <ComboBoxItem  Tag="1"  >Select Target...</ComboBoxItem>
             </ComboBox>
 
 

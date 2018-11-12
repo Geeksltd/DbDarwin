@@ -6,43 +6,45 @@
         xmlns:local="clr-namespace:DbDarwin.UI"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="ConnectWindow" Height="450" Width="563.851">
+        Title="Connect" Height="320" Width="441" ResizeMode="NoResize" Topmost="True">
 
 
-    <Grid  Height="219" VerticalAlignment="Top" Background="WhiteSmoke" Margin="10" >
-   
+    <Grid  Height="212" VerticalAlignment="Top" Background="WhiteSmoke" Margin="10,10,10,0" >
+
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"  />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="35"  />
+            <RowDefinition Height="35" />
+            <RowDefinition Height="35" />
+            <RowDefinition Height="35" />
+            <RowDefinition Height="35" />
+            <RowDefinition Height="35" />
 
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Label  Content="Server Name:"  Grid.Column="0" Grid.Row="0"  />
-        <Label  Content="Authentication:"  Grid.Column="0" Grid.Row="1"  />
-        <Label  Content="User Name:"  Grid.Column="0" Grid.Row="2"  />
-        <Label  Content="Password:"  Grid.Column="0" Grid.Row="3"  />
-        <Label  Content="Database Name:"  Grid.Column="0" Grid.Row="5"  />
-        <TextBox x:Name="ServerName" Grid.Column="1"  Grid.Row="0"  TextWrapping="Wrap" Text="" Width="300"/>
+        <Label  Content="Server Name:"  Grid.Column="0" Grid.Row="0" VerticalAlignment="Center"  />
+        <Label  Content="Authentication:"  Grid.Column="0" Grid.Row="1" VerticalAlignment="Center"  />
+        <Label  Content="User Name:"  Grid.Column="0" Grid.Row="2" VerticalAlignment="Center"  />
+        <Label  Content="Password:"  Grid.Column="0" Grid.Row="3" VerticalAlignment="Center"  />
+        <Label  Content="Database Name:"  Grid.Column="0" Grid.Row="5" VerticalAlignment="Center"  />
+        <TextBox x:Name="ServerName" Grid.Column="1"  Grid.Row="0"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
 
-        <ComboBox  x:Name="Authentication"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="1"  >
+        <ComboBox  x:Name="Authentication"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="1" Margin="5" FontSize="14" Height="25"  >
             <ComboBoxItem IsSelected="True" Tag="1" >Windows Authentication</ComboBoxItem>
             <ComboBoxItem Tag="2" >SQL Authentication</ComboBoxItem>
         </ComboBox>
 
-        <TextBox x:Name="UserName" Grid.Column="1"  Grid.Row="2"  TextWrapping="Wrap" Text="" Width="300"/>
-        <TextBox x:Name="Password" Grid.Column="1"  Grid.Row="3"  TextWrapping="Wrap" Text="" Width="300"/>
-        <CheckBox x:Name="RememberPassword" Content="Remember Password" Grid.Column="1" Grid.Row="4" />
+        <TextBox x:Name="UserName" Grid.Column="1"  Grid.Row="2"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
+        <TextBox x:Name="Password" Grid.Column="1"  Grid.Row="3"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
+        <CheckBox x:Name="RememberPassword" Content="Remember Password" Grid.Column="1" Grid.Row="4" Margin="5" FontSize="14" Height="25" />
 
-        <ComboBox  x:Name="DatabaseName"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="5" IsEditable="True" DropDownOpened="DatabaseName_DropDownOpened">
+        <ComboBox  x:Name="DatabaseName"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="5" IsEditable="True" DropDownOpened="DatabaseName_DropDownOpened" Margin="5" FontSize="14" Height="25">
         </ComboBox>
-        
+        <Button x:Name="Connect" Content="Connect" HorizontalAlignment="Left" Height="28" Margin="5,55,0,-48" Grid.Row="5" VerticalAlignment="Top" Width="101" Grid.Column="1"/>
+        <Button x:Name="Cancel" Content="Cancel" HorizontalAlignment="Left" Height="28" Margin="206,55,0,-48" Grid.Row="5" VerticalAlignment="Top" Width="100" Grid.Column="1" Click="Cancel_Click"/>
+
 
 
 

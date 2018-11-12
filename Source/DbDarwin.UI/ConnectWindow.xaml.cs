@@ -59,5 +59,10 @@ namespace DbDarwin.UI
                 MessageBox.Show(exception.Message);
             }
         }
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }
