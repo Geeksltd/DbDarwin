@@ -14,3 +14,5 @@
 /Source/DbDarwin.UnitTestProject/obj
 /Source/DbDarwin.UnitTestProject/bin/Debug/netcoreapp2.1
 /Source/DbDarwin.UI/obj/Debug
+/Source/DbDarwin.UI/obj/Release
+/Source/DbDarwin.Service2/obj/Release/netstandard2.0

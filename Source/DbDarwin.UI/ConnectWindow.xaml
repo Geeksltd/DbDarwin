@@ -42,7 +42,7 @@
 
         <ComboBox  x:Name="DatabaseName"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="5" IsEditable="True" DropDownOpened="DatabaseName_DropDownOpened" Margin="5" FontSize="14" Height="25">
         </ComboBox>
-        <Button x:Name="Connect" Content="Connect" HorizontalAlignment="Left" Height="28" Margin="5,55,0,-48" Grid.Row="5" VerticalAlignment="Top" Width="101" Grid.Column="1"/>
+        <Button x:Name="Connect" Content="Connect" HorizontalAlignment="Left" Height="28" Margin="5,55,0,-48" Grid.Row="5" VerticalAlignment="Top" Width="101" Grid.Column="1" Click="Connect_Click"/>
         <Button x:Name="Cancel" Content="Cancel" HorizontalAlignment="Left" Height="28" Margin="206,55,0,-48" Grid.Row="5" VerticalAlignment="Top" Width="100" Grid.Column="1" Click="Cancel_Click"/>
 
 

@@ -20,6 +20,7 @@ namespace DbDarwin.UI
     /// </summary>
     public partial class ConnectWindow : Window
     {
+        public string ConnectionString { get; set; }
         public ConnectWindow()
         {
             InitializeComponent();
@@ -29,8 +30,6 @@ namespace DbDarwin.UI
         {
             try
             {
-
-
                 var connection = "";
                 if (((ComboBoxItem)Authentication.SelectedItem).Tag.ToString() == "1")
                 {
@@ -62,7 +61,17 @@ namespace DbDarwin.UI
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
+            this.DialogResult = false;
             Close();
+        }
+
+        private void Connect_Click(object sender, RoutedEventArgs e)
+        {
+            if (((ComboBoxItem)Authentication.SelectedItem).Tag.ToString() == "1")
+                ConnectionString = $"Data Source={ServerName.Text};Initial Catalog={DatabaseName.SelectedValue};Integrated Security=True;Connect Timeout=60;";
+            else
+                ConnectionString = $"Data Source={ServerName.Text};Initial Catalog={DatabaseName.SelectedValue};Integrated Security=False;User Id={UserName.Text};Password={Password.Text};Connect Timeout=60;";
+            this.DialogResult = true;
         }
     }
 }

@@ -48,10 +48,14 @@ namespace DbDarwin.UI
         {
             if (SelectTarget.SelectedItem != null && ((ComboBoxItem)SelectTarget.SelectedItem).Tag.ToString() == "1")
             {
-                var result = new ConnectWindow().ShowDialog();
+                var connect = new ConnectWindow();
+                var result = connect.ShowDialog();
                 if (result ?? false)
                 {
-
+                    //SelectTarget.Items.Add(new ComboBoxItem()
+                    //{
+                    //   Content = C
+                    //});
                 }
                 else
                 {
