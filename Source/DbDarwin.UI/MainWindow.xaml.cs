@@ -27,14 +27,31 @@ namespace DbDarwin.UI
 
         }
 
+        public void EnableCompare()
+        {
+            CompareButton.IsEnabled = SelectSource.Items.Count > 1 && SelectTarget.Items.Count > 1;
+        }
+
 
         private void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SelectSource.SelectedItem != null && ((ComboBoxItem)SelectSource.SelectedItem).Tag.ToString() == "1")
+            var tag = ((ComboBoxItem)SelectSource.SelectedItem)?.Tag;
+            if (tag != null && tag.ToString() == "1")
             {
-                var result = new ConnectWindow().ShowDialog();
+                var connect = new ConnectWindow();
+                var result = connect.ShowDialog();
                 if (result ?? false)
                 {
+                    if (SelectSource.Items.Count > 1)
+                        SelectSource.Items.RemoveAt(1);
+                    SelectSource.Items.Add(new ComboBoxItem()
+                    {
+                        Content = connect.ConnectionName,
+                        DataContext = connect.ConnectionString,
+                        IsSelected = true,
+                    });
+
+
 
                 }
                 else
@@ -42,26 +59,38 @@ namespace DbDarwin.UI
                     SelectSource.SelectedIndex = -1;
                 }
             }
+            EnableCompare();
         }
 
         private void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SelectTarget.SelectedItem != null && ((ComboBoxItem)SelectTarget.SelectedItem).Tag.ToString() == "1")
+            var tag = ((ComboBoxItem)SelectTarget.SelectedItem)?.Tag;
+            if (tag != null && tag.ToString() == "1")
             {
                 var connect = new ConnectWindow();
                 var result = connect.ShowDialog();
                 if (result ?? false)
                 {
-                    //SelectTarget.Items.Add(new ComboBoxItem()
-                    //{
-                    //   Content = C
-                    //});
+                    if (SelectTarget.Items.Count > 1)
+                        SelectTarget.Items.RemoveAt(1);
+                    SelectTarget.Items.Add(new ComboBoxItem()
+                    {
+                        Content = connect.ConnectionName,
+                        DataContext = connect.ConnectionString,
+                        IsSelected = true,
+                    });
                 }
                 else
                 {
                     SelectTarget.SelectedIndex = -1;
                 }
             }
+            EnableCompare();
+        }
+
+        private void CompareButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

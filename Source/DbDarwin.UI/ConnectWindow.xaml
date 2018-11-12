@@ -31,14 +31,14 @@
         <Label  Content="Database Name:"  Grid.Column="0" Grid.Row="5" VerticalAlignment="Center"  />
         <TextBox x:Name="ServerName" Grid.Column="1"  Grid.Row="0"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
 
-        <ComboBox  x:Name="Authentication"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="1" Margin="5" FontSize="14" Height="25"  >
+        <ComboBox  x:Name="Authentication"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="1" Margin="5" FontSize="14" Height="25" SelectionChanged="Authentication_SelectionChanged"  >
             <ComboBoxItem IsSelected="True" Tag="1" >Windows Authentication</ComboBoxItem>
             <ComboBoxItem Tag="2" >SQL Authentication</ComboBoxItem>
         </ComboBox>
 
-        <TextBox x:Name="UserName" Grid.Column="1"  Grid.Row="2"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
-        <TextBox x:Name="Password" Grid.Column="1"  Grid.Row="3"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
-        <CheckBox x:Name="RememberPassword" Content="Remember Password" Grid.Column="1" Grid.Row="4" Margin="5" FontSize="14" Height="25" />
+        <TextBox x:Name="UserName" Grid.Column="1"  Grid.Row="2" IsEnabled="False"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
+        <TextBox x:Name="Password" Grid.Column="1"  Grid.Row="3" IsEnabled="False" TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
+        <CheckBox x:Name="RememberPassword"  IsEnabled="False" Content="Remember Password" Grid.Column="1" Grid.Row="4" Margin="5" FontSize="14" Height="25" />
 
         <ComboBox  x:Name="DatabaseName"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="5" IsEditable="True" DropDownOpened="DatabaseName_DropDownOpened" Margin="5" FontSize="14" Height="25">
         </ComboBox>

@@ -21,9 +21,12 @@ namespace DbDarwin.UI
     public partial class ConnectWindow : Window
     {
         public string ConnectionString { get; set; }
+        public string ConnectionName { get; set; }
         public ConnectWindow()
         {
             InitializeComponent();
+
+            ServerName.Text = System.Environment.MachineName;
         }
 
         private void DatabaseName_DropDownOpened(object sender, EventArgs e)
@@ -67,11 +70,20 @@ namespace DbDarwin.UI
 
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
+            ConnectionName = ServerName.Text + "." + DatabaseName.SelectedValue;
             if (((ComboBoxItem)Authentication.SelectedItem).Tag.ToString() == "1")
                 ConnectionString = $"Data Source={ServerName.Text};Initial Catalog={DatabaseName.SelectedValue};Integrated Security=True;Connect Timeout=60;";
             else
                 ConnectionString = $"Data Source={ServerName.Text};Initial Catalog={DatabaseName.SelectedValue};Integrated Security=False;User Id={UserName.Text};Password={Password.Text};Connect Timeout=60;";
             this.DialogResult = true;
+        }
+
+        private void Authentication_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var combo = (ComboBox)sender;
+            var item = (ComboBoxItem)combo.SelectedItem;
+            if (item?.Tag != null)
+                RememberPassword.IsEnabled = Password.IsEnabled = UserName.IsEnabled = item.Tag.ToString() != "1";
         }
     }
 }
