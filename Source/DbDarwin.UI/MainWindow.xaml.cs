@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
+using DbDarwin.Model.Command;
+using DbDarwin.Service;
 
 namespace DbDarwin.UI
 {
@@ -31,7 +35,11 @@ namespace DbDarwin.UI
         {
             CompareButton.IsEnabled = SelectSource.Items.Count > 1 && SelectTarget.Items.Count > 1;
         }
+        public string SourceConnection { get; set; }
+        public string TargetConnection { get; set; }
 
+        public string SourceName { get; set; }
+        public string TargetName { get; set; }
 
         private void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -44,6 +52,9 @@ namespace DbDarwin.UI
                 {
                     if (SelectSource.Items.Count > 1)
                         SelectSource.Items.RemoveAt(1);
+
+                    SourceConnection = connect.ConnectionString;
+                    SourceName = connect.ConnectionName;
                     SelectSource.Items.Add(new ComboBoxItem()
                     {
                         Content = connect.ConnectionName,
@@ -73,6 +84,9 @@ namespace DbDarwin.UI
                 {
                     if (SelectTarget.Items.Count > 1)
                         SelectTarget.Items.RemoveAt(1);
+
+                    TargetConnection = connect.ConnectionString;
+                    TargetName = connect.ConnectionName;
                     SelectTarget.Items.Add(new ComboBoxItem
                     {
                         Content = connect.ConnectionName,
@@ -91,6 +105,83 @@ namespace DbDarwin.UI
         private void CompareButton_Click(object sender, RoutedEventArgs e)
         {
 
+
+            CompareButton.IsEnabled = false;
+
+            Task.Factory.StartNew(() =>
+              {
+                  UpdateState($"Extracting {SourceName} Schema...");
+                  ExtractSchemaService.ExtractSchema(new ExtractSchema
+                  {
+                      ConnectionString = SourceConnection,
+                      OutputFile = "Source.xml"
+                  });
+                  UpdateState($"Extracted {SourceName} Schema.");
+
+
+                  UpdateState($"Extracting {TargetName} Schema...");
+                  ExtractSchemaService.ExtractSchema(new ExtractSchema
+                  {
+                      ConnectionString = TargetConnection,
+                      OutputFile = "Target.xml"
+                  });
+                  UpdateState($"Extracted {TargetName} Schema.");
+
+
+
+
+
+
+
+                  Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
+                  {
+                      if (Application.Current.MainWindow is MainWindow mainWindow)
+                          mainWindow.CompareButton.IsEnabled = true;
+                  }));
+
+              });
+
+
+
+
+
+
         }
+
+
+        public void UpdateState(string content)
+        {
+            Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
+            {
+                if (Application.Current.MainWindow is MainWindow mainWindow)
+                    mainWindow.StatusLabel.Content = content;
+            }));
+        }
+
+        //private void OnDataUpdate(string data)
+        //{
+        //    var handler = DataUpdate;
+        //    handler?.Invoke(this, new PerformanceEventArgs(data));
+        //}
+
+
+        //private void HandleDataUpdate(object sender, PerformanceEventArgs e)
+        //{
+        //    // dispatch the modification to the text box to the UI thread (main window dispatcher)
+        //    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new OneArgDelegate(e.Data));
+        //}
+        //private delegate void OneArgDelegate(String arg);
+        //public event EventHandler<PerformanceEventArgs> DataUpdate;
+    }
+
+    public class PerformanceEventArgs : EventArgs
+    {
+        public string Data { get; set; }
+        public PerformanceEventArgs(string data)
+        {
+            Data = data;
+        }
+
+
     }
 }
