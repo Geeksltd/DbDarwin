@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="GCop.All.Geeks" Version="2.3.9" />
-    <PackageReference Include="Olive" Version="1.0.121" />
+    <PackageReference Include="Olive" Version="1.0.129" />
   </ItemGroup>
 
 </Project>

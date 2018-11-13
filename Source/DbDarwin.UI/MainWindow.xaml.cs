@@ -36,11 +36,11 @@ namespace DbDarwin.UI
         private void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var tag = ((ComboBoxItem)SelectSource.SelectedItem)?.Tag;
-            if (tag != null && tag.ToString() == "1")
+            if (tag?.ToString() == "1")
             {
                 var connect = new ConnectWindow();
                 var result = connect.ShowDialog();
-                if (result ?? false)
+                if (result == true)
                 {
                     if (SelectSource.Items.Count > 1)
                         SelectSource.Items.RemoveAt(1);
@@ -73,7 +73,7 @@ namespace DbDarwin.UI
                 {
                     if (SelectTarget.Items.Count > 1)
                         SelectTarget.Items.RemoveAt(1);
-                    SelectTarget.Items.Add(new ComboBoxItem()
+                    SelectTarget.Items.Add(new ComboBoxItem
                     {
                         Content = connect.ConnectionName,
                         DataContext = connect.ConnectionString,

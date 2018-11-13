@@ -16,3 +16,8 @@
 /Source/DbDarwin.UI/obj/Debug
 /Source/DbDarwin.UI/obj/Release
 /Source/DbDarwin.Service2/obj/Release/netstandard2.0
+/Source/DbDarwin.Model/bin/Debug/netstandard2.0
+/Source/DbDarwin.Model.Standard/bin/Debug/netstandard2.0
+/Source/DbDarwin.Model.Standard/obj
+/Source/DbDarwin.Service/bin/Debug/netstandard2.0
+/Source/DbDarwin.UI/bin/Debug

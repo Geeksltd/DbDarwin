@@ -288,7 +288,7 @@ namespace DbDarwin.Service
             }
 
             // Detect Sql Objects Changes
-            if (targetData != null)
+            if (targetData == null) return;
             {
                 if (mustAdd != null)
                     sourceData = sourceData.Except(x => mustAdd.Contains(x)).ToList();

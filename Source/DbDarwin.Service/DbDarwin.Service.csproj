@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,13 +15,13 @@
   <ItemGroup>
     <PackageReference Include="CompareNETObjects" Version="4.57.0" />
     <PackageReference Include="GCop.All.Geeks" Version="2.3.9" />
-    <PackageReference Include="Olive" Version="1.0.121" />
+    <PackageReference Include="Olive" Version="1.0.129" />
     <PackageReference Include="PowerMapper" Version="1.0.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DbDarwin.Model\DbDarwin.Model.csproj" />
-    <ProjectReference Include="..\DbDarwin.Service2\DbDarwin.Service.Standard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
