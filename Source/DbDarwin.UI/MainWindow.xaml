@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DbDarwin.UI"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="MainWindow" Height="527.027" Width="766.555" Background="#FF1C1C1C">
+        Title="MainWindow" Height="527.027" Width="766.555">
     <Grid>
         <StatusBar Height="26" Margin="0" VerticalAlignment="Bottom" Background="#FF007ACC">
             <Label x:Name="label" Content="Ready"  HorizontalAlignment="Left" Padding="0" ScrollViewer.CanContentScroll="True" Margin="5,0,0,0" VerticalAlignment="Top"/>
@@ -24,6 +24,23 @@
 
 
         </ToolBar>
+        <Grid x:Name="LayoutRoot" Background="White" ShowGridLines="True" Margin="0,36,0,26" HorizontalAlignment="Stretch"  Width="759" VerticalAlignment="Stretch" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="215" />
+                <RowDefinition Height="Auto"  />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="370" />
+                <ColumnDefinition Width="370" />
+            </Grid.ColumnDefinitions>
+            <GridSplitter Grid.Column="0" Grid.RowSpan="1" Width="12"  HorizontalAlignment="Right"  VerticalAlignment="Stretch"   />
+            <GridSplitter Grid.Row="0" Grid.ColumnSpan="2" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"  />
+
+            <Rectangle Grid.Column="1" Fill="LightCoral"  />
+            <Rectangle Grid.Row="1" Fill="LightBlue" />
+            <!--<Rectangle Grid.Column="1" Grid.Row="1" Fill="Red" />
+            <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="1"  VerticalAlignment="Top" Width="75"/>-->
+        </Grid>
 
 
 
