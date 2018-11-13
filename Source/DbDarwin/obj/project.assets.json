@@ -610,9 +610,10 @@
           "lib/netstandard2.0/Newtonsoft.Json.dll": {}
         }
       },
-      "Olive/1.0.121": {
+      "Olive/1.0.129": {
         "type": "package",
         "dependencies": {
+          "GCop.All.Geeks": "2.3.9",
           "Microsoft.Extensions.Configuration.Binder": "2.1.1",
           "Microsoft.Extensions.Configuration.Json": "2.1.1",
           "Microsoft.Extensions.DependencyInjection": "2.1.1",
@@ -2092,10 +2093,10 @@
       },
       "DbDarwin.Model/1.0.0": {
         "type": "project",
-        "framework": ".NETCoreApp,Version=v2.1",
+        "framework": ".NETStandard,Version=v2.0",
         "dependencies": {
           "GCop.All.Geeks": "2.3.9",
-          "Olive": "1.0.121"
+          "Olive": "1.0.129"
         },
         "compile": {
           "bin/placeholder/DbDarwin.Model.dll": {}
@@ -2106,34 +2107,20 @@
       },
       "DbDarwin.Service/1.0.0": {
         "type": "project",
-        "framework": ".NETCoreApp,Version=v2.1",
+        "framework": ".NETStandard,Version=v2.0",
         "dependencies": {
           "CompareNETObjects": "4.57.0",
           "DbDarwin.Model": "1.0.0",
-          "DbDarwin.Service.Standard": "1.0.0",
           "GCop.All.Geeks": "2.3.9",
-          "Olive": "1.0.121",
-          "PowerMapper": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/DbDarwin.Service.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/DbDarwin.Service.dll": {}
-        }
-      },
-      "DbDarwin.Service.Standard/1.0.0": {
-        "type": "project",
-        "framework": ".NETStandard,Version=v2.0",
-        "dependencies": {
-          "Olive": "1.0.121",
+          "Olive": "1.0.129",
+          "PowerMapper": "1.0.0",
           "System.Data.SqlClient": "4.5.1"
         },
         "compile": {
-          "bin/placeholder/DbDarwin.Service.Standard.dll": {}
+          "bin/placeholder/DbDarwin.Service.dll": {}
         },
         "runtime": {
-          "bin/placeholder/DbDarwin.Service.Standard.dll": {}
+          "bin/placeholder/DbDarwin.Service.dll": {}
         }
       }
     }
@@ -2497,7 +2484,7 @@
       ]
     },
     "Microsoft.Extensions.Configuration/2.1.1": {
-      "sha512": "1JaydycXzbfAExlsD7XIWykzVnU/wZM86KzrHyGlXuxqnqzcWSXLJn4Ejn8bDnq07CEJNZ+GjsxWKlJ8kFfnvQ==",
+      "sha512": "VVYOfsEO/kjpMiXfSVV6zDV0jOzM7y9rpWqPRNfkHidGJlZbut9OW4ehgBb82h5al0cpQoeNBqFKJZ2Q8/qwHQ==",
       "type": "package",
       "path": "microsoft.extensions.configuration/2.1.1",
       "files": [
@@ -2509,7 +2496,7 @@
       ]
     },
     "Microsoft.Extensions.Configuration.Abstractions/2.1.1": {
-      "sha512": "9EMhOWU2eOQOtMIJ+vfwKJpnLRc1Wl3vXu8qXeevA91cSY4j3WvArmF7ApGtJwa7yKewJTvlQlBSn9OSnLFg6Q==",
+      "sha512": "QN0e+FNqqmmFomoRGmjg4VsbXofdTe6jl2C5CoYi34V4cdFT4x+KyBPZ1femUS4+tg/BK+m2YgCHGrcICYb2Ng==",
       "type": "package",
       "path": "microsoft.extensions.configuration.abstractions/2.1.1",
       "files": [
@@ -2521,7 +2508,7 @@
       ]
     },
     "Microsoft.Extensions.Configuration.Binder/2.1.1": {
-      "sha512": "t7KFAv6AxyUsZj9QN8FAbusg+X5baCELl+XtscyuP1IGUv5UctyY7/rNZLyiKaV7HhAcDQ1zC5ZQNQQFn6JpAA==",
+      "sha512": "+vDAcyObAU3mw7Lt9ht8pytlXKlqZ4pAXG5REWJIXkRtdf5juCuAepAEcCRbHz5o9LesS+iuFNifTyHmFdxrVQ==",
       "type": "package",
       "path": "microsoft.extensions.configuration.binder/2.1.1",
       "files": [
@@ -2533,7 +2520,7 @@
       ]
     },
     "Microsoft.Extensions.Configuration.FileExtensions/2.1.1": {
-      "sha512": "JnhKotPCs1+X4CPSsHOk8CpxmBeIS/vIXYewsoM8XflXNhpzMe1gfIckQyuRKyORlGaNFEBr4WrPjpZ159bS/Q==",
+      "sha512": "w8QNDE/6yBYc41h1xxPlYIfdwdwdv7szdQs1lqyINfEPlC4/SZ81wyB+EUblmrQ7OYk5WJh2UF0MKtwJ3mjUkw==",
       "type": "package",
       "path": "microsoft.extensions.configuration.fileextensions/2.1.1",
       "files": [
@@ -2545,7 +2532,7 @@
       ]
     },
     "Microsoft.Extensions.Configuration.Json/2.1.1": {
-      "sha512": "f6KcI9v0GVA4YL/ExoxrEfeQv9La3hyQnySfgxGkFtMeDJIUun0ANoMjspbdpXXnuaScwgbQ2mFE3lJHt9lpJw==",
+      "sha512": "2CRgQ1ojSLI0h9xDqt46T4oIRP4bUFZnYmsp/Se/cjGYbq6w5Fxl+H3JfxrOmCkoS+1/yXLAfeoYmF0U3QA1cA==",
       "type": "package",
       "path": "microsoft.extensions.configuration.json/2.1.1",
       "files": [
@@ -2557,7 +2544,7 @@
       ]
     },
     "Microsoft.Extensions.DependencyInjection/2.1.1": {
-      "sha512": "2nshYaLTn73Ie+/yTkb7EZIXwQeFIXsYCBy/jSY9bMayYykGNjdWa25frayhuPAGVbZpEgfgp3d4JRVEuVyEqQ==",
+      "sha512": "ZPFcDUbSwaEVWMyef8+9GqiTAghHX+eLeIEW032i4LDFAdyM4J4brV0UzChlKtClT7cuip/Of6G+veDnO3/bCw==",
       "type": "package",
       "path": "microsoft.extensions.dependencyinjection/2.1.1",
       "files": [
@@ -2573,7 +2560,7 @@
       ]
     },
     "Microsoft.Extensions.DependencyInjection.Abstractions/2.1.1": {
-      "sha512": "PW1596sF97gpIc1JuUuYvTmeLfeqC5whbWPsWgJhN0fdwz683him3b/HB0dqhFesVssOjnnA0fEz4+S0gUeBqA==",
+      "sha512": "R44kCSYpeZ8JmEb+SLWVdi3RttxuisvCB93zcGVU/menrIEY3klRFAH0dXyyUKmNZrUnxFJVuaVdkEuEsQ9EtA==",
       "type": "package",
       "path": "microsoft.extensions.dependencyinjection.abstractions/2.1.1",
       "files": [
@@ -2585,7 +2572,7 @@
       ]
     },
     "Microsoft.Extensions.FileProviders.Abstractions/2.1.1": {
-      "sha512": "qOJP+VAlXDeMQSJ6iflW62bEsN3S1NJIPHmhKFA9L37yU+jce2wbwesA7sDe9WdJ8+SoKtLnHPUxvOyQrAcRCA==",
+      "sha512": "fhnE51vJglXmjJI9WQNqVIYqPNY3mHX0xnyQ9Ib7r/IV1ZYqs0cuJZvdurfZ4NK5Q9OP3fW/LwueWS/DT63u7w==",
       "type": "package",
       "path": "microsoft.extensions.fileproviders.abstractions/2.1.1",
       "files": [
@@ -2597,7 +2584,7 @@
       ]
     },
     "Microsoft.Extensions.FileProviders.Physical/2.1.1": {
-      "sha512": "pbT/J3B686Xgktv5WH11FbcbZXDmBQuCN3ce8IKIF+DpOk3p0RgUPrOXcYNp81TyH+K/5Cosr4VFVjYMoirNDg==",
+      "sha512": "uJt5Z+Xgc1PXKIS01yFC82GPXQufuNu0Fnhnr6h1x0tsl+rFvrVPVluteTbXf2FSyqwGPkZ7Fn9YIWFjr/v0/g==",
       "type": "package",
       "path": "microsoft.extensions.fileproviders.physical/2.1.1",
       "files": [
@@ -2609,7 +2596,7 @@
       ]
     },
     "Microsoft.Extensions.FileSystemGlobbing/2.1.1": {
-      "sha512": "Pu/O8jBc7QlEmqmbDGVosuDlyzGspMuKc71rOsJigwGMF5574aWYw9uRMX+ho1dmbnL502ZYHo6PlBP3IXkm5A==",
+      "sha512": "kj0cdMpomKhOYRVb97lA+OQnbQ7ezhGQdQf2ziYjeXampN5s3rJxDik1zybjdXkisvUNiz8XSMjiWmE3TBqqZw==",
       "type": "package",
       "path": "microsoft.extensions.filesystemglobbing/2.1.1",
       "files": [
@@ -2621,7 +2608,7 @@
       ]
     },
     "Microsoft.Extensions.Logging/2.1.1": {
-      "sha512": "x4/RzeReQSIi4nVpOjXEySm/xUSr6lBjuecdYnlUboWxbLSm2j3vhFV5OLGRp3gfte3cRMdysMNa/wyZN0t/Tw==",
+      "sha512": "TNMe993ht+lDerchnAH6/1EfLj4YdKDRvFbBmg6Tr6M7b8zkf2PVtl74YgJTJfAbe01q1mkdBrGEOmAHkNL5Mw==",
       "type": "package",
       "path": "microsoft.extensions.logging/2.1.1",
       "files": [
@@ -2633,7 +2620,7 @@
       ]
     },
     "Microsoft.Extensions.Logging.Abstractions/2.1.1": {
-      "sha512": "QWFWKrdeoDSEr8nVJaBAVDMj24wnh9clGzDNmMdgHHRsOIwTUMeh4XljeZXJhIKPT00jWuzwEzn3uNxOtO4cYg==",
+      "sha512": "Aqc+2VEx6jZ29QZZ6Dp/Ba9vy4v8XvMCsz7tbc/VSFE3AALvszro1xCSV3dvIbK85R3QTZRJAXGhl/+3lyXJKQ==",
       "type": "package",
       "path": "microsoft.extensions.logging.abstractions/2.1.1",
       "files": [
@@ -2645,7 +2632,7 @@
       ]
     },
     "Microsoft.Extensions.Options/2.1.1": {
-      "sha512": "j0zOfTt1Qm+JDW2m+6Q/aj1m4C8+onudUu4ls/fN69VxruZkMWmX1bPKkbkYIPNNxJsf4k7FOkVq5o1vEFq9pQ==",
+      "sha512": "A5Cu/5YMuJgEsW21WzPlpK3z+v3ZBF/cV6dl/9t19CtO3qf+EX5lB9dHBr+swsz6uZA3weH1mDXGVs6ukknDkg==",
       "type": "package",
       "path": "microsoft.extensions.options/2.1.1",
       "files": [
@@ -2657,7 +2644,7 @@
       ]
     },
     "Microsoft.Extensions.Primitives/2.1.1": {
-      "sha512": "Svz25/egj1TsNL4118jyMqkhDiu0l8QYWq2p52P4BBN0GbqwR18ZRIctSP5TTDJy0m0EFC8aB2FOVjGtvEGWSA==",
+      "sha512": "jVkZs8NkUIhooFh8iJFIGJAJAeTrwORjM06i4sBw+/VVC8zcqduCIG1QCqjxbGACbR+GkLEnhZdxLjL8qHLHIg==",
       "type": "package",
       "path": "microsoft.extensions.primitives/2.1.1",
       "files": [
@@ -3198,16 +3185,15 @@
         "newtonsoft.json.nuspec"
       ]
     },
-    "Olive/1.0.121": {
-      "sha512": "pdbvWSVAol+Luuj5uvTKcqw0BJ8hkaMtWFhASHADjdqAVihLBYTNH3gD1suISaeonsJpbVv50jffAqaigll7ig==",
+    "Olive/1.0.129": {
+      "sha512": "zM+r2N3ZTccgSuh5oqFsErDrZv/OnCttP6nS1b0M11CoPEycuKb1XuyCkmMKGxp5156UtsRo8V8ZQTYz53t5Zg==",
       "type": "package",
-      "path": "olive/1.0.121",
+      "path": "olive/1.0.129",
       "files": [
         ".signature.p7s",
         "lib/netstandard2.0/Olive.dll",
-        "lib/netstandard2.0/Olive.pdb",
         "lib/netstandard2.0/Olive.xml",
-        "olive.1.0.121.nupkg.sha512",
+        "olive.1.0.129.nupkg.sha512",
         "olive.nuspec"
       ]
     },
@@ -3806,7 +3792,7 @@
       ]
     },
     "System.Data.SqlClient/4.5.1": {
-      "sha512": "qXTvTFkBds7bnN+ntBMHGvmH3pCAkfT4TE1z2Xvfqo4wKMQC77O4aXsYCc7dzCESC+/Gom6l0GLuebpFx7MDvg==",
+      "sha512": "cTPUCClr34EGBnyazUeciMD6sNm9aiE/li3uGvJ7z5dGup9QxKwysUeKXIrCO0E5KtQQAzGORFEYmowyEpcL2A==",
       "type": "package",
       "path": "system.data.sqlclient/4.5.1",
       "files": [
@@ -4823,7 +4809,7 @@
       ]
     },
     "System.Memory/4.5.1": {
-      "sha512": "vcG3/MbfpxznMkkkaAblJi7RHOmuP7kawQMhDgLSuA1tRpRQYsFSCTxRSINDUgn2QNn2jWeLxv8er5BXbyACkw==",
+      "sha512": "oonnLQPZAGD21qtNMG4EtVmbYOInk2jV7M+g108B6OHOb67ZOaWnA/K8P5oQ6uK9wxKzB1iEXSChQOi2scKOqA==",
       "type": "package",
       "path": "system.memory/4.5.1",
       "files": [
@@ -5436,7 +5422,7 @@
       ]
     },
     "System.Runtime.CompilerServices.Unsafe/4.5.1": {
-      "sha512": "qUJMNWhbm9oZ3XaMFiEMiYmRPszbnXIkRIi7+4b2Md2xZ6JUOepf0/kY3S85qistRohl9OdMe4PsO+RdG2kTIQ==",
+      "sha512": "x/3d5xb+mc9e4I2GOOT+HPRWMZLbYjNN/kYKsb0fyUKcWizn/t1CIrGRLIBhv7H0ptYEt+WTTztdPmwSUMyKig==",
       "type": "package",
       "path": "system.runtime.compilerservices.unsafe/4.5.1",
       "files": [
@@ -6809,11 +6795,6 @@
       "type": "project",
       "path": "../DbDarwin.Service/DbDarwin.Service.csproj",
       "msbuildProject": "../DbDarwin.Service/DbDarwin.Service.csproj"
-    },
-    "DbDarwin.Service.Standard/1.0.0": {
-      "type": "project",
-      "path": "../DbDarwin.Service2/DbDarwin.Service.Standard.csproj",
-      "msbuildProject": "../DbDarwin.Service2/DbDarwin.Service.Standard.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -6822,7 +6803,7 @@
       "GCop.All.Geeks >= 2.3.9",
       "Microsoft.CodeAnalysis >= 2.8.0",
       "Microsoft.NETCore.App >= 2.1.0",
-      "Olive >= 1.0.121",
+      "Olive >= 1.0.129",
       "PowerMapper >= 1.0.0",
       "System.Data.SqlClient >= 4.5.1"
     ]
@@ -6883,7 +6864,7 @@
           },
           "Olive": {
             "target": "Package",
-            "version": "[1.0.121, )"
+            "version": "[1.0.129, )"
           },
           "PowerMapper": {
             "target": "Package",
