@@ -1,9 +1,0 @@
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\bin\Debug\netstandard2.0\DbDarwin.Service.Standard.deps.json
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\bin\Debug\netstandard2.0\DbDarwin.Service.Standard.dll
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\bin\Debug\netstandard2.0\DbDarwin.Service.Standard.pdb
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\obj\Debug\netstandard2.0\DbDarwin.Service.Standard.csprojAssemblyReference.cache
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\obj\Debug\netstandard2.0\DbDarwin.Service.Standard.csproj.CoreCompileInputs.cache
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\obj\Debug\netstandard2.0\DbDarwin.Service.Standard.AssemblyInfoInputs.cache
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\obj\Debug\netstandard2.0\DbDarwin.Service.Standard.AssemblyInfo.cs
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\obj\Debug\netstandard2.0\DbDarwin.Service.Standard.dll
-F:\Projects\Geeksltd\DbDarwin\Source\DbDarwin.Service2\obj\Debug\netstandard2.0\DbDarwin.Service.Standard.pdb
