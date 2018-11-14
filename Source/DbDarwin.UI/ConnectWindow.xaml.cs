@@ -22,9 +22,19 @@ namespace DbDarwin.UI
     {
         public string ConnectionString { get; set; }
         public string ConnectionName { get; set; }
-        public ConnectWindow()
+        public string _connectionType { get; set; }
+        public ConnectWindow(string connectionType)
         {
+            _connectionType = connectionType;
             InitializeComponent();
+
+            var data = ManageConnectionData.ReadConnection(_connectionType);
+            if (data != null)
+            {
+                UserName.Text = data.UserName;
+                Password.Password = data.Password;
+                RememberPassword.IsChecked = true;
+            }
 
             ServerName.Text = System.Environment.MachineName;
         }
@@ -40,7 +50,7 @@ namespace DbDarwin.UI
                 }
                 else
                 {
-                    connection = $"Data Source={ServerName.Text};Initial Catalog=master;Integrated Security=False;User Id={UserName.Text};Password={Password.Text};Connect Timeout=30;";
+                    connection = $"Data Source={ServerName.Text};Initial Catalog=master;Integrated Security=False;User Id={UserName.Text};Password={Password.Password};Connect Timeout=30;";
                 }
 
                 using (var sql = new System.Data.SqlClient.SqlConnection(connection))
@@ -74,8 +84,14 @@ namespace DbDarwin.UI
             if (((ComboBoxItem)Authentication.SelectedItem).Tag.ToString() == "1")
                 ConnectionString = $"Data Source={ServerName.Text};Initial Catalog={DatabaseName.SelectedValue};Integrated Security=True;Connect Timeout=60;";
             else
-                ConnectionString = $"Data Source={ServerName.Text};Initial Catalog={DatabaseName.SelectedValue};Integrated Security=False;User Id={UserName.Text};Password={Password.Text};Connect Timeout=60;";
+                ConnectionString = $"Data Source={ServerName.Text};Initial Catalog={DatabaseName.SelectedValue};Integrated Security=False;User Id={UserName.Text};Password={Password.Password};Connect Timeout=60;";
+
+            if (RememberPassword.IsEnabled)
+                ManageConnectionData.SaveConnection(_connectionType, UserName.Text, Password.Password);
+
             this.DialogResult = true;
+
+
         }
 
         private void Authentication_SelectionChanged(object sender, SelectionChangedEventArgs e)

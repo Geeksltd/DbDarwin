@@ -46,7 +46,7 @@ namespace DbDarwin.UI
             var tag = ((ComboBoxItem)SelectSource.SelectedItem)?.Tag;
             if (tag?.ToString() == "1")
             {
-                var connect = new ConnectWindow();
+                var connect = new ConnectWindow("SelectSource");
                 var result = connect.ShowDialog();
                 if (result == true)
                 {
@@ -78,7 +78,7 @@ namespace DbDarwin.UI
             var tag = ((ComboBoxItem)SelectTarget.SelectedItem)?.Tag;
             if (tag != null && tag.ToString() == "1")
             {
-                var connect = new ConnectWindow();
+                var connect = new ConnectWindow("SelectTarget");
                 var result = connect.ShowDialog();
                 if (result ?? false)
                 {
@@ -173,7 +173,7 @@ namespace DbDarwin.UI
                                   {
                                       IsChecked = true,
                                       Content = script.Name,
-                                      DataContext = script.SQLScript
+                                      DataContext = script.SQLScript,
                                   });
                               }
                               else
@@ -206,6 +206,13 @@ namespace DbDarwin.UI
                 if (Application.Current.MainWindow is MainWindow mainWindow)
                     mainWindow.StatusLabel.Content = content;
             }));
+        }
+
+        private void ListBoxAdd_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var combo = (CheckBox)ListBoxAdd.SelectedItem;
+            richTextBox.Document.Blocks.Clear();
+            richTextBox.Document.Blocks.Add(new Paragraph(new Run(combo.DataContext.ToString())));
         }
 
         //private void OnDataUpdate(string data)
