@@ -25,7 +25,7 @@ namespace DbDarwin.Service
         /// <param name="output">Output File XML diff</param>
         public static ResultMessage StartCompare(GenerateDiffFile model)
         {
-            ResultMessage result = new ResultMessage();
+            var result = new ResultMessage();
             try
             {
                 var targetSchema = LoadXMLFile(model.TargetSchemaFile);

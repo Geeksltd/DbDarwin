@@ -24,10 +24,10 @@
 
 
         </ToolBar>
-        <Grid x:Name="LayoutRoot" Background="White" ShowGridLines="True" Margin="0,36,0,26" HorizontalAlignment="Stretch"   VerticalAlignment="Stretch" >
+        <Grid x:Name="LayoutRoot" Background="White" ShowGridLines="False" Margin="0,36,0,26" HorizontalAlignment="Stretch"   VerticalAlignment="Stretch" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="*"  />
+                <RowDefinition Height="*"   />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -35,7 +35,7 @@
             </Grid.ColumnDefinitions>
             <Rectangle Grid.Column="0" Fill="#FFC0C0"  />
             <Rectangle Grid.Row="0" Grid.Column="1"  Fill="#B2FFD1" />
-            <Rectangle Grid.Row="1" Grid.Column="1"  Fill="#B2D3FF" />
+            <Rectangle Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"  Fill="#B2D3FF" />
 
             <ListBox Grid.Row="0" Grid.Column="1" x:Name="ListBoxAdd" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Background="{x:Null}"  >
             </ListBox>
@@ -44,16 +44,22 @@
 
 
             <ListBox Grid.Row="0" Grid.Column="0" x:Name="ListBoxRemove" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Background="{x:Null}">
-                <CheckBox Content="select * FROm table1"/>
             </ListBox>
 
 
+            <RichTextBox x:Name="richTextBox" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <FlowDocument>
+                    <Paragraph>
+                        <Run Text="RichTextBox"/>
+                    </Paragraph>
+                </FlowDocument>
+            </RichTextBox>
 
 
-
-            <GridSplitter Grid.Column="0" Grid.RowSpan="2" Width="5"  HorizontalAlignment="Right"  VerticalAlignment="Stretch"   />
+            <GridSplitter Grid.Column="0" Grid.RowSpan="1" Width="5"  HorizontalAlignment="Right"  VerticalAlignment="Stretch"   />
             <GridSplitter Grid.Row="0" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"  />
-            
+      
+
 
 
 

@@ -156,9 +156,18 @@ namespace DbDarwin.UI
                           if (database.Add?.Tables != null)
                               foreach (var table in database.Add.Tables)
                               {
-                                  ListBoxAdd.Items.Add(new CheckBox()
+                                  ListBoxAdd.Items.Add(new CheckBox
                                   {
                                       Content = "Add new table " + table.FullName
+                                  });
+                              }
+
+                          if (database.Remove?.Tables != null)
+                              foreach (var table in database.Remove.Tables)
+                              {
+                                  ListBoxRemove.Items.Add(new CheckBox
+                                  {
+                                      Content = "Remove table " + table.FullName
                                   });
                               }
                       }
