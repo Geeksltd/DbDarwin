@@ -158,7 +158,17 @@ namespace DbDarwin.UI
                               {
                                   ListBoxAdd.Items.Add(new CheckBox
                                   {
-                                      Content = "Add new table " + table.FullName
+                                      IsChecked = true,
+                                      Content = "New table " + table.FullName
+                                  });
+                              }
+                          if (database.Update?.Tables != null)
+                              foreach (var table in database.Update.Tables)
+                              {
+                                  ListBoxAdd.Items.Add(new CheckBox
+                                  {
+                                      IsChecked = true,
+                                      Content = "Update table " + table.FullName
                                   });
                               }
 
@@ -167,6 +177,7 @@ namespace DbDarwin.UI
                               {
                                   ListBoxRemove.Items.Add(new CheckBox
                                   {
+                                      IsChecked = true,
                                       Content = "Remove table " + table.FullName
                                   });
                               }

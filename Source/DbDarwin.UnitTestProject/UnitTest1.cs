@@ -42,7 +42,7 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void GenerateScripts()
         {
-            GenerateScriptService.GenerateScript(
+            new GenerateScriptService().GenerateScript(
                 new GenerateScript
                 {
                     CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",

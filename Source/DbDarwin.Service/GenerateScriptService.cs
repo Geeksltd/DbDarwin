@@ -14,7 +14,25 @@ namespace DbDarwin.Service
 {
     public class GenerateScriptService
     {
-        public static void GenerateScript(GenerateScript model)
+        private readonly List<GeneratedScriptResult> results;
+        public GenerateScriptService()
+        {
+            results = new List<GeneratedScriptResult>();
+        }
+
+        public List<GeneratedScriptResult> SqlOperation(string name, string sqlScript, ViewMode mode)
+        {
+            results.Add(new GeneratedScriptResult()
+            {
+                ID = Guid.NewGuid().ToString(),
+                Mode = mode,
+                Name = name,
+                SQLScript = sqlScript,
+                Order = results.Count + 1
+            });
+            return results;
+        }
+        public List<GeneratedScriptResult> GenerateScript(GenerateScript model)
         {
             var serializer = new XmlSerializer(typeof(Database));
             Database diffFile = null;
@@ -37,7 +55,8 @@ namespace DbDarwin.Service
                 foreach (var foreignKey in diffFile.Update.Tables.Select(x => x.Update)
                     .ExceptNull()
                     .SelectMany(c => c.ForeignKeys).ToList().GroupBy(x => new { x.TABLE_SCHEMA, x.TABLE_NAME }))
-                    sb.Append(GenerateRemoveForeignKey(foreignKey.ToList(), foreignKey.Key.TABLE_NAME, foreignKey.Key.TABLE_SCHEMA));
+                    sb.Append(GenerateRemoveForeignKey(foreignKey.ToList(), foreignKey.Key.TABLE_NAME,
+                        foreignKey.Key.TABLE_SCHEMA));
 
 
                 if (diffFile.Update?.Tables != null)
@@ -53,6 +72,7 @@ namespace DbDarwin.Service
                         if (table.ForeignKeys.Any())
                             sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name, table.Schema));
                     }
+
                 if (diffFile.Update?.Tables != null)
                     foreach (var table in diffFile.Update.Tables)
                     {
@@ -67,8 +87,11 @@ namespace DbDarwin.Service
                     }
 
             }
+
             sb.AppendLine("COMMIT");
             File.WriteAllText(model.MigrateSqlFile, sb.ToString());
+
+            return results;
         }
 
         private static string GenerateRemoveTables(IEnumerable<Table> tables)
@@ -77,17 +100,17 @@ namespace DbDarwin.Service
             foreach (var table in tables)
             {
                 sb.AppendLine("GO");
-                sb.AppendLine(string.Format("DROP TABLE [{0}].[{1}]", table.Schema, table.Name));
+                sb.AppendLine($"DROP TABLE [{table.Schema}].[{table.Name}]");
             }
             return sb.ToString();
         }
 
-        private static string GenerateAddTables(IEnumerable<Table> tables)
+        private string GenerateAddTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
             {
-                sb.AppendLine(string.Format("CREATE TABLE [{0}].[{1}] (", table.Schema, table.Name));
+                sb.AppendLine($"CREATE TABLE [{table.Schema}].[{table.Name}] (");
 
                 if (table.Columns.Any())
                     sb.AppendLine(GenerateColumns(table.Columns, table.Name));
@@ -122,21 +145,27 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        private static string GenerateUpdateTables(IEnumerable<Table> tables)
+        private string GenerateUpdateTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
             {
                 if (table.SetName.HasValue())
                 {
-                    sb.AppendLine();
-                    sb.AppendLine();
-                    sb.AppendLine("GO");
-                    sb.AppendLine("PRINT 'Updating Table Name...'");
-                    sb.AppendLine();
-                    sb.AppendLine();
-                    sb.AppendLine("GO");
-                    sb.AppendLine(string.Format("EXECUTE sp_rename N'[{0}].[{1}]', N'{2}', 'OBJECT' ", table.Schema, table.Name, table.SetName));
+                    var builder = new StringBuilder();
+                    builder.AppendLine();
+                    builder.AppendLine();
+                    builder.AppendLine("GO");
+                    builder.AppendLine("PRINT 'Updating Table Name...'");
+                    builder.AppendLine();
+                    builder.AppendLine();
+                    builder.AppendLine("GO");
+                    builder.AppendLine($"EXECUTE sp_rename N'[{table.Schema}].[{table.Name}]', N'{table.SetName}', 'OBJECT' ");
+
+                    SqlOperation($"Updating Table Name {table.Name}", builder.ToString(), ViewMode.Update);
+
+                    sb.Append(builder);
+
                     table.Name = table.SetName;
                 }
 
@@ -228,7 +257,7 @@ END
             return sb.ToString();
         }
 
-        private static string GenerateNewPrimaryKey(PrimaryKey key, string tableName, string schema)
+        private string GenerateNewPrimaryKey(PrimaryKey key, string tableName, string schema)
         {
             var sb = new StringBuilder();
 
@@ -240,17 +269,11 @@ END
             sb.AppendLine("-----------------------------------------------------------");
 
             sb.AppendLine("GO");
-            sb.AppendLine(string.Format("ALTER TABLE [{0}]  WITH CHECK ADD ", tableName));
-
-
+            sb.AppendLine($"ALTER TABLE [{schema}].[{tableName}]  WITH CHECK ADD ");
             sb.AppendLine(GeneratePrimaryKeyCore(key));
-
-
-
             sb.AppendLine("GO");
             sb.AppendLine($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
-
-
+            SqlOperation($"Add New PrimaryKey {key.Name} on table [{schema}].[{tableName}]", sb.ToString(), ViewMode.Add);
             return sb.ToString();
         }
 
@@ -259,11 +282,11 @@ END
             var sb = new StringBuilder();
             if (!key.is_system_named)
                 sb.AppendFormat("CONSTRAINT [{0}]", key.name);
-            sb.AppendLine(string.Format(" PRIMARY KEY {0}", key.type_desc));
+            sb.AppendLine($" PRIMARY KEY {key.type_desc}");
             sb.AppendLine("\t(");
             sb.AppendLine("\t" + key.Columns.Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries)
                               .Aggregate((x, y) => $"[{x}] {(y.HasValue() ? $", [{y}]" : "")}")
-                              .Trim(new[] { ',' }));
+                              .Trim(','));
             sb.Append("\t)");
 
             sb.AppendLine(PrimaryKeyOptions(key));
@@ -343,7 +366,7 @@ END
             return sb.ToString();
         }
 
-        static string GenerateUpdateIndexes(IEnumerable<Index> indexes, string tableName, string schema)
+        string GenerateUpdateIndexes(IEnumerable<Index> indexes, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -377,7 +400,7 @@ END
 
                     sb.AppendLine(GenerateNewIndexes(new List<Index> { index }, tableName, schema, true));
                     if (index.is_disabled.ToBoolean())
-                        sb.AppendLine(string.Format("ALTER INDEX [{0}] ON [{1}].[{2}] DISABLE", index.Name, schema, tableName));
+                        sb.AppendLine($"ALTER INDEX [{index.Name}] ON [{schema}].[{tableName}] DISABLE");
                 }
 
                 sb.AppendLine();
@@ -387,7 +410,7 @@ END
             return sb.ToString();
         }
 
-        static string GenerateUpdateColumns(IEnumerable<Column> columns, string tableName, string schema)
+        string GenerateUpdateColumns(IEnumerable<Column> columns, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -402,23 +425,32 @@ END
 
                 if (column.SetName.HasValue())
                 {
-                    sb.AppendLine();
-                    sb.AppendLine();
-                    sb.AppendLine("GO");
-                    sb.AppendLine("PRINT 'Updating Column Name...'");
-                    sb.AppendLine();
-                    sb.AppendLine();
-                    sb.AppendLine("GO");
-                    sb.AppendFormat("EXECUTE sp_rename N'{0}.{1}', N'{2}', 'COLUMN' ", tableName,
+                    var builder = new StringBuilder();
+                    builder.AppendLine();
+                    builder.AppendLine();
+                    builder.AppendLine("GO");
+                    builder.AppendLine("PRINT 'Updating Column Name...'");
+                    builder.AppendLine();
+                    builder.AppendLine();
+                    builder.AppendLine("GO");
+                    builder.AppendFormat("EXECUTE sp_rename N'{0}.{1}', N'{2}', 'COLUMN' ", tableName,
                         column.Name,
                         column.SetName);
+
+
+                    SqlOperation(
+                        $"Rename column name from {column.Name} to {column.SetName} from table [{schema}].[{tableName}]",
+                        builder.ToString(), ViewMode.Update);
+
+
+                    sb.Append(builder);
                     column.COLUMN_NAME = column.SetName;
                 }
 
                 var resultCompare = compareLogic.Compare(new Column(), column);
                 if (!resultCompare.AreEqual)
                 {
-                    var listPropetyChanged = resultCompare.Differences.Select(x => x.PropertyName).ToList();
+                    var listPropertyChanged = resultCompare.Differences.Select(x => x.PropertyName).ToList();
                     var detectChanges = new List<string>
                     {
                         nameof(column.CHARACTER_MAXIMUM_LENGTH),
@@ -427,41 +459,47 @@ END
                         nameof(column.DATA_TYPE),
                         nameof(column.COLUMN_DEFAULT),
                     };
-                    var intersected = listPropetyChanged.Intersect(detectChanges).ToList();
+                    var intersected = listPropertyChanged.Intersect(detectChanges).ToList();
                     if (intersected.Any())
                     {
+                        var builder = new StringBuilder();
+                        builder.AppendLine();
+                        builder.AppendLine();
+                        builder.AppendLine();
+                        builder.AppendLine("GO");
+                        builder.AppendLine("PRINT 'Updating Column Type and Length...'");
+                        builder.AppendLine();
+                        builder.AppendLine();
+                        builder.AppendLine("GO");
 
-                        sb.AppendLine();
-                        sb.AppendLine();
-                        sb.AppendLine();
-                        sb.AppendLine("GO");
-                        sb.AppendLine("PRINT 'Updating Column Type and Length...'");
-                        sb.AppendLine();
-                        sb.AppendLine();
-                        sb.AppendLine("GO");
-
-                        sb.AppendLine(GenerateDeleteConstraintBeforeAddOrUpdate(tableName, schema,
+                        builder.AppendLine(GenerateDeleteConstraintBeforeAddOrUpdate(tableName, schema,
                             $"DF_{tableName}_{column.Name}"));
 
                         var typeLen = GenerateLength(column);
-                        sb.AppendFormat("ALTER TABLE [{0}].[{1}] ALTER COLUMN [{2}] {3}", schema, tableName, column.Name,
+                        builder.AppendFormat("ALTER TABLE [{0}].[{1}] ALTER COLUMN [{2}] {3}", schema, tableName, column.Name,
                             column.DATA_TYPE);
-                        sb.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
-                        sb.AppendLine();
-                        sb.AppendLine("GO");
+                        builder.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                        builder.AppendLine();
+                        builder.AppendLine("GO");
 
 
-                        if (listPropetyChanged.Contains(nameof(column.COLUMN_DEFAULT)))
+                        if (listPropertyChanged.Contains(nameof(column.COLUMN_DEFAULT)))
                         {
 
-                            sb.AppendLine();
-                            sb.AppendLine(string.Format(
+                            builder.AppendLine();
+                            builder.AppendLine(string.Format(
                                 "ALTER TABLE [{0}].[{1}] ADD  CONSTRAINT [DF_{1}_{2}]  DEFAULT {3} FOR [{2}]", schema, tableName,
                                 column.Name, column.COLUMN_DEFAULT));
-                            sb.AppendLine("GO");
+                            builder.AppendLine("GO");
                         }
+                        sb.Append(builder);
+                        SqlOperation(
+                            $"Update column {column.Name} from table [{schema}].[{tableName}]",
+                            builder.ToString(), ViewMode.Update);
 
                     }
+
+
                 }
                 sb.AppendLine();
                 sb.AppendLine("GO");
@@ -486,8 +524,9 @@ END
         /// </summary>
         /// <param name="foreignKeys">foreignKeys for remove</param>
         /// <param name="tableName">Table Name</param>
+        /// <param name="schema"></param>
         /// <returns>sql script</returns>
-        static string GenerateRemoveForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
+        string GenerateRemoveForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -495,11 +534,15 @@ END
             sb.AppendLine("-----------------------------------------------------------");
             foreach (var key in foreignKeys)
             {
-                sb.AppendLine(string.Format(
-                    "IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[{0}]') AND parent_object_id = OBJECT_ID(N'[{1}].[{2}]'))",
-                    key.Name, schema, tableName));
-                sb.AppendLine(string.Format("ALTER TABLE [{0}].[{1}] DROP CONSTRAINT [{2}]", schema, tableName, key.Name));
-                sb.AppendLine("GO");
+                var builder = new StringBuilder();
+
+                builder.AppendLine(
+                    $"IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[{key.Name}]') AND parent_object_id = OBJECT_ID(N'[{schema}].[{tableName}]'))");
+                builder.AppendLine($"ALTER TABLE [{schema}].[{tableName}] DROP CONSTRAINT [{key.Name}]");
+                builder.AppendLine("GO");
+
+                sb.Append(builder);
+                SqlOperation($"Drop Foreign Key {key.Name}", builder.ToString(), ViewMode.Delete);
             }
             return sb.ToString();
         }
@@ -509,7 +552,7 @@ END
         /// <param name="tableName">Table Name</param>
         /// <param name="indexes">Index Collection for this table</param>
         /// <returns>sql script to remove object</returns>
-        static string GenerateRemoveIndexes(IEnumerable<Index> indexes, string tableName, string schema)
+        string GenerateRemoveIndexes(IEnumerable<Index> indexes, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -517,14 +560,20 @@ END
             sb.AppendLine("-----------------------------------------------------------");
             foreach (var index in indexes)
             {
-                sb.AppendFormat("DROP INDEX [{0}] ON [{1}].[{2}]", index.Name, schema, tableName);
-                sb.AppendLine();
-                sb.AppendLine("GO");
+                var builder = new StringBuilder();
+
+                builder.AppendFormat("DROP INDEX [{0}] ON [{1}].[{2}]", index.Name, schema, tableName);
+                builder.AppendLine();
+                builder.AppendLine("GO");
+
+                sb.Append(builder);
+
+                SqlOperation($"Drop Index Name {index.Name}", builder.ToString(), ViewMode.Delete);
             }
             return sb.ToString();
         }
 
-        static string GenerateRemoveColumns(IEnumerable<Column> columns, string tableName, string schema)
+        string GenerateRemoveColumns(IEnumerable<Column> columns, string tableName, string schema)
         {
             var sb = new StringBuilder();
 
@@ -535,10 +584,15 @@ END
             sb.AppendFormat("ALTER TABLE [{0}].[{1}]", schema, tableName);
             sb.AppendLine();
             sb.Append("\t");
-            sb.AppendLine(string.Format("DROP COLUMN {0}", columns.Select(x => x.Name).Aggregate("", (current, c) => current + $"[{c}] ,").Trim(',')));
+            var columnNames = columns.Select(x => x.Name).Aggregate("", (current, c) => current + $"[{c}] ,").Trim(',');
+            sb.AppendLine($"DROP COLUMN {columnNames}");
             sb.AppendLine("GO");
             sb.AppendLine($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
             sb.AppendLine("GO");
+
+
+            SqlOperation($"Drop columns Name {columnNames}", sb.ToString(), ViewMode.Delete);
+
             return sb.ToString();
         }
 
@@ -603,7 +657,7 @@ END
             return columnsBuilder.ToString().Trim(',', '\r', '\n');
         }
 
-        static string GenerateNewColumns(IEnumerable<Column> columns, string tableName, string schema)
+        string GenerateNewColumns(IEnumerable<Column> columns, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -621,10 +675,13 @@ END
                 sb.AppendLine("GO");
             }
 
+            var columnNames = columns.Select(x => x.Name).Aggregate((x, y) => x + " , " + y).Trim(',', ' ');
+            SqlOperation($"Add New Columns {columnNames} on table [{schema}].[{tableName}]", sb.ToString(), ViewMode.Add);
+
             return sb.ToString();
         }
 
-        static string GenerateNewIndexes(IEnumerable<Index> indexes, string tableName, string schema, bool indexExists)
+        string GenerateNewIndexes(IEnumerable<Index> indexes, string tableName, string schema, bool indexExists)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -632,33 +689,41 @@ END
             sb.AppendLine("-----------------------------------------------------------");
             foreach (var index in indexes)
             {
-                sb.AppendLine("GO");
-                sb.AppendFormat("CREATE {0} {1} INDEX [{2}] ON [{3}].[{4}]", index.is_unique.ToBoolean() ? "UNIQUE" : string.Empty,
+                var builder = new StringBuilder();
+
+                builder.AppendLine("GO");
+                builder.AppendFormat("CREATE {0} {1} INDEX [{2}] ON [{3}].[{4}]", index.is_unique.ToBoolean() ? "UNIQUE" : string.Empty,
                     index.type_desc,
                     index.Name,
                     schema,
                     tableName);
 
-                sb.AppendLine("(");
+                builder.AppendLine("(");
 
-                var columnsSpited = index.Columns.Split(new char[] { '|' });
+                var columnsSpited = index.Columns.Split('|');
                 for (var index1 = 0; index1 < columnsSpited.Length; index1++)
                 {
                     var columnName = columnsSpited[index1];
-                    sb.Append($"[{columnName}] ASC");
+                    builder.Append($"[{columnName}] ASC");
                     if (columnsSpited.Length > 1 && index1 < columnsSpited.Length - 1)
-                        sb.AppendLine(",");
+                        builder.AppendLine(",");
                 }
 
-                sb.AppendLine(")");
+                builder.AppendLine(")");
                 if (index.has_filter.ToBoolean())
-                    sb.AppendLine(string.Format("WHERE {0}", index.filter_definition));
+                    builder.AppendLine($"WHERE {index.filter_definition}");
 
                 var options = IndexOptions(index, indexExists);
                 if (options.HasValue())
-                    sb.AppendLine(options);
+                    builder.AppendLine(options);
 
-                sb.AppendLine("ON [PRIMARY]");
+                builder.AppendLine("ON [PRIMARY]");
+
+                SqlOperation(
+                    $"{(indexExists ? "Update" : "Add New")} Index {index.Name} on table [{schema}].[{tableName}]",
+                    builder.ToString(), indexExists ? ViewMode.Update : ViewMode.Add);
+
+                sb.Append(builder);
             }
 
             return sb.ToString();

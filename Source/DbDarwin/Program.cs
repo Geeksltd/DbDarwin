@@ -33,7 +33,7 @@ namespace DbDarwin
                     {
                         var model = IsArgumentGenerateScriptValid(argList);
                         if (model.IsValid)
-                            GenerateScriptService.GenerateScript(model);
+                            new GenerateScriptService().GenerateScript(model);
                     }
                     else if (first.ToLower() == "rename")
                     {
