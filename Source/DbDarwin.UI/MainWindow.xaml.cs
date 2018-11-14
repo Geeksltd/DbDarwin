@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -186,6 +187,8 @@ namespace DbDarwin.UI
                                   });
                               }
                           }
+
+                          GenerateButton.IsEnabled = true;
                       }
                   }));
 
@@ -229,6 +232,22 @@ namespace DbDarwin.UI
         //}
         //private delegate void OneArgDelegate(String arg);
         //public event EventHandler<PerformanceEventArgs> DataUpdate;
+        private void GenerateButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var engine = new GenerateScriptService();
+            var result = engine.GenerateScript(
+                new GenerateScript
+                {
+                    CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                    MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
+                });
+            Process.Start(AppContext.BaseDirectory + "\\output.sql");
+        }
+
+        private void GenerateSelectedButton_OnClick(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
     public class PerformanceEventArgs : EventArgs

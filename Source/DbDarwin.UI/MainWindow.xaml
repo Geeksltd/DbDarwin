@@ -21,6 +21,9 @@
                 <ComboBoxItem  Tag="1"  >Select Target...</ComboBoxItem>
             </ComboBox>
 
+            <Button x:Name="GenerateButton" IsEnabled="False" Content="Generate All" Height="31" VerticalAlignment="Top" Click="GenerateButton_OnClick"  Padding="10,2"/>
+            <Button x:Name="GenerateSelectedButton" IsEnabled="False" Content="Generate Selected" Height="31" VerticalAlignment="Top" Click="GenerateSelectedButton_OnClick"  Padding="10,2"/>
+
 
 
         </ToolBar>
