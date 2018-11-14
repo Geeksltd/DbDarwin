@@ -23,8 +23,9 @@ namespace DbDarwin.Service
         /// <param name="currentFileName">Current XML File</param>
         /// <param name="newSchemaFilePath">New XML File Want To Compare</param>
         /// <param name="output">Output File XML diff</param>
-        public static bool StartCompare(GenerateDiffFile model)
+        public static ResultMessage StartCompare(GenerateDiffFile model)
         {
+            ResultMessage result = new ResultMessage();
             try
             {
                 var targetSchema = LoadXMLFile(model.TargetSchemaFile);
@@ -35,10 +36,14 @@ namespace DbDarwin.Service
                     targetSchema,
                     model.OutputFile);
 
+                result.IsSuccessfully = true;
                 Console.WriteLine("Saving To xml");
             }
             catch (Exception ex)
             {
+                result.IsSuccessfully = false;
+                result.Messsage = ex.Message;
+
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.ToString());
                 Console.ForegroundColor = ConsoleColor.White;
@@ -49,7 +54,7 @@ namespace DbDarwin.Service
                 GC.Collect();
             }
 
-            return true;
+            return result;
         }
 
         private static void CompareAndSave(Database sourceSchema, Database targetSchema, string output)
@@ -171,7 +176,7 @@ namespace DbDarwin.Service
             doc.Save(output);
         }
 
-        private static Database LoadXMLFile(string currentFileName)
+        public static Database LoadXMLFile(string currentFileName)
         {
             var serializer = new XmlSerializer(typeof(Database));
             using (var reader = new StreamReader(currentFileName))

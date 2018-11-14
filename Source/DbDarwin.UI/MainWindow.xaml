@@ -38,7 +38,6 @@
             <Rectangle Grid.Row="1" Grid.Column="1"  Fill="#B2D3FF" />
 
             <ListBox Grid.Row="0" Grid.Column="1" x:Name="ListBoxAdd" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Background="{x:Null}"  >
-                <CheckBox Content="select * FROm table1"/>
             </ListBox>
 
         

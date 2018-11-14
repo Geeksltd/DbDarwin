@@ -130,13 +130,38 @@ namespace DbDarwin.UI
 
 
 
+                  UpdateState("Comparing Databases...");
+                  CompareSchemaService.StartCompare(new GenerateDiffFile
+                  {
+                      SourceSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
+                      TargetSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
+                      OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
+                  });
+                  UpdateState("Databases Compared.");
+
+
+
+
+
 
 
 
                   Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
                   {
                       if (Application.Current.MainWindow is MainWindow mainWindow)
+                      {
                           mainWindow.CompareButton.IsEnabled = true;
+
+                          var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
+                          if (database.Add?.Tables != null)
+                              foreach (var table in database.Add.Tables)
+                              {
+                                  ListBoxAdd.Items.Add(new CheckBox()
+                                  {
+                                      Content = "Add new table " + table.FullName
+                                  });
+                              }
+                      }
                   }));
 
               });
