@@ -82,8 +82,6 @@ namespace DbDarwin.Service
                             sb.Append(GenerateNewForeignKey(table.Update.ForeignKeys, table.Name, table.Schema));
                         if (table.Add?.ForeignKeys != null)
                             sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name, table.Schema));
-
-
                     }
 
             }
@@ -94,13 +92,17 @@ namespace DbDarwin.Service
             return results;
         }
 
-        private static string GenerateRemoveTables(IEnumerable<Table> tables)
+        private string GenerateRemoveTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
             {
-                sb.AppendLine("GO");
-                sb.AppendLine($"DROP TABLE [{table.Schema}].[{table.Name}]");
+                var builder = new StringBuilder();
+                builder.AppendLine("GO");
+                builder.AppendLine($"DROP TABLE [{table.Schema}].[{table.Name}]");
+
+                sb.Append(builder);
+                SqlOperation($"Remove Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Delete);
             }
             return sb.ToString();
         }
@@ -110,37 +112,30 @@ namespace DbDarwin.Service
             var sb = new StringBuilder();
             foreach (var table in tables)
             {
-                sb.AppendLine($"CREATE TABLE [{table.Schema}].[{table.Name}] (");
+                var builder = new StringBuilder();
+                builder.AppendLine($"CREATE TABLE [{table.Schema}].[{table.Name}] (");
 
                 if (table.Columns.Any())
-                    sb.AppendLine(GenerateColumns(table.Columns, table.Name));
+                    builder.AppendLine(GenerateColumns(table.Columns, table.Name));
                 if (table.PrimaryKey != null)
-                    sb.AppendLine(GeneratePrimaryKeyCore(table.PrimaryKey));
+                    builder.AppendLine(GeneratePrimaryKeyCore(table.PrimaryKey));
 
-                sb.AppendLine(")");
-                sb.AppendLine(" ON [PRIMARY]");
+                builder.AppendLine(")");
+                builder.AppendLine(" ON [PRIMARY]");
 
 
 
                 if (table.Indexes.Any())
                 {
                     var indexExists = false;
-                    sb.AppendLine(GenerateNewIndexes(table.Indexes, table.Name, table.Schema, indexExists));
+                    builder.AppendLine(GenerateNewIndexes(table.Indexes, table.Name, table.Schema, indexExists));
                 }
 
 
-                //if (table.Add != null)
-                //{
-                //    sb.AppendLine("GO");
-                //    if (table.Add.PrimaryKey != null)
-                //        sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name));
-                //    if (table.Add.Indexes.Any())
-                //        sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name));
-                //    if (table.Add.ForeignKeys.Any())
-                //        sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name));
-                //}
 
+                SqlOperation($"Add New Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Add);
 
+                sb.Append(builder);
             }
             return sb.ToString();
         }
@@ -321,10 +316,10 @@ END
             if (key.fill_factor > 0)
                 sb.AppendFormat(", FILLFACTOR = {0}", key.fill_factor);
 
-            return sb.Length > 0 ? string.Format(" WITH ({0})", sb).Trim(',', ' ') : string.Empty;
+            return sb.Length > 0 ? $" WITH ({sb})".Trim(',', ' ') : string.Empty;
         }
 
-        static string GenerateUpdateForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
+        string GenerateUpdateForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -355,7 +350,7 @@ END
                 var resultCompare = compareLogic.Compare(new Index(), key);
                 if (!resultCompare.AreEqual)
                 {
-                    sb.AppendLine(string.Format("ALTER TABLE [{0}].[{1}] DROP CONSTRAINT [{2}]", schema, tableName, key.Name));
+                    sb.AppendLine($"ALTER TABLE [{schema}].[{tableName}] DROP CONSTRAINT [{key.Name}]");
                     sb.AppendLine(GenerateNewForeignKey(new List<ForeignKey> { key }, tableName, schema));
                 }
 
@@ -381,26 +376,36 @@ END
 
                 if (index.SetName.HasValue())
                 {
-                    sb.AppendLine();
-                    sb.AppendLine();
-                    sb.AppendLine("GO");
-                    sb.AppendLine("PRINT 'Updating Index Name...'");
-                    sb.AppendLine();
-                    sb.AppendLine();
-                    sb.AppendLine("GO");
-                    sb.AppendFormat("EXECUTE sp_rename N'{0}.{1}', N'{2}', 'Index' ", tableName,
+                    var builder = new StringBuilder();
+
+                    builder.AppendLine();
+                    builder.AppendLine();
+                    builder.AppendLine("GO");
+                    builder.AppendLine("PRINT 'Updating Index Name...'");
+                    builder.AppendLine();
+                    builder.AppendLine();
+                    builder.AppendLine("GO");
+                    builder.AppendFormat("EXECUTE sp_rename N'{0}.{1}', N'{2}', 'Index' ", tableName,
                         index.Name,
                         index.SetName);
                     index.name = index.SetName;
+
+                    sb.Append(builder);
+                    SqlOperation($"Rename index from {index.Name} to {index.SetName} on table [{schema}].[{tableName}]", builder.ToString(), ViewMode.Update);
                 }
 
                 var resultCompare = compareLogic.Compare(new Index(), index);
                 if (!resultCompare.AreEqual)
                 {
+                    var builder = new StringBuilder();
 
-                    sb.AppendLine(GenerateNewIndexes(new List<Index> { index }, tableName, schema, true));
+                    builder.AppendLine(GenerateNewIndexes(new List<Index> { index }, tableName, schema, true));
                     if (index.is_disabled.ToBoolean())
-                        sb.AppendLine($"ALTER INDEX [{index.Name}] ON [{schema}].[{tableName}] DISABLE");
+                        builder.AppendLine($"ALTER INDEX [{index.Name}] ON [{schema}].[{tableName}] DISABLE");
+
+                    SqlOperation($"Update index {index.Name} on table [{schema}].[{tableName}]", builder.ToString(), ViewMode.Update);
+
+                    sb.Append(builder);
                 }
 
                 sb.AppendLine();
@@ -596,7 +601,7 @@ END
             return sb.ToString();
         }
 
-        static string GenerateNewForeignKey(IEnumerable<ForeignKey> foreignKey, string tableName, string schema)
+        string GenerateNewForeignKey(IEnumerable<ForeignKey> foreignKey, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -604,13 +609,19 @@ END
             sb.AppendLine("-----------------------------------------------------------");
             foreach (var key in foreignKey)
             {
-                sb.AppendLine("GO");
-                sb.AppendFormat("ALTER TABLE [{0}].[{1}]  WITH CHECK ADD CONSTRAINT [{2}] FOREIGN KEY([{3}]) \r\n", schema, tableName, key.Name, key.COLUMN_NAME);
-                sb.AppendFormat("REFERENCES [{0}].[{1}] ([{2}]) ", key.Ref_TABLE_SCHEMA, key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
-                sb.AppendLine(string.Format("ON UPDATE {0} ON DELETE {1} ", key.UPDATE_RULE, key.DELETE_RULE));
-                sb.AppendLine("\r\nGO");
-                sb.AppendFormat("ALTER TABLE [{0}].[{1}] CHECK CONSTRAINT [{2}]", schema, tableName, key.Name);
-                sb.AppendLine("\r\nGO");
+                var builder = new StringBuilder();
+                builder.AppendLine("GO");
+                builder.AppendFormat("ALTER TABLE [{0}].[{1}]  WITH CHECK ADD CONSTRAINT [{2}] FOREIGN KEY([{3}]) \r\n", schema, tableName, key.Name, key.COLUMN_NAME);
+                builder.AppendFormat("REFERENCES [{0}].[{1}] ([{2}]) ", key.Ref_TABLE_SCHEMA, key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
+                builder.AppendLine($"ON UPDATE {key.UPDATE_RULE} ON DELETE {key.DELETE_RULE} ");
+                builder.AppendLine("\r\nGO");
+                builder.AppendFormat("ALTER TABLE [{0}].[{1}] CHECK CONSTRAINT [{2}]", schema, tableName, key.Name);
+                builder.AppendLine("\r\nGO");
+
+                sb.Append(builder);
+                SqlOperation(
+                    $"Add new foreign key {key.COLUMN_NAME}  from [{key.TABLE_SCHEMA}].[{key.TABLE_NAME}] to {key.Ref_COLUMN_NAME} on table [{key.Ref_TABLE_SCHEMA}].[{key.Ref_TABLE_NAME}] ",
+                    builder.ToString(), ViewMode.Add);
             }
 
             return sb.ToString();

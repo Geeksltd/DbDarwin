@@ -141,6 +141,14 @@ namespace DbDarwin.UI
 
 
 
+                  var engine = new GenerateScriptService();
+                  var result = engine.GenerateScript(
+                      new GenerateScript
+                      {
+                          CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                          MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
+                      });
+
 
 
 
@@ -152,35 +160,32 @@ namespace DbDarwin.UI
                       {
                           mainWindow.CompareButton.IsEnabled = true;
 
-                          var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
-                          if (database.Add?.Tables != null)
-                              foreach (var table in database.Add.Tables)
-                              {
-                                  ListBoxAdd.Items.Add(new CheckBox
-                                  {
-                                      IsChecked = true,
-                                      Content = "New table " + table.FullName
-                                  });
-                              }
-                          if (database.Update?.Tables != null)
-                              foreach (var table in database.Update.Tables)
-                              {
-                                  ListBoxAdd.Items.Add(new CheckBox
-                                  {
-                                      IsChecked = true,
-                                      Content = "Update table " + table.FullName
-                                  });
-                              }
+                          // var database =
+                          //     CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
 
-                          if (database.Remove?.Tables != null)
-                              foreach (var table in database.Remove.Tables)
+
+
+                          foreach (var script in result.OrderBy(x => x.Order))
+                          {
+                              if (script.Mode == Model.ViewMode.Add || script.Mode == Model.ViewMode.Update)
+                              {
+                                  ListBoxAdd.Items.Add(new CheckBox
+                                  {
+                                      IsChecked = true,
+                                      Content = script.Name,
+                                      DataContext = script.SQLScript
+                                  });
+                              }
+                              else
                               {
                                   ListBoxRemove.Items.Add(new CheckBox
                                   {
                                       IsChecked = true,
-                                      Content = "Remove table " + table.FullName
+                                      Content = script.Name,
+                                      DataContext = script.SQLScript
                                   });
                               }
+                          }
                       }
                   }));
 
