@@ -20,13 +20,16 @@ namespace DbDarwin.Service
             results = new List<GeneratedScriptResult>();
         }
 
-        public List<GeneratedScriptResult> SqlOperation(string name, string sqlScript, ViewMode mode)
+        public List<GeneratedScriptResult> SqlOperation(string title, string sqlScript, ViewMode mode, string fullTableName, string objectName, SQLObject objectType)
         {
-            results.Add(new GeneratedScriptResult()
+            results.Add(new GeneratedScriptResult
             {
                 ID = Guid.NewGuid().ToString(),
+                TableName = fullTableName,
+                ObjectName = objectName,
+                ObjectType = objectType,
                 Mode = mode,
-                Name = name,
+                Title = title,
                 SQLScript = sqlScript,
                 Order = results.Count + 1
             });
@@ -102,7 +105,7 @@ namespace DbDarwin.Service
                 builder.AppendLine($"DROP TABLE [{table.Schema}].[{table.Name}]");
 
                 sb.Append(builder);
-                SqlOperation($"Remove Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Delete);
+                SqlOperation($"Remove Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Delete, table.FullName, table.Name, SQLObject.Table);
             }
             return sb.ToString();
         }
@@ -133,7 +136,7 @@ namespace DbDarwin.Service
 
 
 
-                SqlOperation($"Add New Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Add);
+                SqlOperation($"Add New Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Add, table.FullName, table.Name, SQLObject.Table);
 
                 sb.Append(builder);
             }
@@ -157,7 +160,7 @@ namespace DbDarwin.Service
                     builder.AppendLine("GO");
                     builder.AppendLine($"EXECUTE sp_rename N'[{table.Schema}].[{table.Name}]', N'{table.SetName}', 'OBJECT' ");
 
-                    SqlOperation($"Updating Table Name {table.Name}", builder.ToString(), ViewMode.Update);
+                    SqlOperation($"Rename table name {table.Name}", builder.ToString(), ViewMode.Rename, table.FullName, table.Name, SQLObject.Table);
 
                     sb.Append(builder);
 
@@ -268,7 +271,8 @@ END
             sb.AppendLine(GeneratePrimaryKeyCore(key));
             sb.AppendLine("GO");
             sb.AppendLine($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
-            SqlOperation($"Add New PrimaryKey {key.Name} on table [{schema}].[{tableName}]", sb.ToString(), ViewMode.Add);
+            SqlOperation($"Add New PrimaryKey {key.Name} on table [{schema}].[{tableName}]", sb.ToString(),
+                ViewMode.Add, $"{schema}.{tableName}", key.Name, SQLObject.PrimaryKey);
             return sb.ToString();
         }
 
@@ -391,7 +395,8 @@ END
                     index.name = index.SetName;
 
                     sb.Append(builder);
-                    SqlOperation($"Rename index from {index.Name} to {index.SetName} on table [{schema}].[{tableName}]", builder.ToString(), ViewMode.Update);
+                    SqlOperation($"Rename index from {index.Name} to {index.SetName} on table [{schema}].[{tableName}]",
+                        builder.ToString(), ViewMode.Rename, $"{schema}.{tableName}", index.Name, SQLObject.Index);
                 }
 
                 var resultCompare = compareLogic.Compare(new Index(), index);
@@ -403,7 +408,7 @@ END
                     if (index.is_disabled.ToBoolean())
                         builder.AppendLine($"ALTER INDEX [{index.Name}] ON [{schema}].[{tableName}] DISABLE");
 
-                    SqlOperation($"Update index {index.Name} on table [{schema}].[{tableName}]", builder.ToString(), ViewMode.Update);
+                    SqlOperation($"Update index {index.Name} on table [{schema}].[{tableName}]", builder.ToString(), ViewMode.Update, $"{schema}.{tableName}", index.Name, SQLObject.Index);
 
                     sb.Append(builder);
                 }
@@ -445,7 +450,7 @@ END
 
                     SqlOperation(
                         $"Rename column name from {column.Name} to {column.SetName} from table [{schema}].[{tableName}]",
-                        builder.ToString(), ViewMode.Update);
+                        builder.ToString(), ViewMode.Rename, $"{schema}.{tableName}", column.Name, SQLObject.Column);
 
 
                     sb.Append(builder);
@@ -500,7 +505,7 @@ END
                         sb.Append(builder);
                         SqlOperation(
                             $"Update column {column.Name} from table [{schema}].[{tableName}]",
-                            builder.ToString(), ViewMode.Update);
+                            builder.ToString(), ViewMode.Update, $"{schema}.{tableName}", column.Name, SQLObject.Column);
 
                     }
 
@@ -529,7 +534,7 @@ END
         /// </summary>
         /// <param name="foreignKeys">foreignKeys for remove</param>
         /// <param name="tableName">Table Name</param>
-        /// <param name="schema"></param>
+        /// <param name="schema">Table Schema</param>
         /// <returns>sql script</returns>
         string GenerateRemoveForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
         {
@@ -547,7 +552,7 @@ END
                 builder.AppendLine("GO");
 
                 sb.Append(builder);
-                SqlOperation($"Drop Foreign Key {key.Name}", builder.ToString(), ViewMode.Delete);
+                SqlOperation($"Drop Foreign Key {key.Name}", builder.ToString(), ViewMode.Delete, $"{schema}.{tableName}", key.Name, SQLObject.ForeignKey);
             }
             return sb.ToString();
         }
@@ -573,7 +578,7 @@ END
 
                 sb.Append(builder);
 
-                SqlOperation($"Drop Index Name {index.Name}", builder.ToString(), ViewMode.Delete);
+                SqlOperation($"Drop Index Name {index.Name}", builder.ToString(), ViewMode.Delete, $"{schema}.{tableName}", $"{index.Name}", SQLObject.Index);
             }
             return sb.ToString();
         }
@@ -595,7 +600,7 @@ END
                 builder.AppendLine($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
                 builder.AppendLine("GO");
                 SqlOperation($"Drop column Name {column.Name} from table [{tableName}].[{schema}]", builder.ToString(),
-                    ViewMode.Delete);
+                    ViewMode.Delete, $"{schema}.{tableName}", column.Name, SQLObject.Column);
                 sb.Append(builder);
             }
 
@@ -623,7 +628,7 @@ END
                 sb.Append(builder);
                 SqlOperation(
                     $"Add new foreign key {key.COLUMN_NAME}  from [{key.TABLE_SCHEMA}].[{key.TABLE_NAME}] to {key.Ref_COLUMN_NAME} on table [{key.Ref_TABLE_SCHEMA}].[{key.Ref_TABLE_NAME}] ",
-                    builder.ToString(), ViewMode.Add);
+                    builder.ToString(), ViewMode.Add, $"{schema}.{tableName}", key.Name, SQLObject.ForeignKey);
             }
 
             return sb.ToString();
@@ -688,7 +693,9 @@ END
                 builder.Append($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
                 builder.AppendLine();
                 builder.AppendLine("GO");
-                SqlOperation($"Add New Column {column.Name} on table [{schema}].[{tableName}]", builder.ToString(), ViewMode.Add);
+
+                SqlOperation($"Add New Column {column.Name} on table [{schema}].[{tableName}]", builder.ToString(), ViewMode.Add, $"{schema}.{tableName}", column.Name, SQLObject.Column);
+
                 sb.Append(builder);
             }
             return sb.ToString();
@@ -734,7 +741,8 @@ END
 
                 SqlOperation(
                     $"{(indexExists ? "Update" : "Add New")} Index {index.Name} on table [{schema}].[{tableName}]",
-                    builder.ToString(), indexExists ? ViewMode.Update : ViewMode.Add);
+                    builder.ToString(), indexExists ? ViewMode.Update : ViewMode.Add, $"{schema}.{tableName}",
+                    index.Name, SQLObject.Index);
 
                 sb.Append(builder);
             }

@@ -174,7 +174,7 @@ namespace DbDarwin.UI
                               {
                                   var checkbox = new RadioButton()
                                   {
-                                      Content = script.Name,
+                                      Content = script.Title,
                                       DataContext = script.SQLScript,
                                   };
                                   checkbox.Click += Checkbox_Click;
@@ -184,7 +184,7 @@ namespace DbDarwin.UI
                               {
                                   var checkbox = new RadioButton
                                   {
-                                      Content = script.Name,
+                                      Content = script.Title,
                                       DataContext = script.SQLScript
                                   };
                                   checkbox.Click += Checkbox_Click;
