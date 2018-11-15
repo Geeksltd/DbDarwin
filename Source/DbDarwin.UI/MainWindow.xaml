@@ -14,20 +14,29 @@
         <ToolBar x:Name="ToolBar" VerticalAlignment="Top" Height="36">
             <Button x:Name="CompareButton" IsEnabled="False" Content="Compare" Height="31" VerticalAlignment="Top" Width="75" Click="CompareButton_Click"/>
 
-            <ComboBox  x:Name="SelectSource"  Width="250" Text="Select Source" SelectionChanged="SelectSource_SelectionChanged"  >
-                <ComboBoxItem  Tag="1" >Select Source...</ComboBoxItem>
-            </ComboBox>
-            <ComboBox  x:Name="SelectTarget" Width="250" Text="Select Target"  Margin="10,0,0,0" SelectionChanged="SelectTarget_SelectionChanged"  >
-                <ComboBoxItem  Tag="1"  >Select Target...</ComboBoxItem>
-            </ComboBox>
 
             <Button x:Name="GenerateButton" IsEnabled="False" Content="Generate All" Height="31" VerticalAlignment="Top" Click="GenerateButton_OnClick"  Padding="10,2"/>
-            <Button x:Name="GenerateSelectedButton" IsEnabled="False" Content="Generate Selected" Height="31" VerticalAlignment="Top" Click="GenerateSelectedButton_OnClick"  Padding="10,2"/>
+            <Button x:Name="ActuallyRename" IsEnabled="False" Content="Its actually a rename" Height="31" VerticalAlignment="Top" Click="ActuallyRename_OnClick"  Padding="10,2"/>
+
+            <Button x:Name="GenerateSelectedButton" IsEnabled="False" Content="Generate Selected (Next version)" Height="31" VerticalAlignment="Top" Click="GenerateSelectedButton_OnClick"  Padding="10,2"/>
 
 
 
         </ToolBar>
-        <Grid x:Name="LayoutRoot" Background="White" ShowGridLines="False" Margin="0,36,0,26" HorizontalAlignment="Stretch"   VerticalAlignment="Stretch" >
+        <ToolBar VerticalAlignment="Top" Height="36" Margin="0,35,0,0">
+
+            <ComboBox  x:Name="SelectSource"  Width="300" Text="Select Source" SelectionChanged="SelectSource_SelectionChanged"  >
+                <ComboBoxItem  Tag="1" >Select Source...</ComboBoxItem>
+            </ComboBox>
+            <ComboBox  x:Name="SelectTarget" Width="300" Text="Select Target"  Margin="10,0,0,0" SelectionChanged="SelectTarget_SelectionChanged"  >
+                <ComboBoxItem  Tag="1"  >Select Target...</ComboBoxItem>
+            </ComboBox>
+
+
+
+
+        </ToolBar>
+        <Grid x:Name="LayoutRoot" Background="White" ShowGridLines="False" Margin="0,71,0,26" HorizontalAlignment="Stretch"   VerticalAlignment="Stretch" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*"   />
@@ -47,10 +56,11 @@
 
 
             <ListBox Grid.Row="0" Grid.Column="0" x:Name="ListBoxRemove" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Background="{x:Null}" SelectionChanged="ListBoxAdd_SelectionChanged" >
+         
             </ListBox>
 
 
-            <RichTextBox x:Name="richTextBox" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <RichTextBox x:Name="RichTextBox" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <FlowDocument>
                     <Paragraph>
                         <Run Text=""/>

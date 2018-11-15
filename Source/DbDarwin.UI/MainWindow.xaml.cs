@@ -170,21 +170,23 @@ namespace DbDarwin.UI
                           {
                               if (script.Mode == Model.ViewMode.Add || script.Mode == Model.ViewMode.Update)
                               {
-                                  ListBoxAdd.Items.Add(new CheckBox
+                                  var checkbox = new RadioButton()
                                   {
-                                      IsChecked = true,
                                       Content = script.Name,
                                       DataContext = script.SQLScript,
-                                  });
+                                  };
+                                  checkbox.Click += Checkbox_Click;
+                                  ListBoxAdd.Items.Add(checkbox);
                               }
                               else
                               {
-                                  ListBoxRemove.Items.Add(new CheckBox
+                                  var checkbox = new RadioButton
                                   {
-                                      IsChecked = true,
                                       Content = script.Name,
                                       DataContext = script.SQLScript
-                                  });
+                                  };
+                                  checkbox.Click += Checkbox_Click;
+                                  ListBoxRemove.Items.Add(checkbox);
                               }
                           }
 
@@ -201,6 +203,10 @@ namespace DbDarwin.UI
 
         }
 
+        private void Checkbox_Click(object sender, RoutedEventArgs e)
+        {
+            ShowScript((RadioButton)sender);
+        }
 
         public void UpdateState(string content)
         {
@@ -213,9 +219,14 @@ namespace DbDarwin.UI
 
         private void ListBoxAdd_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var combo = (CheckBox)ListBoxAdd.SelectedItem;
-            richTextBox.Document.Blocks.Clear();
-            richTextBox.Document.Blocks.Add(new Paragraph(new Run(combo.DataContext.ToString())));
+            var combo = (RadioButton)ListBoxAdd.SelectedItem;
+            ShowScript(combo);
+        }
+
+        public void ShowScript(RadioButton control)
+        {
+            RichTextBox.Document.Blocks.Clear();
+            RichTextBox.Document.Blocks.Add(new Paragraph(new Run(control.DataContext.ToString())));
         }
 
         //private void OnDataUpdate(string data)
@@ -247,6 +258,11 @@ namespace DbDarwin.UI
         private void GenerateSelectedButton_OnClick(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 
