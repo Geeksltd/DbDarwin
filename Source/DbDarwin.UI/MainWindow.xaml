@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DbDarwin.UI"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="MainWindow" Height="527.027" Width="766.555">
+        Title="DbDarwin UI" Height="527.027" Width="766.555">
     <Grid>
         <StatusBar Height="26" Margin="0" VerticalAlignment="Bottom" Background="#FF007ACC" Foreground="White">
             <Label x:Name="StatusLabel" Content="Ready"  HorizontalAlignment="Left" Padding="0" ScrollViewer.CanContentScroll="True" Margin="5,0,0,0" VerticalAlignment="Top" Foreground="{DynamicResource White}"/>

@@ -671,24 +671,24 @@ END
         string GenerateNewColumns(IEnumerable<Column> columns, string tableName, string schema)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("-----------------------------------------------------------");
-            sb.AppendLine("-------------------- Create New Columns -------------------");
-            sb.AppendLine("-----------------------------------------------------------");
-            sb.AppendFormat("ALTER TABLE [{0}].[{1}] ADD ", schema, tableName);
-            sb.AppendLine();
-            sb.AppendLine(GenerateColumns(columns, tableName));
-            sb.AppendLine();
-            sb.AppendLine("GO");
-            if (columns.Any())
+
+            foreach (var column in columns)
             {
-                sb.Append($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
-                sb.AppendLine();
-                sb.AppendLine("GO");
+                var builder = new StringBuilder();
+                builder.AppendLine("-----------------------------------------------------------");
+                builder.AppendLine("-------------------- Create New Columns -------------------");
+                builder.AppendLine("-----------------------------------------------------------");
+                builder.AppendFormat("ALTER TABLE [{0}].[{1}] ADD ", schema, tableName);
+                builder.AppendLine();
+                builder.AppendLine(GenerateColumns(new[] { column }, tableName));
+                builder.AppendLine();
+                builder.AppendLine("GO");
+                builder.Append($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
+                builder.AppendLine();
+                builder.AppendLine("GO");
+                SqlOperation($"Add New Column {column.Name} on table [{schema}].[{tableName}]", builder.ToString(), ViewMode.Add);
+                sb.Append(builder);
             }
-
-            var columnNames = columns.Select(x => x.Name).Aggregate((x, y) => x + " , " + y).Trim(',', ' ');
-            SqlOperation($"Add New Columns {columnNames} on table [{schema}].[{tableName}]", sb.ToString(), ViewMode.Add);
-
             return sb.ToString();
         }
 
