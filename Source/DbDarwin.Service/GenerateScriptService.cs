@@ -581,22 +581,24 @@ END
         string GenerateRemoveColumns(IEnumerable<Column> columns, string tableName, string schema)
         {
             var sb = new StringBuilder();
-
             sb.AppendLine("-----------------------------------------------------------");
             sb.AppendLine("-------------------- Drop Columns -------------------------");
             sb.AppendLine("-----------------------------------------------------------");
+            foreach (var column in columns)
+            {
+                var builder = new StringBuilder();
 
-            sb.AppendFormat("ALTER TABLE [{0}].[{1}]", schema, tableName);
-            sb.AppendLine();
-            sb.Append("\t");
-            var columnNames = columns.Select(x => x.Name).Aggregate("", (current, c) => current + $"[{c}] ,").Trim(',');
-            sb.AppendLine($"DROP COLUMN {columnNames}");
-            sb.AppendLine("GO");
-            sb.AppendLine($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
-            sb.AppendLine("GO");
+                builder.Append($"ALTER TABLE [{schema}].[{tableName}]");
+                //   var columnNames = columns.Select(x => x.Name).Aggregate("", (current, c) => current + $"[{c}] ,").Trim(',');
+                builder.AppendLine($" DROP COLUMN {column.Name}");
+                builder.AppendLine("GO");
+                builder.AppendLine($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
+                builder.AppendLine("GO");
+                SqlOperation($"Drop column Name {column.Name} from table [{tableName}].[{schema}]", builder.ToString(),
+                    ViewMode.Delete);
+                sb.Append(builder);
+            }
 
-
-            SqlOperation($"Drop columns Name {columnNames}", sb.ToString(), ViewMode.Delete);
 
             return sb.ToString();
         }

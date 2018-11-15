@@ -165,6 +165,8 @@ namespace DbDarwin.UI
                           //     CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
 
 
+                          ListBoxAdd.Items.Clear();
+                          ListBoxRemove.Items.Clear();
 
                           foreach (var script in result.OrderBy(x => x.Order))
                           {
