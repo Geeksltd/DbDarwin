@@ -149,7 +149,7 @@ namespace DbDarwin.Service
 
 
 
-        private static void SaveToFile(Database database, string fileOutput)
+        public static void SaveToFile(Database database, string fileOutput)
         {
             var ser = new XmlSerializer(typeof(Database));
             var sw2 = new StringWriter();

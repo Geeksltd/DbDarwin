@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using DbDarwin.Model;
 using DbDarwin.Model.Command;
 using DbDarwin.Service;
 
@@ -141,60 +142,8 @@ namespace DbDarwin.UI
                   UpdateState("Databases Compared.");
 
 
+                  GenerateSqlFileAndShowUpdates();
 
-                  var engine = new GenerateScriptService();
-                  var result = engine.GenerateScript(
-                      new GenerateScript
-                      {
-                          CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
-                          MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
-                      });
-
-
-
-
-
-
-                  Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
-                  {
-                      if (Application.Current.MainWindow is MainWindow mainWindow)
-                      {
-                          mainWindow.CompareButton.IsEnabled = true;
-
-                          // var database =
-                          //     CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
-
-
-                          ListBoxAdd.Items.Clear();
-                          ListBoxRemove.Items.Clear();
-
-                          foreach (var script in result.OrderBy(x => x.Order))
-                          {
-                              if (script.Mode == Model.ViewMode.Add || script.Mode == Model.ViewMode.Update)
-                              {
-                                  var checkbox = new RadioButton()
-                                  {
-                                      Content = script.Title,
-                                      DataContext = script.SQLScript,
-                                  };
-                                  checkbox.Click += Checkbox_Click;
-                                  ListBoxAdd.Items.Add(checkbox);
-                              }
-                              else
-                              {
-                                  var checkbox = new RadioButton
-                                  {
-                                      Content = script.Title,
-                                      DataContext = script.SQLScript
-                                  };
-                                  checkbox.Click += Checkbox_Click;
-                                  ListBoxRemove.Items.Add(checkbox);
-                              }
-                          }
-
-                          GenerateButton.IsEnabled = true;
-                      }
-                  }));
 
               });
 
@@ -205,8 +154,86 @@ namespace DbDarwin.UI
 
         }
 
+        private void GenerateSqlFileAndShowUpdates()
+        {
+            var engine = new GenerateScriptService();
+            var result = engine.GenerateScript(
+                new GenerateScript
+                {
+                    CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                    MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
+                });
+
+
+
+
+
+
+            Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
+            {
+                if (Application.Current.MainWindow is MainWindow mainWindow)
+                {
+                    mainWindow.CompareButton.IsEnabled = true;
+
+                    // var database =
+                    //     CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
+
+
+                    ListBoxAdd.Items.Clear();
+                    ListBoxRemove.Items.Clear();
+
+                    foreach (var script in result.OrderBy(x => x.Order))
+                    {
+                        if (script.Mode == Model.ViewMode.Add || script.Mode == Model.ViewMode.Update || script.Mode == Model.ViewMode.Rename)
+                        {
+                            var checkbox = new RadioButton()
+                            {
+                                Tag = "AddOrUpdate",
+                                Content = script.Title,
+                                DataContext = script,
+                            };
+                            checkbox.Click += Checkbox_Click;
+                            ListBoxAdd.Items.Add(checkbox);
+                        }
+                        else
+                        {
+                            var checkbox = new RadioButton
+                            {
+                                Tag = "Remove",
+                                Content = script.Title,
+                                DataContext = script
+                            };
+                            checkbox.Click += Checkbox_Click;
+                            ListBoxRemove.Items.Add(checkbox);
+                        }
+                    }
+
+                    GenerateButton.IsEnabled = true;
+                }
+            }));
+        }
+
+        public GeneratedScriptResult SelectedAddOrUpdate;
+        public GeneratedScriptResult SelectedRemove;
+        public void ValidateSelectedObject()
+        {
+            ActuallyRename.IsEnabled = SelectedAddOrUpdate != null &&
+                                       SelectedRemove != null &&
+                                       SelectedAddOrUpdate.Mode == ViewMode.Add &&
+                                       SelectedRemove.Mode == ViewMode.Delete &&
+                                       SelectedAddOrUpdate.ObjectType == SQLObject.Column &&
+                                       SelectedRemove.ObjectType == SQLObject.Column
+                                       && SelectedAddOrUpdate.TableName.ToLower() == SelectedRemove.TableName.ToLower();
+        }
+
         private void Checkbox_Click(object sender, RoutedEventArgs e)
         {
+            if (((RadioButton)sender).Tag.ToString() == "AddOrUpdate")
+                SelectedAddOrUpdate = (GeneratedScriptResult)((RadioButton)sender).DataContext;
+            else if (((RadioButton)sender).Tag.ToString() == "Remove")
+                SelectedRemove = (GeneratedScriptResult)((RadioButton)sender).DataContext;
+
+            ValidateSelectedObject();
             ShowScript((RadioButton)sender);
         }
 
@@ -219,32 +246,19 @@ namespace DbDarwin.UI
             }));
         }
 
-        private void ListBoxAdd_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ListBoxAddOrRemove_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var combo = (RadioButton)ListBoxAdd.SelectedItem;
+            var combo = (RadioButton)((ListBox)sender).SelectedItem;
             ShowScript(combo);
         }
 
         public void ShowScript(RadioButton control)
         {
             RichTextBox.Document.Blocks.Clear();
-            RichTextBox.Document.Blocks.Add(new Paragraph(new Run(control.DataContext.ToString())));
+            RichTextBox.Document.Blocks.Add(new Paragraph(new Run(((GeneratedScriptResult)control.DataContext).SQLScript)));
         }
 
-        //private void OnDataUpdate(string data)
-        //{
-        //    var handler = DataUpdate;
-        //    handler?.Invoke(this, new PerformanceEventArgs(data));
-        //}
 
-
-        //private void HandleDataUpdate(object sender, PerformanceEventArgs e)
-        //{
-        //    // dispatch the modification to the text box to the UI thread (main window dispatcher)
-        //    Dispatcher.BeginInvoke(DispatcherPriority.Normal, new OneArgDelegate(e.Data));
-        //}
-        //private delegate void OneArgDelegate(String arg);
-        //public event EventHandler<PerformanceEventArgs> DataUpdate;
         private void GenerateButton_OnClick(object sender, RoutedEventArgs e)
         {
             var engine = new GenerateScriptService();
@@ -264,7 +278,23 @@ namespace DbDarwin.UI
 
         private void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
+            var table = database.Update?.Tables?.FirstOrDefault(x =>
+                x.FullName.ToLower() == SelectedAddOrUpdate.TableName.ToLower());
+            if (table == null) return;
+
+            var newSchema = table.Add.Columns.FirstOrDefault(x => x.Name == SelectedAddOrUpdate.ObjectName);
+            var oldSchema = table.Remove.Columns.FirstOrDefault(x => x.Name == SelectedRemove.ObjectName);
+            if (oldSchema == null || newSchema == null)
+                return;
+
+            newSchema.SetName = newSchema.Name;
+            newSchema.COLUMN_NAME = oldSchema.Name;
+            table.Add.Columns.Remove(newSchema);
+            table.Remove.Columns.Remove(oldSchema);
+            table.Update.Columns.Add(newSchema);
+            ExtractSchemaService.SaveToFile(database, "diff.xml");
+            GenerateSqlFileAndShowUpdates();
         }
     }
 

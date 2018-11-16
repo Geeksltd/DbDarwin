@@ -599,7 +599,7 @@ END
                 builder.AppendLine("GO");
                 builder.AppendLine($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
                 builder.AppendLine("GO");
-                SqlOperation($"Drop column Name {column.Name} from table [{tableName}].[{schema}]", builder.ToString(),
+                SqlOperation($"Drop column Name {column.Name} from table [{schema}].[{tableName}]", builder.ToString(),
                     ViewMode.Delete, $"{schema}.{tableName}", column.Name, SQLObject.Column);
                 sb.Append(builder);
             }
