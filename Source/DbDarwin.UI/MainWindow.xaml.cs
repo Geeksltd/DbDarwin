@@ -18,6 +18,7 @@ using System.Windows.Threading;
 using DbDarwin.Model;
 using DbDarwin.Model.Command;
 using DbDarwin.Service;
+using Olive;
 
 namespace DbDarwin.UI
 {
@@ -268,6 +269,55 @@ namespace DbDarwin.UI
                     CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
                     MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
                 });
+            if (result.Any(x =>
+                x.Mode == ViewMode.Add && x.ObjectType == SQLObject.Column &&
+                x.SQLScript.ToUpper().Contains("NOT NULL") && !x.SQLScript.ToUpper().Contains("DEFAULT")))
+            {
+                var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
+                var count = database.Update?.Tables?
+                    .Where(v => v.Add?.Columns != null)
+                    .SelectMany(x => x.Add.Columns)
+                    .Count(c => c.IS_NULLABLE == "NO" && c.COLUMN_DEFAULT.IsEmpty());
+                if (count > 0)
+                {
+
+                    var NeedToSave = false;
+                    var tables = database.Update?.Tables?.Where(v => v.Add?.Columns != null).ToList();
+                    foreach (var table in tables)
+                    {
+                        foreach (var column in table.Add.Columns.Where(x => x.IS_NULLABLE == "NO" && x.COLUMN_DEFAULT.IsEmpty()))
+                        {
+                            var description = $"Column {column.Name} on table {table.Name} need default value";
+                            var defaultWindow = new SetDefaultValueWindow(description);
+                            if (defaultWindow.ShowDialog() ?? false)
+                            {
+                                NeedToSave = true;
+                                column.COLUMN_DEFAULT = defaultWindow.DefaultValue;
+                            }
+                        }
+                    }
+
+
+                    if (NeedToSave)
+                    {
+                        ExtractSchemaService.SaveToFile(database, "diff.xml");
+                        engine = new GenerateScriptService();
+                        result = engine.GenerateScript(
+                            new GenerateScript
+                            {
+                                CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                                MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
+                            });
+                    }
+                }
+
+
+
+
+
+
+            }
+
             Process.Start(AppContext.BaseDirectory + "\\output.sql");
         }
 

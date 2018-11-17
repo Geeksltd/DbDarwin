@@ -1,0 +1,15 @@
+﻿<Window x:Class="DbDarwin.UI.SetDefaultValueWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DbDarwin.UI"
+        mc:Ignorable="d"
+        Title="Set Default Value" Height="124.662" Width="519.257" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Label x:Name="Description" Content="Label" HorizontalAlignment="Left" Margin="22,22,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="DefaultValueTextBox" HorizontalAlignment="Left" Height="23" Margin="22,53,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="115" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        <Button x:Name="SetDefaultValueButton" Content="Set Default Value" HorizontalAlignment="Left" Margin="160,53,0,0" VerticalAlignment="Top" Width="117" Height="23" Click="SetDefaultValueButton_OnClick"/>
+
+    </Grid>
+</Window>
