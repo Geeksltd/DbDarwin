@@ -45,12 +45,11 @@
                 <RowDefinition Height="*"   />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="116*"  />
-                <ColumnDefinition Width="643*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <!--<Rectangle Grid.Column="0" Fill="#FFC0C0"  />-->
             <Rectangle Grid.Row="0" Grid.Column="0"  Fill="#FFDAFFF8" Grid.ColumnSpan="2" />
-            <Rectangle Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"  Fill="#B2D3FF" />
+            <Rectangle Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="1"  Fill="#B2D3FF" />
 
 
 
@@ -59,7 +58,7 @@
             <TreeView Grid.Row="0" Grid.Column="0" x:Name="TreeViewRoot" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" SelectedItemChanged="TreeViewRemove_OnSelectedItemChanged" Background="{x:Null}" Grid.ColumnSpan="2" />
 
 
-            <RichTextBox x:Name="RichTextBox" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <RichTextBox x:Name="RichTextBox" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <FlowDocument>
                     <Paragraph>
                         <Run Text=""/>
@@ -68,7 +67,7 @@
             </RichTextBox>
 
 
-            <GridSplitter Grid.Row="0"  Grid.Column="0" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.ColumnSpan="2"  />
+            <GridSplitter Grid.Row="0"  Grid.Column="0" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.ColumnSpan="1"  />
 
 
         </Grid>
