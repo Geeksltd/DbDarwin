@@ -188,7 +188,7 @@ namespace DbDarwin.UI
 
                         if (table.Any(script => script.Mode == Model.ViewMode.Add || script.Mode == Model.ViewMode.Update || script.Mode == Model.ViewMode.Rename))
                             TreeViewAdd.Items.Add(treeViewAddOrUpdateItems);
-                        else if (table.Any(script => script.Mode == Model.ViewMode.Delete))
+                        if (table.Any(script => script.Mode == Model.ViewMode.Delete))
                             TreeViewRemove.Items.Add(treeViewRemoveItems);
 
 
@@ -357,7 +357,16 @@ namespace DbDarwin.UI
             newSchema.COLUMN_NAME = oldSchema.Name;
             table.Add.Columns.Remove(newSchema);
             table.Remove.Columns.Remove(oldSchema);
-            table.Update.Columns.Add(newSchema);
+
+            if (table.Update == null)
+                table.Update = new Model.Schema.Table()
+                {
+                    Columns = new List<Model.Schema.Column> { newSchema }
+                };
+            else if (table.Update.Columns == null)
+                table.Update.Columns = new List<Model.Schema.Column> { newSchema };
+            else
+                table.Update.Columns.Add(newSchema);
             ExtractSchemaService.SaveToFile(database, "diff.xml");
             GenerateSqlFileAndShowUpdates();
         }
