@@ -172,52 +172,55 @@ namespace DbDarwin.UI
                 {
                     mainWindow.CompareButton.IsEnabled = true;
 
-                    TreeViewAdd.Items.Clear();
-                    TreeViewRemove.Items.Clear();
+                    TreeViewRoot.Items.Clear();
 
                     foreach (var table in result.GroupBy(x => x.TableName).OrderBy(x => x.Key))
                     {
-                        var treeViewRemoveItems = new TreeViewItem
+                        var treeViewItems = new TreeViewItem
                         {
                             Header = table.Key,
-                        };
-                        var treeViewAddOrUpdateItems = new TreeViewItem
-                        {
-                            Header = table.Key,
+                            IsExpanded = true
                         };
 
-                        if (table.Any(script => script.Mode == Model.ViewMode.Add || script.Mode == Model.ViewMode.Update || script.Mode == Model.ViewMode.Rename))
-                            TreeViewAdd.Items.Add(treeViewAddOrUpdateItems);
-                        if (table.Any(script => script.Mode == Model.ViewMode.Delete))
-                            TreeViewRemove.Items.Add(treeViewRemoveItems);
+
+                        TreeViewRoot.Items.Add(treeViewItems);
 
 
                         foreach (var script in table.ToList())
                         {
+                            RadioButton checkbox;
+
+                            var removed = new SolidColorBrush(Color.FromArgb(255, 255, 192, 192));
+                            var add = new SolidColorBrush(Color.FromArgb(255, 175, 220, 255));
                             if (script.Mode == Model.ViewMode.Add || script.Mode == Model.ViewMode.Update || script.Mode == Model.ViewMode.Rename)
                             {
-                                var checkbox = new RadioButton()
+                                checkbox = new RadioButton()
                                 {
                                     Tag = "AddOrUpdate",
                                     Content = script.Title,
                                     DataContext = script,
-                                    GroupName = "AddOrUpdateGroup"
+                                    GroupName = "AddOrUpdateGroup",
+                                    Background = add,
+
+
                                 };
-                                checkbox.Click += Checkbox_Click;
-                                treeViewAddOrUpdateItems.Items.Add(checkbox);
+
+
                             }
                             else
                             {
-                                var checkbox = new RadioButton
+                                checkbox = new RadioButton
                                 {
                                     Tag = "Remove",
                                     Content = script.Title,
                                     DataContext = script,
-                                    GroupName = "RemoveGroup"
+                                    GroupName = "RemoveGroup",
+                                    Background = removed,
+
                                 };
-                                checkbox.Click += Checkbox_Click;
-                                treeViewRemoveItems.Items.Add(checkbox);
                             }
+                            checkbox.Click += Checkbox_Click;
+                            treeViewItems.Items.Add(checkbox);
                         }
                     }
 
