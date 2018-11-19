@@ -49,16 +49,17 @@
             <Rectangle Grid.Row="0" Grid.Column="1"  Fill="#B2FFD1" />
             <Rectangle Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"  Fill="#B2D3FF" />
 
-            <ListBox Grid.Row="0" Grid.Column="1" x:Name="ListBoxAdd"  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Background="{x:Null}" SelectionChanged="ListBoxAddOrRemove_SelectionChanged"  >
-            </ListBox>
+            <TreeView Grid.Row="0" Grid.Column="1" x:Name="TreeViewAdd"  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Background="{x:Null}" SelectedItemChanged="TreeViewRemove_OnSelectedItemChanged"  >
+            </TreeView>
 
         
+    
 
+            <TreeView Grid.Row="0" Grid.Column="0" x:Name="TreeViewRemove" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Background="{x:Null}" SelectedItemChanged="TreeViewRemove_OnSelectedItemChanged" >
+                
 
-            <ListBox Grid.Row="0" Grid.Column="0" x:Name="ListBoxRemove" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"  Background="{x:Null}" SelectionChanged="ListBoxAddOrRemove_SelectionChanged" >
-         
-            </ListBox>
-
+            </TreeView>
+            
 
             <RichTextBox x:Name="RichTextBox" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <FlowDocument>
