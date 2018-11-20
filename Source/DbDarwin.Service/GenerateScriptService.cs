@@ -53,6 +53,7 @@ namespace DbDarwin.Service
             sb.AppendLine("SET ANSI_WARNINGS ON");
             sb.AppendLine("COMMIT");
             sb.AppendLine("BEGIN TRANSACTION ");
+            var foreignKeys = new List<SqlCommandGenerated>();
             if (diffFile != null)
             {
                 foreach (var foreignKey in diffFile.Update.Tables.Select(x => x.Update)
@@ -69,27 +70,44 @@ namespace DbDarwin.Service
                 if (diffFile.Remove?.Tables != null)
                     sb.AppendLine(GenerateRemoveTables(diffFile.Remove.Tables));
 
+
                 if (diffFile.Add?.Tables != null)
-                    foreach (var table in diffFile.Add.Tables)
+                    foreach (var table in diffFile.Add.Tables.Where(x => x.ForeignKeys.Any()))
                     {
-                        if (table.ForeignKeys.Any())
-                            sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name, table.Schema));
+                        var foreignKeysTemp = GenerateNewForeignKey(table.ForeignKeys, table.Name, table.Schema);
+                        if (foreignKeysTemp.Any())
+                        {
+                            foreignKeys.AddRange(foreignKeysTemp);
+                            sb.Append(foreignKeysTemp.Select(x => x.Body).Aggregate((x, y) => x + y));
+                        }
                     }
 
                 if (diffFile.Update?.Tables != null)
                     foreach (var table in diffFile.Update.Tables)
                     {
+                        var foreignKeysTemp = new List<SqlCommandGenerated>();
                         if (table.ForeignKeys.Any())
-                            sb.Append(GenerateNewForeignKey(table.ForeignKeys, table.Name, table.Schema));
+                            foreignKeysTemp.AddRange(GenerateNewForeignKey(table.ForeignKeys, table.Name, table.Schema));
                         if (table.Update?.ForeignKeys != null)
-                            sb.Append(GenerateNewForeignKey(table.Update.ForeignKeys, table.Name, table.Schema));
+                            foreignKeysTemp.AddRange(GenerateNewForeignKey(table.Update.ForeignKeys, table.Name, table.Schema));
                         if (table.Add?.ForeignKeys != null)
-                            sb.Append(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name, table.Schema));
+                            foreignKeysTemp.AddRange(GenerateNewForeignKey(table.Add.ForeignKeys, table.Name, table.Schema));
+
+                        if (foreignKeysTemp.Any())
+                        {
+                            sb.AppendLine(foreignKeysTemp.Select(x => x.Body).Aggregate((x, y) => x + y));
+                            foreignKeys.AddRange(foreignKeysTemp);
+                        }
                     }
 
             }
 
+            sb.AppendLine("PRINT 'Update Completed Successfully'");
             sb.AppendLine("COMMIT");
+
+            if (foreignKeys.Any())
+                sb.AppendLine(foreignKeys.Select(x => x.AfterCommit).Aggregate((x, y) => x + y));
+
             File.WriteAllText(model.MigrateSqlFile, sb.ToString());
 
             return results;
@@ -355,7 +373,9 @@ END
                 if (!resultCompare.AreEqual)
                 {
                     sb.AppendLine($"ALTER TABLE [{schema}].[{tableName}] DROP CONSTRAINT [{key.Name}]");
-                    sb.AppendLine(GenerateNewForeignKey(new List<ForeignKey> { key }, tableName, schema));
+                    sb.AppendLine(GenerateNewForeignKey(new List<ForeignKey> { key }, tableName, schema)
+                        .Select(x => x.Full)
+                        .Aggregate((x, y) => x + y));
                 }
 
                 sb.AppendLine();
@@ -608,30 +628,57 @@ END
             return sb.ToString();
         }
 
-        string GenerateNewForeignKey(IEnumerable<ForeignKey> foreignKey, string tableName, string schema)
+        List<SqlCommandGenerated> GenerateNewForeignKey(IEnumerable<ForeignKey> foreignKey, string tableName, string schema)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("-----------------------------------------------------------");
-            sb.AppendLine("-------------------- Create New ForeignKeys ---------------");
-            sb.AppendLine("-----------------------------------------------------------");
-            foreach (var key in foreignKey)
+            if (foreignKey.Any())
             {
-                var builder = new StringBuilder();
-                builder.AppendLine("GO");
-                builder.AppendFormat("ALTER TABLE [{0}].[{1}]  WITH CHECK ADD CONSTRAINT [{2}] FOREIGN KEY([{3}]) \r\n", schema, tableName, key.Name, key.COLUMN_NAME);
-                builder.AppendFormat("REFERENCES [{0}].[{1}] ([{2}]) ", key.Ref_TABLE_SCHEMA, key.Ref_TABLE_NAME, key.Ref_COLUMN_NAME);
-                builder.AppendLine($"ON UPDATE {key.UPDATE_RULE} ON DELETE {key.DELETE_RULE} ");
-                builder.AppendLine("\r\nGO");
-                builder.AppendFormat("ALTER TABLE [{0}].[{1}] CHECK CONSTRAINT [{2}]", schema, tableName, key.Name);
-                builder.AppendLine("\r\nGO");
-
-                sb.Append(builder);
-                SqlOperation(
-                    $"Add new foreign key {key.COLUMN_NAME}  from [{key.TABLE_SCHEMA}].[{key.TABLE_NAME}] to {key.Ref_COLUMN_NAME} on table [{key.Ref_TABLE_SCHEMA}].[{key.Ref_TABLE_NAME}] ",
-                    builder.ToString(), ViewMode.Add, $"{schema}.{tableName}", key.Name, SQLObject.ForeignKey);
+                sb.AppendLine("-----------------------------------------------------------");
+                sb.AppendLine("-------------------- Create New ForeignKeys ---------------");
+                sb.AppendLine("-----------------------------------------------------------");
             }
 
-            return sb.ToString();
+            var commandBuilder = new List<SqlCommandGenerated>();
+
+            foreach (var key in foreignKey)
+            {
+                var operationDescription =
+                    $"Add new foreign key {key.COLUMN_NAME} from [{key.TABLE_SCHEMA}].[{key.TABLE_NAME}] to {key.Ref_COLUMN_NAME} on table [{key.Ref_TABLE_SCHEMA}].[{key.Ref_TABLE_NAME}] ";
+
+
+                var sqlBuilder = new SqlCommandGenerated();
+
+                sqlBuilder.AppendBody("GO", LineEnum.FirstLine);
+                sqlBuilder.AppendBody($"PRINT '{operationDescription}'", LineEnum.FirstLine);
+                sqlBuilder.AppendBody(string.Empty, LineEnum.FullLine);
+
+                sqlBuilder.AppendBody("GO", LineEnum.FirstLine);
+                sqlBuilder.AppendBody($"ALTER TABLE [{schema}].[{tableName}]  WITH NOCHECK", LineEnum.FirstLine);
+                sqlBuilder.AppendBody($"ADD CONSTRAINT [{key.Name}] FOREIGN KEY([{key.COLUMN_NAME}])", LineEnum.FirstLineWithTab);
+                sqlBuilder.AppendBody($"REFERENCES [{key.Ref_TABLE_SCHEMA}].[{key.Ref_TABLE_NAME}] ([{key.Ref_COLUMN_NAME}]) ", LineEnum.FirstLineWithTab);
+                sqlBuilder.AppendBody($"ON UPDATE {key.UPDATE_RULE} ON DELETE {key.DELETE_RULE}");
+                sqlBuilder.AppendBody(string.Empty, LineEnum.FullLine);
+
+
+                sqlBuilder.AppendAfterCommit("GO", LineEnum.FirstLine);
+                sqlBuilder.AppendAfterCommit("BEGIN TRY", LineEnum.FirstLine);
+                sqlBuilder.AppendAfterCommit($"ALTER TABLE [{schema}].[{tableName}] WITH CHECK CHECK CONSTRAINT [{key.Name}]", LineEnum.FirstLineWithTab);
+                sqlBuilder.AppendAfterCommit("END TRY", LineEnum.FirstLine);
+                sqlBuilder.AppendAfterCommit("BEGIN CATCH", LineEnum.FirstLine);
+                sqlBuilder.AppendAfterCommit("DECLARE @Msg NVARCHAR(4000) = ERROR_MESSAGE();", LineEnum.FirstLineWithTab);
+                sqlBuilder.AppendAfterCommit($"Print 'You must remove or update some records in table [{schema}].[{tableName}] because:';", LineEnum.FirstLineWithTab);
+                sqlBuilder.AppendAfterCommit("THROW 60000, @Msg, 1;", LineEnum.FirstLineWithTab);
+                sqlBuilder.AppendAfterCommit("END CATCH", LineEnum.FirstLine);
+                sqlBuilder.AppendAfterCommit(string.Empty, LineEnum.FullLine);
+
+                commandBuilder.Add(sqlBuilder);
+
+                // sb.Append(builder);
+                SqlOperation(operationDescription, sqlBuilder.Full, ViewMode.Add, $"{schema}.{tableName}", key.Name,
+                    SQLObject.ForeignKey);
+            }
+
+            return commandBuilder;
         }
 
         static string GenerateLength(Column column)

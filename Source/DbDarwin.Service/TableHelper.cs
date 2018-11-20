@@ -87,9 +87,25 @@ namespace DbDarwin.Service
         {
             try
             {
-
                 var list = new List<string>();
-
+                var columns = table.Columns.Cast<DataColumn>()
+                    .Select(x => x.ColumnName)
+                    .ToArray();
+                foreach (DataRow row in table.Rows)
+                    list.Add(row[0].ToString());
+                return list;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return new List<string>();
+            }
+        }
+        public static List<string> DataTableToString(this DataTable table)
+        {
+            try
+            {
+                var list = new List<string>();
                 var columns = table.Columns.Cast<DataColumn>()
                     .Select(x => x.ColumnName)
                     .ToArray();

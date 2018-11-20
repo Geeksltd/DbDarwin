@@ -23,6 +23,7 @@ namespace DbDarwin.Service
 
             // Create Connection to database
             var database = new Database();
+            var databaseData = new Database();
             try
             {
                 using (var sql = new System.Data.SqlClient.SqlConnection(model.ConnectionString))
@@ -70,12 +71,7 @@ namespace DbDarwin.Service
                         var primaryKey = FetchPrimary(constraintInformation, keyConstraints, tableId);
 
                         // If table is deference data 
-                        if (extendProperties.Any(x =>
-                            x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
-                            x.value.ToLower() == "enum"))
-                        {
 
-                        }
 
                         var myDt = new DbDarwin.Model.Schema.Table
                         {
@@ -91,6 +87,16 @@ namespace DbDarwin.Service
                                 x.TABLE_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList()
 
                         };
+
+
+                        if (extendProperties.Any(x =>
+                            x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
+                            x.value.ToLower() == "enum"))
+                        {
+                          //  myDt.Rows = SqlService.LoadFirstData<String>(sql,
+                          //      $"SELECT * FROM [{myDt.Schema}].[{myDt.Name}] FOR XML RAW");
+                        }
+
                         database.Tables.Add(myDt);
                     }
 

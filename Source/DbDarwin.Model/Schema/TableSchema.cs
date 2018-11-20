@@ -19,6 +19,10 @@ namespace DbDarwin.Model.Schema
             Schema = "dbo";
         }
 
+        //  [XmlIgnore]
+        //[XmlElement("Rows")]
+        //public string Rows { get; set; }
+
         public string FullName => Schema + "." + Name;
 
         [XmlAttribute]

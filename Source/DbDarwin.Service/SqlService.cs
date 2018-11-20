@@ -30,5 +30,16 @@ namespace DbDarwin.Service
                 return dataTable.DataTableToListAsString();
             }
         }
+
+        public static T LoadFirstData<T>(SqlConnection connection, string sqlScript)
+        {
+            using (var cmd = new SqlCommand())
+            {
+                cmd.Connection = connection;
+                cmd.CommandText = sqlScript;
+                var ob = cmd.ExecuteScalar();
+                return (T)ob;
+            }
+        }
     }
 }
