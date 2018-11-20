@@ -13,12 +13,10 @@ namespace DbDarwin.Service
 {
     public class ExtractSchemaService
     {
-
         /// <summary>
         /// extract table schema
         /// </summary>
-        /// <param name="connectionString">Connection string</param>
-        /// <param name="fileOutput">output file</param>
+        /// <param name="model">Contain Connection string and output file</param>
         /// <returns>can be successful it is true</returns>
         public static bool ExtractSchema(ExtractSchema model)
         {
@@ -46,6 +44,9 @@ namespace DbDarwin.Service
                     var objectMapped = SqlService.LoadData<SqlObject>(sql, "sys.object", "SELECT o.*, s.name as schemaName FROM sys.objects o join sys.schemas s on s.schema_id = o.schema_id");
                     /// Get All Key Constraint
                     var keyConstraints = SqlService.LoadData<KeyConstraint>(sql, "keyConstraints", "SELECT * FROM [sys].[key_constraints]");
+                    /// Get All Table Extend Property
+                    var extendProperties = SqlService.LoadData<ExtendedProperty>(sql, "extendProperties", "SELECT [major_id] ,[name] ,[value] FROM [sys].[extended_properties] where minor_id = 0 and major_id <> 0");
+
 
 
                     var constraintInformation = (from ind in indexMapped
@@ -67,6 +68,14 @@ namespace DbDarwin.Service
 
                         var indexes = FetchIndexes(constraintInformation, tableId);
                         var primaryKey = FetchPrimary(constraintInformation, keyConstraints, tableId);
+
+                        // If table is deference data 
+                        if (extendProperties.Any(x =>
+                            x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
+                            x.value.ToLower() == "enum"))
+                        {
+
+                        }
 
                         var myDt = new DbDarwin.Model.Schema.Table
                         {
@@ -106,7 +115,7 @@ namespace DbDarwin.Service
             return true;
         }
 
-        private static List<Index> FetchIndexes(List<ConstraintInformationModel> constraintInformation, int tableId)
+        private static List<Index> FetchIndexes(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
         {
             var indexRows = constraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "False")
