@@ -114,20 +114,16 @@ namespace DbDarwin.UI
             Task.Factory.StartNew(() =>
               {
                   UpdateState($"Extracting {SourceName} Schema...");
-                  ExtractSchemaService.ExtractSchema(new ExtractSchema
-                  {
-                      ConnectionString = SourceConnection,
-                      OutputFile = "Source.xml"
-                  });
+                  using (var service = new ExtractSchemaService(new ExtractSchema
+                  { ConnectionString = SourceConnection, OutputFile = "Source.xml" }))
+                      service.ExtractSchema();
                   UpdateState($"Extracted {SourceName} Schema.");
 
 
                   UpdateState($"Extracting {TargetName} Schema...");
-                  ExtractSchemaService.ExtractSchema(new ExtractSchema
-                  {
-                      ConnectionString = TargetConnection,
-                      OutputFile = "Target.xml"
-                  });
+                  using (var service = new ExtractSchemaService(new ExtractSchema
+                  { ConnectionString = SourceConnection, OutputFile = "Target.xml" }))
+                      service.ExtractSchema();
                   UpdateState($"Extracted {TargetName} Schema.");
 
 

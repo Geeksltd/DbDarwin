@@ -21,7 +21,8 @@ namespace DbDarwin
                     {
                         var model = IsArgumentExtractSchemaValid(argList);
                         if (model.IsValid)
-                            ExtractSchemaService.ExtractSchema(model);
+                            using (var service = new ExtractSchemaService(model))
+                                service.ExtractSchema();
                     }
                     else if (first.ToLower() == "generate-diff")
                     {

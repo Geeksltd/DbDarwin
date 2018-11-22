@@ -5,107 +5,182 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using DbDarwin.Model.Command;
 using PowerMapper;
 
 namespace DbDarwin.Service
 {
-    public class ExtractSchemaService
+    public class ExtractSchemaService : IDisposable
     {
+        private SqlConnection CurrentSqlConnection;
+        public List<ConstraintInformationModel> ConstraintInformation { get; set; }
+        /// <summary>
+        /// All Table Extend Property
+        /// </summary>
+        public List<ExtendedProperty> ExtendProperties { get; set; }
+        /// <summary>
+        /// All Key Constraint
+        /// </summary>
+        public List<KeyConstraint> KeyConstraints { get; set; }
+        /// <summary>
+        /// All Objects from SQL
+        /// </summary>
+        public List<SqlObject> ObjectMapped { get; set; }
+        /// <summary>
+        /// All sys.columns from SQL
+        /// </summary>
+        public List<SystemColumns> SystemColumnsMapped { get; set; }
+        /// <summary>
+        /// All Index from SQL
+        /// </summary>
+        public List<Index> IndexMapped { get; set; }
+        /// <summary>
+        /// COLUMNS schema
+        /// </summary>
+        public List<Column> ColumnsMapped { get; set; }
+        /// <summary>
+        /// All index_columns from SQL
+        /// </summary>
+        public List<IndexColumns> IndexColumnsMapped { get; set; }
+        /// <summary>
+        /// All References from SQL
+        /// </summary>
+        public List<ForeignKey> ReferencesMapped { get; set; }
+
+        public DataTable AllTables { get; set; }
+        public ExtractSchema Model { get; set; }
+
+        public ExtractSchemaService(ExtractSchema model)
+        {
+            Model = model;
+            CurrentSqlConnection = new System.Data.SqlClient.SqlConnection(model.ConnectionString);
+            CurrentSqlConnection.Open();
+
+            AllTables = CurrentSqlConnection.GetSchema("Tables");
+            // Fetch All References from SQL
+            ReferencesMapped = SqlService.LoadData<ForeignKey>(CurrentSqlConnection, "References", Properties.Resources.REFERENTIAL_CONSTRAINTS);
+            // Fetch All index_columns from SQL
+            IndexColumnsMapped = SqlService.LoadData<IndexColumns>(CurrentSqlConnection, "index_columns", "SELECT * FROM sys.index_columns");
+            // fetch COLUMNS schema
+            ColumnsMapped = SqlService.LoadData<Column>(CurrentSqlConnection, "Columns", "select * from INFORMATION_SCHEMA.COLUMNS");
+            // Fetch All Index from SQL
+            IndexMapped = SqlService.LoadData<Index>(CurrentSqlConnection, "index_columns", "SELECT * FROM sys.indexes");
+            // Fetch All sys.columns from SQL
+            SystemColumnsMapped = SqlService.LoadData<SystemColumns>(CurrentSqlConnection, "allSysColumns", "SELECT * FROM sys.columns");
+            // Fetch All Objects from SQL
+            ObjectMapped = SqlService.LoadData<SqlObject>(CurrentSqlConnection, "sys.object", "SELECT o.*, s.name as schemaName FROM sys.objects o join sys.schemas s on s.schema_id = o.schema_id");
+            // Get All Key Constraint
+            KeyConstraints = SqlService.LoadData<KeyConstraint>(CurrentSqlConnection, "keyConstraints", "SELECT * FROM [sys].[key_constraints]");
+            // Get All Table Extend Property
+            ExtendProperties = SqlService.LoadData<ExtendedProperty>(CurrentSqlConnection, "extendProperties", "SELECT [major_id] ,[name] ,[value] FROM [sys].[extended_properties] where minor_id = 0 and major_id <> 0");
+
+
+
+            ConstraintInformation = (from ind in IndexMapped
+                                     join ic in IndexColumnsMapped on new { ind.object_id, ind.index_id } equals new
+                                     { ic.object_id, ic.index_id }
+                                     join col in SystemColumnsMapped on new { ic.object_id, ic.column_id } equals new
+                                     { col.object_id, col.column_id }
+                                     select new ConstraintInformationModel { Index = ind, IndexColumn = ic, SystemColumn = col }).ToList();
+            Model = model;
+        }
+
+
+
         /// <summary>
         /// extract table schema
         /// </summary>
         /// <param name="model">Contain Connection string and output file</param>
         /// <returns>can be successful it is true</returns>
-        public static bool ExtractSchema(ExtractSchema model)
+        public bool ExtractSchema()
         {
 
             // Create Connection to database
             var database = new Database();
-            var databaseData = new Database();
+
+            var doc = new XDocument
+            {
+                Declaration = new XDeclaration("1.0", "UTF-8", "true")
+            };
+            var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+            var rootDatabase = new XElement("Database");
+
             try
             {
-                using (var sql = new System.Data.SqlClient.SqlConnection(model.ConnectionString))
+
+                // Create Table Model
+                if (AllTables.Rows.Count > 0)
+                    database.Tables = new List<Table>();
+
+                foreach (DataRow tableSchema in AllTables.Rows)
                 {
+                    var schemaTable = tableSchema["TABLE_SCHEMA"].ToString();
+                    var tableName = tableSchema["TABLE_NAME"].ToString();
+                    Console.WriteLine(schemaTable + @"." + tableName);
+                    var tableId = ObjectMapped.Where(x => x.schemaName == schemaTable && x.name == tableName).Select(x => x.object_id)
+                        .FirstOrDefault();
 
-                    sql.Open();
-                    var allTables = sql.GetSchema("Tables");
-                    /// Fetch All Refrences from SQL
-                    var referencesMapped = SqlService.LoadData<ForeignKey>(sql, "References", Properties.Resources.REFERENTIAL_CONSTRAINTS);
-                    /// Fetch All index_columns from SQL
-                    var indexColumnsMapped = SqlService.LoadData<IndexColumns>(sql, "index_columns", "SELECT * FROM sys.index_columns");
-                    /// fetch COLUMNS schema
-                    var columnsMapped = SqlService.LoadData<Column>(sql, "Columns", "select * from INFORMATION_SCHEMA.COLUMNS");
-                    /// Fetch All Index from SQL
-                    var indexMapped = SqlService.LoadData<Index>(sql, "index_columns", "SELECT * FROM sys.indexes");
-                    /// Fetch All sys.columns from SQL
-                    var systemColumnsMapped = SqlService.LoadData<SystemColumns>(sql, "allSysColumns", "SELECT * FROM sys.columns");
-                    /// Fetch All Objects from SQL
-                    var objectMapped = SqlService.LoadData<SqlObject>(sql, "sys.object", "SELECT o.*, s.name as schemaName FROM sys.objects o join sys.schemas s on s.schema_id = o.schema_id");
-                    /// Get All Key Constraint
-                    var keyConstraints = SqlService.LoadData<KeyConstraint>(sql, "keyConstraints", "SELECT * FROM [sys].[key_constraints]");
-                    /// Get All Table Extend Property
-                    var extendProperties = SqlService.LoadData<ExtendedProperty>(sql, "extendProperties", "SELECT [major_id] ,[name] ,[value] FROM [sys].[extended_properties] where minor_id = 0 and major_id <> 0");
+                    var indexes = FetchIndexes(ConstraintInformation, tableId);
+                    var primaryKey = FetchPrimary(ConstraintInformation, KeyConstraints, tableId);
 
 
-
-                    var constraintInformation = (from ind in indexMapped
-                                                 join ic in indexColumnsMapped on new { ind.object_id, ind.index_id } equals new
-                                                 { ic.object_id, ic.index_id }
-                                                 join col in systemColumnsMapped on new { ic.object_id, ic.column_id } equals new
-                                                 { col.object_id, col.column_id }
-                                                 select new ConstraintInformationModel { Index = ind, IndexColumn = ic, SystemColumn = col }).ToList();
-                    // Create Table Model
-                    if (allTables.Rows.Count > 0)
-                        database.Tables = new List<Table>();
-                    foreach (DataRow row in allTables.Rows)
+                    var newTable = new DbDarwin.Model.Schema.Table
                     {
-                        var schemaTable = row["TABLE_SCHEMA"].ToString();
-                        var tableName = row["TABLE_NAME"].ToString();
-                        Console.WriteLine(schemaTable + @"." + tableName);
-                        var tableId = objectMapped.Where(x => x.schemaName == schemaTable && x.name == tableName).Select(x => x.object_id)
-                            .FirstOrDefault();
+                        Name = tableName,
+                        Schema = schemaTable,
+                        Columns = ColumnsMapped.Where(x =>
+                                x.TABLE_NAME == tableName &&
+                                x.TABLE_SCHEMA == schemaTable)
+                            .ToList(),
+                        Indexes = indexes,
+                        PrimaryKey = primaryKey,
+                        ForeignKeys = ReferencesMapped.Where(x =>
+                            x.TABLE_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList()
 
-                        var indexes = FetchIndexes(constraintInformation, tableId);
-                        var primaryKey = FetchPrimary(constraintInformation, keyConstraints, tableId);
-
-                        // If table is deference data 
+                    };
 
 
-                        var myDt = new DbDarwin.Model.Schema.Table
+                    // If table is deference data 
+                    // For check reference data
+                    if (ExtendProperties.Any(x =>
+                        x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
+                        x.value.ToLower() == "enum"))
+                    {
+                        var data = SqlService.LoadData(CurrentSqlConnection, newTable.Name, $"SELECT * FROM [{newTable.Schema}].[{newTable.Name}]");
+                        if (data.Rows.Count > 0)
                         {
-                            Name = tableName,
-                            Schema = schemaTable,
-                            Columns = columnsMapped.Where(x =>
-                                    x.TABLE_NAME == tableName &&
-                                    x.TABLE_SCHEMA == schemaTable)
-                                .ToList(),
-                            Indexes = indexes,
-                            PrimaryKey = primaryKey,
-                            ForeignKeys = referencesMapped.Where(x =>
-                                x.TABLE_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList()
-
-                        };
-
-
-                        if (extendProperties.Any(x =>
-                            x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
-                            x.value.ToLower() == "enum"))
-                        {
-                          //  myDt.Rows = SqlService.LoadFirstData<String>(sql,
-                          //      $"SELECT * FROM [{myDt.Schema}].[{myDt.Name}] FOR XML RAW");
+                            var tableElement = new XElement("Table");
+                            tableElement.SetAttributeValue(nameof(newTable.Name), newTable.Name);
+                            if (newTable.Schema.ToLower() != "dbo")
+                                tableElement.SetAttributeValue(nameof(newTable.Schema), newTable.Schema);
+                            tableElement.SetAttributeValue("PrimaryKey", primaryKey.Columns);
+                            foreach (DataRow rowData in data.Rows)
+                            {
+                                var rowElement = new XElement("Row");
+                                foreach (DataColumn column in data.Columns)
+                                    rowElement.Add(new XElement(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName) { Value = rowData[column.ColumnName].ToString() });
+                                tableElement.Add(rowElement);
+                            }
+                            rootDatabase.Add(tableElement);
                         }
-
-                        database.Tables.Add(myDt);
                     }
+                    database.Tables.Add(newTable);
 
-                    database.Tables = database.Tables?.OrderBy(x => x.FullName).ToList();
-
-                    // Create Serialize Object and save as XML file
-                    SaveToFile(database, model.OutputFile);
                 }
+
+                database.Tables = database.Tables?.OrderBy(x => x.FullName).ToList();
+
+                // Create Serialize Object and save as XML file
+                doc.Add(rootDatabase);
+                doc.Save(AppDomain.CurrentDomain.BaseDirectory + Model.OutputFile + @"_data.xml");
+                SaveToFile(database, Model.OutputFile);
+
             }
+
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -121,7 +196,7 @@ namespace DbDarwin.Service
             return true;
         }
 
-        private static List<Index> FetchIndexes(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
+        private List<Index> FetchIndexes(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
         {
             var indexRows = constraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "False")
@@ -140,7 +215,7 @@ namespace DbDarwin.Service
             return existsIndex;
         }
 
-        private static PrimaryKey FetchPrimary(IEnumerable<ConstraintInformationModel> constraintInformation, IEnumerable<KeyConstraint> keyConstraints, int tableId)
+        private PrimaryKey FetchPrimary(IEnumerable<ConstraintInformationModel> constraintInformation, IEnumerable<KeyConstraint> keyConstraints, int tableId)
         {
             var indexRows = constraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "True")
@@ -174,5 +249,42 @@ namespace DbDarwin.Service
             File.WriteAllText(path, xml);
             Console.WriteLine("Saving To xml");
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    CurrentSqlConnection.Close();
+                    CurrentSqlConnection.Dispose();
+                }
+                GC.Collect();
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~ExtractSchemaService() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 }

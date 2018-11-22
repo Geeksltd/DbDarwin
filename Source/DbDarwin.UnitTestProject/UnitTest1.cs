@@ -11,16 +11,27 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void ExtractSchema()
         {
-            ExtractSchemaService.ExtractSchema(new ExtractSchema
+            var sourceModel = new ExtractSchema
             {
-                ConnectionString = "Data Source=.\\SQL2016;Initial Catalog=Pay247_Source;Integrated Security=True;Connect Timeout=30",
+                ConnectionString =
+                    "Data Source=.\\SQL2016;Initial Catalog=Pay247_Source;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Source.xml"
-            });
-            ExtractSchemaService.ExtractSchema(new ExtractSchema
+            };
+            using (var service = new ExtractSchemaService(sourceModel))
+                service.ExtractSchema();
+
+
+            var targetModel = new ExtractSchema
             {
-                ConnectionString = "Data Source=.\\SQL2016;Initial Catalog=Pay247_Target;Integrated Security=True;Connect Timeout=30",
+                ConnectionString =
+                    "Data Source=.\\SQL2016;Initial Catalog=Pay247_Target;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Target.xml"
-            });
+            };
+            using (var service = new ExtractSchemaService(targetModel))
+                service.ExtractSchema();
+
+
+
         }
 
         [TestMethod]
