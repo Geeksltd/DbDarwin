@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Linq;
 using Olive;
 
@@ -28,12 +30,12 @@ namespace DbDarwin.Service
                     .Select(x => x.ColumnName)
                     .ToArray();
 
-                //var objProperty = new T();
-                //var propertyList = objProperty
-                //    .GetType()
-                //    .GetProperties()
-                //    .Where(x => columns.Contains(x.Name))
-                //    .ToArray();
+                var objProperty = new T();
+                var propertyList = objProperty
+                    .GetType()
+                    .GetProperties()
+                    .Where(x => columns.Contains(x.Name))
+                    .ToArray();
 
                 foreach (DataRow row in table.Rows)
                 {
@@ -43,19 +45,26 @@ namespace DbDarwin.Service
                     {
                         try
                         {
+                            if (!columns.Contains(propertyInfo.Name)) 
+                                continue;
                             var currentType = propertyInfo.PropertyType;
-                            if (currentType.IsGenericType && currentType.GetGenericTypeDefinition() == typeof(Nullable<>))
+
+                            if (currentType.IsGenericType &&
+                                currentType.GetGenericTypeDefinition() == typeof(Nullable<>))
                             {
                                 if (row[propertyInfo.Name] == null || row[propertyInfo.Name] == DBNull.Value)
                                     propertyInfo.SetValue(obj, default(T), null);
                                 else
-                                    propertyInfo.SetValue(obj, Convert.ChangeType(row[propertyInfo.Name], Nullable.GetUnderlyingType(currentType)), null);
+                                    propertyInfo.SetValue(obj,
+                                        Convert.ChangeType(row[propertyInfo.Name],
+                                            Nullable.GetUnderlyingType(currentType)), null);
                             }
                             else
 
                             {
                                 var result = Convert.ChangeType(row[propertyInfo.Name], propertyInfo.PropertyType);
-                                if (propertyInfo.PropertyType == typeof(string) && (row[propertyInfo.Name] == null || row[propertyInfo.Name].ToString().IsEmpty()))
+                                if (propertyInfo.PropertyType == typeof(string) &&
+                                    (row[propertyInfo.Name] == null || row[propertyInfo.Name].ToString().IsEmpty()))
                                     propertyInfo.SetValue(obj, null, null);
                                 else
                                     propertyInfo.SetValue(obj, result, null);
@@ -101,6 +110,8 @@ namespace DbDarwin.Service
                 return new List<string>();
             }
         }
+
+
         public static List<string> DataTableToString(this DataTable table)
         {
             try

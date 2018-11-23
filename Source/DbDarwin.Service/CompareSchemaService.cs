@@ -344,16 +344,16 @@ namespace DbDarwin.Service
             object found = null;
             if (typeof(T) == typeof(Column))
                 found = newList.Cast<Column>().FirstOrDefault(x =>
-                    x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+                    x.Name == currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString());
             else if (typeof(T) == typeof(Index))
                 found = newList.Cast<Index>().FirstOrDefault(x =>
-                    x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+                    x.Name == currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString());
             else if (typeof(T) == typeof(ForeignKey))
                 found = newList.Cast<ForeignKey>().FirstOrDefault(x =>
-                    x.Name == currentObject.GetType().GetProperty("Name").GetValue(currentObject).ToString());
+                    x.Name == currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString());
             else if (typeof(T) == typeof(PrimaryKey))
                 found = newList.Cast<PrimaryKey>().FirstOrDefault(x =>
-                    x.Columns == currentObject.GetType().GetProperty("Columns").GetValue(currentObject).ToString());
+                    x.Columns == currentObject.GetType().GetProperty("Columns")?.GetValue(currentObject).ToString());
 
             return (T)Convert.ChangeType(found, typeof(T));
         }

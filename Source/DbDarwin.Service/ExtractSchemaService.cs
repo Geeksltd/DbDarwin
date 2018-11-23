@@ -128,7 +128,7 @@ namespace DbDarwin.Service
                     var primaryKey = FetchPrimary(ConstraintInformation, KeyConstraints, tableId);
 
 
-                    var newTable = new DbDarwin.Model.Schema.Table
+                    var newTable = new Table
                     {
                         Name = tableName,
                         Schema = schemaTable,
@@ -143,8 +143,7 @@ namespace DbDarwin.Service
 
                     };
 
-
-                    // If table is deference data 
+                    //If table is deference data
                     // For check reference data
                     if (ExtendProperties.Any(x =>
                         x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
@@ -153,21 +152,31 @@ namespace DbDarwin.Service
                         var data = SqlService.LoadData(CurrentSqlConnection, newTable.Name, $"SELECT * FROM [{newTable.Schema}].[{newTable.Name}]");
                         if (data.Rows.Count > 0)
                         {
+
                             var tableElement = new XElement("Table");
+                            var dataElement = new XElement("Data");
                             tableElement.SetAttributeValue(nameof(newTable.Name), newTable.Name);
                             if (newTable.Schema.ToLower() != "dbo")
                                 tableElement.SetAttributeValue(nameof(newTable.Schema), newTable.Schema);
-                            tableElement.SetAttributeValue("PrimaryKey", primaryKey.Columns);
+                            //tableElement.SetAttributeValue("PrimaryKey", primaryKey.Columns);
                             foreach (DataRow rowData in data.Rows)
                             {
                                 var rowElement = new XElement("Row");
                                 foreach (DataColumn column in data.Columns)
-                                    rowElement.Add(new XElement(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName) { Value = rowData[column.ColumnName].ToString() });
-                                tableElement.Add(rowElement);
+                                {
+                                    if (column.ColumnName.ToLower() == "id")
+                                        continue;
+                                    rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
+                                    //    new XElement(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName)
+                                    //  { Value =  });
+                                }
+                                dataElement.Add(rowElement);
                             }
+                            tableElement.Add(dataElement);
                             rootDatabase.Add(tableElement);
                         }
                     }
+
                     database.Tables.Add(newTable);
 
                 }
@@ -176,8 +185,7 @@ namespace DbDarwin.Service
 
                 // Create Serialize Object and save as XML file
                 doc.Add(rootDatabase);
-                doc.Save(AppDomain.CurrentDomain.BaseDirectory + Model.OutputFile + @"_data.xml");
-                SaveToFile(database, Model.OutputFile);
+                AddDataToTable(database, doc, Model.OutputFile);
 
             }
 
@@ -188,10 +196,7 @@ namespace DbDarwin.Service
                 Console.ForegroundColor = ConsoleColor.White;
                 return false;
             }
-            finally
-            {
-                GC.Collect();
-            }
+
 
             return true;
         }
@@ -237,6 +242,49 @@ namespace DbDarwin.Service
             return null;
         }
 
+        public static void AddDataToTable(Database database, XDocument data, string fileOutput)
+        {
+            var ser = new XmlSerializer(typeof(Database));
+            var sw2 = new StringWriter();
+            ser.Serialize(sw2, database);
+
+            var xml = sw2.ToString();
+            var doc = XDocument.Parse(xml);
+
+            var dataElements = data.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
+            var schemaElements = doc.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
+            foreach (XElement element in schemaElements)
+            {
+                if (element.Name.ToString().ToLower() == "table")
+                {
+                    var tableNameAttribute = element.Attribute(XName.Get("Name"));
+                    var schemaAttribute = element.Attribute(XName.Get("Schema"));
+
+                    var tableName = string.Empty;
+                    var schemaName = string.Empty;
+                    if (tableNameAttribute != null)
+                        tableName = tableNameAttribute.Value;
+                    if (schemaAttribute != null)
+                        schemaName = schemaAttribute.Value;
+
+                    var findedData = dataElements?.FirstOrDefault(x =>
+                        x.Attributes().Any(c => c.Name == "Name" && c.Value == tableName) && x.Elements(XName.Get("Data")).Any());
+                    if (findedData != null)
+                    {
+                        element.Add(findedData.Elements(XName.Get("Data")));
+                    }
+
+                }
+            }
+
+
+
+
+            var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
+            doc.Save(path);
+            Console.WriteLine("Saving To xml");
+        }
+
 
 
         public static void SaveToFile(Database database, string fileOutput)
@@ -244,7 +292,10 @@ namespace DbDarwin.Service
             var ser = new XmlSerializer(typeof(Database));
             var sw2 = new StringWriter();
             ser.Serialize(sw2, database);
+
             var xml = sw2.ToString();
+
+
             var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
             File.WriteAllText(path, xml);
             Console.WriteLine("Saving To xml");

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using DbDarwin.Model.Schema;
 using Olive;
@@ -20,7 +22,7 @@ namespace DbDarwin.Model.Schema
         }
 
         //[XmlIgnore]
-        [XmlElement("Rows")]
+        [XmlElement("Row")]
         public List<dynamic> Rows { get; set; }
 
         public string FullName => Schema + "." + Name;
