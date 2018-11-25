@@ -80,7 +80,7 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void TestLoadDataFile()
         {
-            var data = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\Source.xml_data.xml");
+            var data = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\Source.xml");
 
             var doc = new XDocument
             {
@@ -108,7 +108,7 @@ namespace DbDarwin.UnitTestProject
                 var targetList = new List<IDictionary<string, object>>();
 
 
-                foreach (XmlNode[] o in table.Rows)
+                foreach (XmlNode[] o in table.Data.Rows)
                 {
                     var expan = new ExpandoObject();
                     foreach (XmlNode node in o)
@@ -146,9 +146,9 @@ namespace DbDarwin.UnitTestProject
                         var rowElement = new XElement("Row");
                         foreach (var column in data1)
                         {
-                            rowElement.Add(
-                                new XElement(XmlConvert.EncodeName(column.Key) ?? column.Key)
-                                { Value = column.Value.ToString() });
+                            rowElement.SetAttributeValue(
+                                XmlConvert.EncodeName(column.Key) ?? column.Key,
+                                column.Value.ToString());
                         }
                         addNodes.Add(rowElement);
                     }
@@ -172,9 +172,10 @@ namespace DbDarwin.UnitTestProject
                         var rowElement = new XElement("Row");
                         foreach (var column in data1)
                         {
-                            rowElement.Add(
-                                new XElement(XmlConvert.EncodeName(column.Key) ?? column.Key)
-                                { Value = column.Value.ToString() });
+                            rowElement.SetAttributeValue(
+                                XmlConvert.EncodeName(column.Key) ?? column.Key,
+                                column.Value.ToString());
+
                         }
                         removeNodes.Add(rowElement);
                     }

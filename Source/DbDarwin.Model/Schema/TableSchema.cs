@@ -11,6 +11,21 @@ using Olive;
 
 namespace DbDarwin.Model.Schema
 {
+    [Serializable]
+    public class TableData
+    {
+        [XmlElement("Row")]
+        public List<dynamic> Rows { get; set; }
+
+        [XmlElement("Add")]
+        public TableData Add { get; set; }
+
+        [XmlElement("Update")]
+        public TableData Update { get; set; }
+
+        [XmlElement("Delete")]
+        public TableData Delete { get; set; }
+    }
 
     //[XmlRoot("Table")]
     [Serializable]
@@ -21,9 +36,8 @@ namespace DbDarwin.Model.Schema
             Schema = "dbo";
         }
 
-        //[XmlIgnore]
-        [XmlElement("Row")]
-        public List<dynamic> Rows { get; set; }
+        [XmlElement("Data")]
+        public TableData Data { get; set; }
 
         public string FullName => Schema + "." + Name;
 

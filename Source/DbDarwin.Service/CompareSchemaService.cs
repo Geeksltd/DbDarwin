@@ -3,6 +3,7 @@ using DbDarwin.Model.Schema;
 using KellermanSoftware.CompareNetObjects;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -132,6 +133,9 @@ namespace DbDarwin.Service
                     GenerateDifference<ForeignKey>(sourceTable.ForeignKeys, foundTable.ForeignKeys, navigatorAdd,
                         navigatorRemove, navigatorUpdate);
 
+                    GenerateDifferenceData(sourceTable.Data, foundTable.Data, navigatorAdd,
+                        navigatorRemove, navigatorUpdate);
+
 
                     navigatorAdd.Flush();
                     navigatorAdd.Close();
@@ -174,6 +178,70 @@ namespace DbDarwin.Service
             doc.Add(rootDatabase);
 
             doc.Save(output);
+        }
+
+
+        private static void GenerateDifferenceData(TableData sourceData, TableData targetData, XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
+        {
+            var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+
+
+            var sourceList = sourceData.ToDictionaryList();
+            var targetList = targetData.ToDictionaryList();
+
+
+            var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
+            var dataNodeAdd = new XElement("Data");
+            foreach (IDictionary<string, object> row in sourceList)
+            {
+                row.TryGetValue("Name", out var val);
+                var exists = false;
+                foreach (var data2 in targetList)
+                {
+                    if (data2.Any(x => x.Key == "Name" && x.Value == val))
+                    {
+                        var result = compareLogic.Compare(sourceList, targetList);
+                        //if (!result.AreEqual)
+                        //{
+
+                        //}
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists)
+                    dataNodeAdd.Add(row.ToElement("Row"));
+            }
+
+            var dataNodeRemove = new XElement("Data");
+            foreach (IDictionary<string, object> row in targetList)
+            {
+                row.TryGetValue("Name", out var val);
+
+                var exists = false;
+                foreach (var data2 in sourceList)
+                {
+                    if (data2.Any(x => x.Key == "Name" && x.Value == val))
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists)
+                    dataNodeRemove.Add(row.ToElement("Row"));
+            }
+
+            if (dataNodeAdd.HasElements)
+                navigatorAdd.Serialize(dataNodeAdd);
+            if (dataNodeRemove.HasElements)
+                navigatorRemove.Serialize(dataNodeRemove);
+
+            //if (updateNodes.HasElements)
+            //    tableElement.Add(updateNodes);
+
+
+            //if (tableElement.HasElements)
+            //    rootDatabase.Add(tableElement);
         }
 
         public static Database LoadXMLFile(string currentFileName)
