@@ -27,6 +27,11 @@ namespace DbDarwin.UI
     /// </summary>
     public partial class MainWindow : Window
     {
+        public GeneratedScriptResult SelectedAddOrUpdate;
+        public GeneratedScriptResult SelectedRemove;
+        private readonly Color RemoveItem = Color.FromArgb(255, 255, 192, 192);
+        private readonly Color AddItem = Color.FromArgb(255, 175, 220, 255);
+
         public MainWindow()
         {
             InitializeComponent();
@@ -58,7 +63,7 @@ namespace DbDarwin.UI
 
                     SourceConnection = connect.ConnectionString;
                     SourceName = connect.ConnectionName;
-                    SelectSource.Items.Add(new ComboBoxItem()
+                    SelectSource.Items.Add(new ComboBoxItem
                     {
                         Content = connect.ConnectionName,
                         DataContext = connect.ConnectionString,
@@ -79,11 +84,11 @@ namespace DbDarwin.UI
         private void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var tag = ((ComboBoxItem)SelectTarget.SelectedItem)?.Tag;
-            if (tag != null && tag.ToString() == "1")
+            if (tag?.ToString() == "1")
             {
                 var connect = new ConnectWindow("SelectTarget");
                 var result = connect.ShowDialog();
-                if (result ?? false)
+                if (result == true)
                 {
                     if (SelectTarget.Items.Count > 1)
                         SelectTarget.Items.RemoveAt(1);
@@ -186,11 +191,11 @@ namespace DbDarwin.UI
                         {
                             RadioButton checkbox;
 
-                            var removed = new SolidColorBrush(Color.FromArgb(255, 255, 192, 192));
-                            var add = new SolidColorBrush(Color.FromArgb(255, 175, 220, 255));
+                            var removed = new SolidColorBrush(RemoveItem);
+                            var add = new SolidColorBrush(AddItem);
                             if (script.Mode == Model.ViewMode.Add || script.Mode == Model.ViewMode.Update || script.Mode == Model.ViewMode.Rename)
                             {
-                                checkbox = new RadioButton()
+                                checkbox = new RadioButton
                                 {
                                     Tag = "AddOrUpdate",
                                     Content = script.Title,
@@ -225,8 +230,7 @@ namespace DbDarwin.UI
             }));
         }
 
-        public GeneratedScriptResult SelectedAddOrUpdate;
-        public GeneratedScriptResult SelectedRemove;
+
         public void ValidateSelectedObject()
         {
             ActuallyRename.IsEnabled = SelectedAddOrUpdate != null &&
@@ -335,10 +339,7 @@ namespace DbDarwin.UI
             Process.Start(sqlOutput);
         }
 
-        private void GenerateSelectedButton_OnClick(object sender, RoutedEventArgs e)
-        {
 
-        }
 
         private void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
         {
@@ -358,7 +359,7 @@ namespace DbDarwin.UI
             table.Remove.Columns.Remove(oldSchema);
 
             if (table.Update == null)
-                table.Update = new Model.Schema.Table()
+                table.Update = new Model.Schema.Table
                 {
                     Columns = new List<Model.Schema.Column> { newSchema }
                 };

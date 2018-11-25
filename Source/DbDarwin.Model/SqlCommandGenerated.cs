@@ -47,6 +47,8 @@ namespace DbDarwin.Model
                 case LineEnum.FirstLineWith2LastLine:
                     message = message + Line + command + Line + Line;
                     break;
+                default:
+                    throw new Exception("Not Support");
             }
 
             return message;

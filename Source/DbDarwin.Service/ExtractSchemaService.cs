@@ -16,6 +16,7 @@ namespace DbDarwin.Service
 {
     public class ExtractSchemaService : IDisposable
     {
+        private bool _disposedValue = false;
         private SqlConnection CurrentSqlConnection;
         public List<ConstraintInformationModel> ConstraintInformation { get; set; }
         /// <summary>
@@ -167,8 +168,6 @@ namespace DbDarwin.Service
                                     if (column.ColumnName.ToLower() == "id")
                                         continue;
                                     rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
-                                    //    new XElement(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName)
-                                    //  { Value =  });
                                 }
                                 dataElement.Add(rowElement);
                             }
@@ -255,25 +254,23 @@ namespace DbDarwin.Service
             var schemaElements = doc.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
             foreach (XElement element in schemaElements)
             {
-                if (element.Name.ToString().ToLower() == "table")
+                if (element.Name.ToString().ToLower() != "table") continue;
+
+                var tableNameAttribute = element.Attribute(XName.Get("Name"));
+                var schemaAttribute = element.Attribute(XName.Get("Schema"));
+
+                var tableName = string.Empty;
+                var schemaName = string.Empty;
+                if (tableNameAttribute != null)
+                    tableName = tableNameAttribute.Value;
+                if (schemaAttribute != null)
+                    schemaName = schemaAttribute.Value;
+
+                var findedData = dataElements?.FirstOrDefault(x =>
+                    x.Attributes().Any(c => c.Name == "Name" && c.Value == tableName) && x.Elements(XName.Get("Data")).Any());
+                if (findedData != null)
                 {
-                    var tableNameAttribute = element.Attribute(XName.Get("Name"));
-                    var schemaAttribute = element.Attribute(XName.Get("Schema"));
-
-                    var tableName = string.Empty;
-                    var schemaName = string.Empty;
-                    if (tableNameAttribute != null)
-                        tableName = tableNameAttribute.Value;
-                    if (schemaAttribute != null)
-                        schemaName = schemaAttribute.Value;
-
-                    var findedData = dataElements?.FirstOrDefault(x =>
-                        x.Attributes().Any(c => c.Name == "Name" && c.Value == tableName) && x.Elements(XName.Get("Data")).Any());
-                    if (findedData != null)
-                    {
-                        element.Add(findedData.Elements(XName.Get("Data")));
-                    }
-
+                    element.Add(findedData.Elements(XName.Get("Data")));
                 }
             }
 
@@ -302,24 +299,20 @@ namespace DbDarwin.Service
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (_disposedValue) return;
+            if (disposing)
             {
-                if (disposing)
-                {
-                    CurrentSqlConnection.Close();
-                    CurrentSqlConnection.Dispose();
-                }
-                GC.Collect();
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-
-                disposedValue = true;
+                CurrentSqlConnection.Close();
+                CurrentSqlConnection.Dispose();
             }
+            GC.Collect();
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+            _disposedValue = true;
         }
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.

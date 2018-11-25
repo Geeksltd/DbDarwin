@@ -206,7 +206,7 @@ namespace DbDarwin.Service
                     if (table.Add.PrimaryKey != null)
                         sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name, table.Schema));
                     if (table.Add.Indexes.Any())
-                        sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name, table.Schema, false));
+                        sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name, table.Schema, indexExists: false));
 
                 }
 
@@ -424,7 +424,7 @@ END
                 {
                     var builder = new StringBuilder();
 
-                    builder.AppendLine(GenerateNewIndexes(new List<Index> { index }, tableName, schema, true));
+                    builder.AppendLine(GenerateNewIndexes(new List<Index> { index }, tableName, schema, indexExists: true));
                     if (index.is_disabled.ToBoolean())
                         builder.AppendLine($"ALTER INDEX [{index.Name}] ON [{schema}].[{tableName}] DISABLE");
 

@@ -181,11 +181,8 @@ namespace DbDarwin.Service
         }
 
 
-        private static void GenerateDifferenceData(TableData sourceData, TableData targetData, XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
+        private static void GenerateDifferenceData(TableData sourceData, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
         {
-            var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
-
-
             var sourceList = sourceData.ToDictionaryList();
             var targetList = targetData.ToDictionaryList();
 
@@ -232,9 +229,9 @@ namespace DbDarwin.Service
             }
 
             if (dataNodeAdd.HasElements)
-                navigatorAdd.Serialize(dataNodeAdd);
+                addWriter.Serialize(dataNodeAdd);
             if (dataNodeRemove.HasElements)
-                navigatorRemove.Serialize(dataNodeRemove);
+                removeWriter.Serialize(dataNodeRemove);
 
             //if (updateNodes.HasElements)
             //    tableElement.Add(updateNodes);
@@ -341,19 +338,9 @@ namespace DbDarwin.Service
             // Add new objects to xml
             if (mustAdd != null)
                 foreach (T sqlObject in mustAdd)
-                {
-                    var serializer1 = new XmlSerializer(sqlObject.GetType());
-                    navigatorAdd.WriteWhitespace("");
-                    serializer1.Serialize(navigatorAdd, sqlObject, emptyNamespaces);
-                }
+                    navigatorAdd.Serialize(sqlObject);
 
-            var compareLogic = new CompareLogic
-            {
-                Config =
-                {
-                    MaxDifferences = int.MaxValue,
-                },
-            };
+            var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
             if (typeof(T) == typeof(PrimaryKey))
             {
                 compareLogic.Config.MembersToIgnore.Add("Name");
@@ -367,42 +354,29 @@ namespace DbDarwin.Service
                     sourceData = sourceData.Except(x => mustAdd.Contains(x)).ToList();
                 foreach (T currentObject in sourceData)
                 {
-                    var serializer1 = new XmlSerializer(currentObject.GetType());
+
                     var foundObject = FindRemoveOrUpdate<T>(currentObject, targetData);
                     if (foundObject == null)
                     {
                         if (typeof(T) == typeof(PrimaryKey))
-                        {
-                            navigatorUpdate.WriteWhitespace("");
-                            serializer1.Serialize(navigatorUpdate, currentObject, emptyNamespaces);
-                        }
+                            navigatorUpdate.Serialize(currentObject);
                         else
-                        {
-                            navigatorRemove.WriteWhitespace("");
-                            serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
-                        }
+                            navigatorRemove.Serialize(currentObject);
                     }
                     else
                     {
                         var result = compareLogic.Compare(currentObject, foundObject);
                         if (!result.AreEqual)
-                        {
-                            navigatorUpdate.WriteWhitespace("");
-                            serializer1.Serialize(navigatorUpdate, currentObject, emptyNamespaces);
-                        }
+                            navigatorUpdate.Serialize(currentObject);
                     }
                 }
 
 
                 foreach (T currentObject in targetData)
                 {
-                    var serializer1 = new XmlSerializer(currentObject.GetType());
                     var foundObject = FindRemoveOrUpdate<T>(currentObject, sourceData);
                     if (foundObject == null)
-                    {
-                        navigatorRemove.WriteWhitespace("");
-                        serializer1.Serialize(navigatorRemove, currentObject, emptyNamespaces);
-                    }
+                        navigatorRemove.Serialize(currentObject);
                 }
             }
         }
