@@ -122,14 +122,14 @@ namespace DbDarwin.UI
                   UpdateState($"Extracted {TargetName} Schema.");
 
                   UpdateState("Comparing Databases...");
-                  CompareSchemaService.StartCompare(new GenerateDiffFile
-                  {
-                      SourceSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
-                      TargetSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
-                      OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
-                  });
+                  using (var service = new CompareSchemaService())
+                      service.StartCompare(new GenerateDiffFile
+                      {
+                          SourceSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
+                          TargetSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
+                          OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
+                      });
                   UpdateState("Databases Compared.");
-
                   GenerateSqlFileAndShowUpdates();
               });
         }

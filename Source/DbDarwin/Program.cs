@@ -28,7 +28,8 @@ namespace DbDarwin
                     {
                         var model = IsArgumentGenerateDiffFileValid(argList);
                         if (model.IsValid)
-                            CompareSchemaService.StartCompare(model);
+                            using (var service = new CompareSchemaService())
+                                service.StartCompare(model);
                     }
                     else if (first.ToLower() == "generate-script")
                     {

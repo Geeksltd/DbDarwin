@@ -45,12 +45,15 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void GenerateDiff()
         {
-            CompareSchemaService.StartCompare(new GenerateDiffFile
-            {
-                SourceSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
-                TargetSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
-                OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
-            });
+            using (var service = new CompareSchemaService())
+                service.StartCompare(new GenerateDiffFile
+                {
+                    SourceSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
+                    TargetSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
+                    OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
+                });
+
+
             Assert.IsTrue(true);
         }
 

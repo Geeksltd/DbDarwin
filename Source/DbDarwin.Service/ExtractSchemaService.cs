@@ -16,7 +16,7 @@ namespace DbDarwin.Service
     public class ExtractSchemaService : IDisposable
     {
         bool disposedValue;
-        SqlConnection CurrentSqlConnection;
+        readonly SqlConnection CurrentSqlConnection;
         public List<ConstraintInformationModel> ConstraintInformation { get; set; }
         /// <summary>
         /// All Table Extend Property
@@ -54,6 +54,10 @@ namespace DbDarwin.Service
         public DataTable AllTables { get; set; }
         public ExtractSchema Model { get; set; }
 
+        public XElement RootDatabase { get; set; }
+        public XDocument Doc { get; set; }
+        public Database Database { get; set; }
+
         public ExtractSchemaService(ExtractSchema model)
         {
             Model = model;
@@ -85,6 +89,13 @@ namespace DbDarwin.Service
                                      { col.object_id, col.column_id }
                                      select new ConstraintInformationModel { Index = ind, IndexColumn = ic, SystemColumn = col }).ToList();
             Model = model;
+
+            Database = new Database();
+            Doc = new XDocument
+            {
+                Declaration = new XDeclaration("1.0", "UTF-8", "true")
+            };
+            RootDatabase = new XElement("Database");
         }
 
         /// <summary>
@@ -94,21 +105,11 @@ namespace DbDarwin.Service
         /// <returns>can be successful it is true</returns>
         public bool ExtractSchema()
         {
-            // Create Connection to database
-            var database = new Database();
-
-            var doc = new XDocument
-            {
-                Declaration = new XDeclaration("1.0", "UTF-8", "true")
-            };
-            var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
-            var rootDatabase = new XElement("Database");
-
             try
             {
                 // Create Table Model
                 if (AllTables.Rows.Count > 0)
-                    database.Tables = new List<Table>();
+                    Database.Tables = new List<Table>();
 
                 foreach (DataRow tableSchema in AllTables.Rows)
                 {
@@ -136,46 +137,16 @@ namespace DbDarwin.Service
 
                     };
 
-                    // If table is deference data
-                    // For check reference data
-                    if (ExtendProperties.Any(x =>
-                        x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
-                        x.value.ToLower() == "enum"))
-                    {
-                        var data = SqlService.LoadData(CurrentSqlConnection, newTable.Name, $"SELECT * FROM [{newTable.Schema}].[{newTable.Name}]");
-                        if (data.Rows.Count > 0)
-                        {
-                            var tableElement = new XElement("Table");
-                            var dataElement = new XElement("Data");
-                            tableElement.SetAttributeValue(nameof(newTable.Name), newTable.Name);
-                            if (newTable.Schema.ToLower() != "dbo")
-                                tableElement.SetAttributeValue(nameof(newTable.Schema), newTable.Schema);
-                            // tableElement.SetAttributeValue("PrimaryKey", primaryKey.Columns);
-                            foreach (DataRow rowData in data.Rows)
-                            {
-                                var rowElement = new XElement("Row");
-                                foreach (DataColumn column in data.Columns)
-                                {
-                                    if (column.ColumnName.ToLower() == "id") continue;
-                                    rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
-                                }
+                    CheckReferenceData(tableId, newTable.Name, newTable.Schema);
 
-                                dataElement.Add(rowElement);
-                            }
-
-                            tableElement.Add(dataElement);
-                            rootDatabase.Add(tableElement);
-                        }
-                    }
-
-                    database.Tables.Add(newTable);
+                    Database.Tables.Add(newTable);
                 }
 
-                database.Tables = database.Tables?.OrderBy(x => x.FullName).ToList();
+                Database.Tables = Database.Tables?.OrderBy(x => x.FullName).ToList();
 
                 // Create Serialize Object and save as XML file
-                doc.Add(rootDatabase);
-                AddDataToTable(database, doc, Model.OutputFile);
+                Doc.Add(RootDatabase);
+                AddDataToTable(Database, Doc, Model.OutputFile);
             }
 
             catch (Exception ex)
@@ -187,6 +158,40 @@ namespace DbDarwin.Service
             }
 
             return true;
+        }
+
+        void CheckReferenceData(long tableId, string tableName, string schema)
+        {
+            // If table is deference data
+            // For check reference data
+            if (ExtendProperties.Any(x =>
+                x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
+                x.value.ToLower() == "enum"))
+            {
+                var data = SqlService.LoadData(CurrentSqlConnection, tableName, $"SELECT * FROM [{schema}].[{tableName}]");
+                if (data.Rows.Count > 0)
+                {
+                    var tableElement = new XElement("Table");
+                    var dataElement = new XElement("Data");
+                    tableElement.SetAttributeValue("Name", tableName);
+                    if (schema.ToLower() != "dbo")
+                        tableElement.SetAttributeValue("Schema", schema);
+                    foreach (DataRow rowData in data.Rows)
+                    {
+                        var rowElement = new XElement("Row");
+                        foreach (DataColumn column in data.Columns)
+                        {
+                            if (column.ColumnName.ToLower() == "id") continue;
+                            rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
+                        }
+
+                        dataElement.Add(rowElement);
+                    }
+
+                    tableElement.Add(dataElement);
+                    RootDatabase.Add(tableElement);
+                }
+            }
         }
 
         List<Index> FetchIndexes(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
@@ -242,27 +247,29 @@ namespace DbDarwin.Service
 
             var dataElements = data.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
             var schemaElements = doc.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
-            foreach (XElement element in schemaElements)
-            {
-                if (element.Name.ToString().ToLower() != "table") continue;
-
-                var tableNameAttribute = element.Attribute(XName.Get("Name"));
-                var schemaAttribute = element.Attribute(XName.Get("Schema"));
-
-                var tableName = string.Empty;
-                var schemaName = string.Empty;
-                if (tableNameAttribute != null)
-                    tableName = tableNameAttribute.Value;
-                if (schemaAttribute != null)
-                    schemaName = schemaAttribute.Value;
-
-                var findedData = dataElements?.FirstOrDefault(x =>
-                    x.Attributes().Any(c => c.Name == "Name" && c.Value == tableName) && x.Elements(XName.Get("Data")).Any());
-                if (findedData != null)
+            if (schemaElements != null)
+                foreach (XElement element in schemaElements)
                 {
-                    element.Add(findedData.Elements(XName.Get("Data")));
+                    if (element.Name.ToString().ToLower() != "table") continue;
+
+                    var tableNameAttribute = element.Attribute(XName.Get("Name"));
+                    var schemaAttribute = element.Attribute(XName.Get("Schema"));
+
+                    var tableName = string.Empty;
+                    var schemaName = string.Empty;
+                    if (tableNameAttribute != null)
+                        tableName = tableNameAttribute.Value;
+                    if (schemaAttribute != null)
+                        schemaName = schemaAttribute.Value;
+
+                    var foundData = dataElements?.FirstOrDefault(x =>
+                        x.Attributes().Any(c => c.Name == "Name" && c.Value == tableName) &&
+                        x.Elements(XName.Get("Data")).Any());
+                    if (foundData != null)
+                    {
+                        element.Add(foundData.Elements(XName.Get("Data")));
+                    }
                 }
-            }
 
             var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
             doc.Save(path);

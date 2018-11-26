@@ -13,15 +13,30 @@ using System.Xml.Serialization;
 
 namespace DbDarwin.Service
 {
-    public class CompareSchemaService
+    public class CompareSchemaService : IDisposable
     {
+        bool disposedValue; // To detect redundant calls
+        readonly XElement UpdateTables;
+        readonly XElement AddTables;
+        readonly XElement RemoveTables;
+        readonly XElement RootDatabase;
+        readonly XDocument Doc;
+
+        public CompareSchemaService()
+        {
+            Doc = new XDocument { Declaration = new XDeclaration("1.0", "UTF-8", "true") };
+            RootDatabase = new XElement("Database");
+            UpdateTables = new XElement("update");
+            AddTables = new XElement("add");
+            RemoveTables = new XElement("remove");
+        }
         /// <summary>
         /// compare two xml file and create diff xml file
         /// </summary>
         /// <param name="currentFileName">Current XML File</param>
         /// <param name="newSchemaFilePath">New XML File Want To Compare</param>
         /// <param name="output">Output File XML diff</param>
-        public static ResultMessage StartCompare(GenerateDiffFile model)
+        public ResultMessage StartCompare(GenerateDiffFile model)
         {
             var result = new ResultMessage();
             try
@@ -55,31 +70,15 @@ namespace DbDarwin.Service
             return result;
         }
 
-        static void CompareAndSave(Database sourceSchema, Database targetSchema, string output)
+        void CompareAndSave(Database sourceSchema, Database targetSchema, string output)
         {
-            var doc = new XDocument
-            {
-                Declaration = new XDeclaration("1.0", "UTF-8", "true")
-            };
-            var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
-            var rootDatabase = new XElement("Database");
-
-            var updateTables = new XElement("update");
-            var addTables = new XElement("add");
-            var removeTables = new XElement("remove");
-
             foreach (var sourceTable in sourceSchema.Tables)
             {
                 var foundTable = targetSchema.Tables.FirstOrDefault(x => x.FullName == sourceTable.FullName);
-
                 if (foundTable == null)
                 {
-                    using (var navigatorAdd = addTables.CreateWriter())
-                    {
-                        var serializer1 = new XmlSerializer(sourceTable.GetType());
-                        navigatorAdd.WriteWhitespace("");
-                        serializer1.Serialize(navigatorAdd, sourceTable, emptyNamespaces);
-                    }
+                    using (var navigatorAdd = AddTables.CreateWriter())
+                        navigatorAdd.Serialize(sourceTable);
                 }
                 else
                 {
@@ -96,33 +95,11 @@ namespace DbDarwin.Service
                     var updateElement = new XElement("update");
                     var navigatorUpdate = updateElement.CreateWriter();
 
-                    if (sourceTable.PrimaryKey == null && foundTable.PrimaryKey != null)
-                    {
-                        var serializer1 = new XmlSerializer(foundTable.PrimaryKey.GetType());
-                        navigatorRemove.WriteWhitespace("");
-                        serializer1.Serialize(navigatorRemove, foundTable.PrimaryKey, emptyNamespaces);
-                    }
-                    else
-                    {
-                        GenerateDifference<PrimaryKey>(
-                            sourceTable.PrimaryKey == null
-                                ? new List<PrimaryKey>()
-                                : new List<PrimaryKey> { sourceTable.PrimaryKey },
-                            foundTable.PrimaryKey == null
-                                ? new List<PrimaryKey>()
-                                : new List<PrimaryKey> { foundTable.PrimaryKey }, navigatorAdd,
-                            navigatorRemove, navigatorUpdate);
-                    }
-
-                    GenerateDifference<Column>(sourceTable.Columns, foundTable.Columns, navigatorAdd, navigatorRemove,
-                        navigatorUpdate);
-                    GenerateDifference<Index>(sourceTable.Indexes, foundTable.Indexes, navigatorAdd, navigatorRemove,
-                        navigatorUpdate);
-                    GenerateDifference<ForeignKey>(sourceTable.ForeignKeys, foundTable.ForeignKeys, navigatorAdd,
-                        navigatorRemove, navigatorUpdate);
-
-                    GenerateDifferenceData(sourceTable.Data, foundTable.Data, navigatorAdd,
-                        navigatorRemove, navigatorUpdate);
+                    GenerateDifferencePrimaryKey(sourceTable, foundTable, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<Column>(sourceTable.Columns, foundTable.Columns, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<Index>(sourceTable.Indexes, foundTable.Indexes, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifference<ForeignKey>(sourceTable.ForeignKeys, foundTable.ForeignKeys, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifferenceData(sourceTable.Data, foundTable.Data, navigatorAdd, navigatorRemove, navigatorUpdate);
 
                     navigatorAdd.Flush();
                     navigatorAdd.Close();
@@ -134,72 +111,92 @@ namespace DbDarwin.Service
                     navigatorUpdate.Close();
 
                     if (!add.IsEmpty) root.Add(add);
-
                     if (!removeColumn.IsEmpty) root.Add(removeColumn);
-
-                    if (!updateElement.IsEmpty)
-                        root.Add(updateElement);
-
-                    if (!add.IsEmpty || !removeColumn.IsEmpty || !updateElement.IsEmpty)
-                        updateTables.Add(root);
+                    if (!updateElement.IsEmpty) root.Add(updateElement);
+                    if (!add.IsEmpty || !removeColumn.IsEmpty || !updateElement.IsEmpty) UpdateTables.Add(root);
                 }
             }
 
             var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.FullName).ToList().Contains(c.FullName)).ToList();
-            using (var writer = removeTables.CreateWriter())
-            {
-                foreach (var table in mustRemove)
-                {
-                    var serializer1 = new XmlSerializer(table.GetType());
-                    writer.WriteWhitespace("");
-                    serializer1.Serialize(writer, table, emptyNamespaces);
-                }
-            }
+            using (var writer = RemoveTables.CreateWriter())
+                mustRemove.ForEach(c => writer.Serialize(c));
 
-            rootDatabase.Add(updateTables);
-            rootDatabase.Add(addTables);
-            rootDatabase.Add(removeTables);
-
-            doc.Add(rootDatabase);
-
-            doc.Save(output);
+            SaveChanges(output);
         }
 
-        static void GenerateDifferenceData(TableData sourceData, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
+        void GenerateDifferencePrimaryKey(Table sourceTable, Table foundTable, XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
-            var sourceList = sourceData.ToDictionaryList();
-            var targetList = targetData.ToDictionaryList();
+            if (sourceTable.PrimaryKey == null && foundTable.PrimaryKey != null)
+                navigatorRemove.Serialize(foundTable.PrimaryKey);
+            else
+            {
+                GenerateDifference<PrimaryKey>(
+                    sourceTable.PrimaryKey == null
+                        ? new List<PrimaryKey>()
+                        : new List<PrimaryKey> { sourceTable.PrimaryKey },
+                    foundTable.PrimaryKey == null
+                        ? new List<PrimaryKey>()
+                        : new List<PrimaryKey> { foundTable.PrimaryKey }, navigatorAdd,
+                    navigatorRemove, navigatorUpdate);
+            }
+        }
+
+        void SaveChanges(string output)
+        {
+            if (UpdateTables.HasElements) RootDatabase.Add(UpdateTables);
+            if (AddTables.HasElements) RootDatabase.Add(AddTables);
+            if (RemoveTables.HasElements) RootDatabase.Add(RemoveTables);
+
+            Doc.Add(RootDatabase);
+            Doc.Save(output);
+        }
+
+        /// <summary>
+        /// Generate Difference Data
+        /// </summary>
+        /// <param name="sourceData">Source Table Data</param>
+        /// <param name="targetData">Target Table Data</param>
+        /// <param name="addWriter">XML Writer for add data</param>
+        /// <param name="removeWriter">XML Writer for remove data</param>
+        /// <param name="updateWriter">XML Writer for update data</param>
+        void GenerateDifferenceData(TableData sourceData, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
+        {
+            var sourceTable = sourceData.ToDictionaryList();
+            var targetTable = targetData.ToDictionaryList();
 
             var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
             var dataNodeAdd = new XElement("Data");
             var dataNodeUpdate = new XElement("Data");
-            foreach (IDictionary<string, object> row in sourceList)
+            // Detect new data or updates
+            foreach (IDictionary<string, object> sourceRow in sourceTable)
             {
-                row.TryGetValue("Name", out var val);
+                sourceRow.TryGetValue("Name", out var val);
                 var exists = false;
-                foreach (var data2 in targetList)
+                foreach (var targetRow in targetTable)
                 {
-                    if (data2.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString()))
+                    if (targetRow.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString()))
                     {
-                        var result = compareLogic.Compare(row, data2);
+                        var result = compareLogic.Compare(sourceRow, targetRow);
                         if (!result.AreEqual)
-                            dataNodeUpdate.Add(row.ToElement("Update"));
+                            dataNodeUpdate.Add(sourceRow.ToElement("Update"));
                         exists = true;
                         break;
                     }
                 }
 
                 if (!exists)
-                    dataNodeAdd.Add(row.ToElement("Row"));
+                    dataNodeAdd.Add(sourceRow.ToElement("Row"));
             }
 
+            // Detect Remove Data
             var dataNodeRemove = new XElement("Data");
-            foreach (IDictionary<string, object> row in targetList)
+
+            foreach (IDictionary<string, object> row in targetTable)
             {
                 row.TryGetValue("Name", out var val);
 
                 var exists = false;
-                foreach (var data2 in sourceList)
+                foreach (var data2 in sourceTable)
                 {
                     exists = data2.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString());
                     if (exists) break;
@@ -215,9 +212,6 @@ namespace DbDarwin.Service
                 removeWriter.Serialize(dataNodeRemove);
             if (dataNodeUpdate.HasElements)
                 updateWriter.Serialize(dataNodeUpdate);
-
-            // if (tableElement.HasElements)
-            //    rootDatabase.Add(tableElement);
         }
 
         public static Database LoadXMLFile(string currentFileName)
@@ -301,7 +295,7 @@ namespace DbDarwin.Service
         /// <param name="navigatorAdd">refers to add element XML</param>
         /// <param name="navigatorRemove">refers to remove element XML</param>
         /// <param name="navigatorUpdate">refers to update element XML</param>
-        public static void GenerateDifference<T>(List<T> sourceData, List<T> targetData,
+        public void GenerateDifference<T>(List<T> sourceData, List<T> targetData,
             XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
             // Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
@@ -351,7 +345,7 @@ namespace DbDarwin.Service
             }
         }
 
-        static object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
+        object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
         {
             object found = null;
             if (typeof(T) == typeof(Column))
@@ -370,7 +364,7 @@ namespace DbDarwin.Service
             return (T)Convert.ChangeType(found, typeof(T));
         }
 
-        static List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
+        List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
         {
             object tempAdd = null;
             if (sourceList == null) return new List<T>();
@@ -389,5 +383,37 @@ namespace DbDarwin.Service
                             .Contains(x.CONSTRAINT_NAME)).ToList();
             return (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
         }
+
+        #region IDisposable Support
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposedValue) return;
+            if (disposing)
+            {
+            }
+
+            GC.Collect();
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            disposedValue = true;
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~CompareSchemaService() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 }
