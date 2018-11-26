@@ -117,7 +117,7 @@ namespace DbDarwin.UI
 
                   UpdateState($"Extracting {TargetName} Schema...");
                   using (var service = new ExtractSchemaService(new ExtractSchema
-                  { ConnectionString = SourceConnection, OutputFile = "Target.xml" }))
+                  { ConnectionString = TargetConnection, OutputFile = "Target.xml" }))
                       service.ExtractSchema();
                   UpdateState($"Extracted {TargetName} Schema.");
 

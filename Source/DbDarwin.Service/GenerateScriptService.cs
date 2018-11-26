@@ -57,11 +57,12 @@ namespace DbDarwin.Service
             var foreignKeys = new List<SqlCommandGenerated>();
             if (diffFile != null)
             {
-                foreach (var foreignKey in diffFile.Update.Tables.Select(x => x.Update)
-                    .ExceptNull()
-                    .SelectMany(c => c.ForeignKeys).ToList().GroupBy(x => new { x.TABLE_SCHEMA, x.TABLE_NAME }))
-                    sb.Append(GenerateRemoveForeignKey(foreignKey.ToList(), foreignKey.Key.TABLE_NAME,
-                        foreignKey.Key.TABLE_SCHEMA));
+                if (diffFile.Update != null)
+                    foreach (var foreignKey in diffFile.Update.Tables.Select(x => x.Update)
+                        .ExceptNull()
+                        .SelectMany(c => c.ForeignKeys).ToList().GroupBy(x => new { x.TABLE_SCHEMA, x.TABLE_NAME }))
+                        sb.Append(GenerateRemoveForeignKey(foreignKey.ToList(), foreignKey.Key.TABLE_NAME,
+                            foreignKey.Key.TABLE_SCHEMA));
 
                 if (diffFile.Update?.Tables != null)
                     sb.AppendLine(GenerateUpdateTables(diffFile.Update.Tables));

@@ -56,8 +56,7 @@ namespace DbDarwin
             // Read -out parameter
             model.MigrateSqlFile = ReadArgument("-out", argList, "-out parameter is requirement");
             // Read table name parameter
-            var notRequerment = false;
-            model.TableName = ReadArgument("table", argList, string.Empty, notRequerment);
+            model.TableName = ReadArgument("table", argList, string.Empty, requirement: false);
             // Read from name parameter
             model.FromName = ReadArgument("from", argList, "from parameter is requirement");
             // Read from name parameter
@@ -69,7 +68,7 @@ namespace DbDarwin
         {
             var model = new GenerateScript();
 
-            Console.WriteLine("Start generate migration script...");
+            Console.WriteLine(@"Start generate migration script...");
             // Read -diff parameter
             model.CurrentDiffFile = ReadArgument("-diff", argList, "-diff parameter is requirement");
             // Read -out parameter
@@ -80,7 +79,7 @@ namespace DbDarwin
 
         static ExtractSchema IsArgumentExtractSchemaValid(List<string> argList)
         {
-            Console.WriteLine("Start Extract Schema...");
+            Console.WriteLine(@"Start Extract Schema...");
             return new ExtractSchema
             {
                 // Read -connect parameter
