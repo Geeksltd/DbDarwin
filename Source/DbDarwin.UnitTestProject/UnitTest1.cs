@@ -22,7 +22,7 @@ namespace DbDarwin.UnitTestProject
             var sourceModel = new ExtractSchema
             {
                 ConnectionString =
-                    "Data Source=.\\SQL2016;Initial Catalog=Pay247_Source;Integrated Security=True;Connect Timeout=30",
+                    "Data Source=.;Initial Catalog=Pay247_Source;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Source.xml"
             };
             using (var service = new ExtractSchemaService(sourceModel))
@@ -32,7 +32,7 @@ namespace DbDarwin.UnitTestProject
             var targetModel = new ExtractSchema
             {
                 ConnectionString =
-                    "Data Source=.\\SQL2016;Initial Catalog=Pay247_Target;Integrated Security=True;Connect Timeout=30",
+                    "Data Source=.;Initial Catalog=Pay247_Target;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Target.xml"
             };
             using (var service = new ExtractSchemaService(targetModel))

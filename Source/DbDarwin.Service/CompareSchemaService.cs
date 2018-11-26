@@ -189,19 +189,18 @@ namespace DbDarwin.Service
 
             var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
             var dataNodeAdd = new XElement("Data");
+            var dataNodeUpdate = new XElement("Data");
             foreach (IDictionary<string, object> row in sourceList)
             {
                 row.TryGetValue("Name", out var val);
                 var exists = false;
                 foreach (var data2 in targetList)
                 {
-                    if (data2.Any(x => x.Key == "Name" && x.Value == val))
+                    if (data2.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString()))
                     {
-                        var result = compareLogic.Compare(sourceList, targetList);
-                        //if (!result.AreEqual)
-                        //{
-
-                        //}
+                        var result = compareLogic.Compare(row, data2);
+                        if (!result.AreEqual)
+                            dataNodeUpdate.Add(row.ToElement("Update"));
                         exists = true;
                         break;
                     }
@@ -218,11 +217,8 @@ namespace DbDarwin.Service
                 var exists = false;
                 foreach (var data2 in sourceList)
                 {
-                    if (data2.Any(x => x.Key == "Name" && x.Value == val))
-                    {
-                        exists = true;
-                        break;
-                    }
+                    exists = data2.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString());
+                    if (exists) break;
                 }
                 if (!exists)
                     dataNodeRemove.Add(row.ToElement("Row"));
@@ -232,9 +228,8 @@ namespace DbDarwin.Service
                 addWriter.Serialize(dataNodeAdd);
             if (dataNodeRemove.HasElements)
                 removeWriter.Serialize(dataNodeRemove);
-
-            //if (updateNodes.HasElements)
-            //    tableElement.Add(updateNodes);
+            if (dataNodeUpdate.HasElements)
+                updateWriter.Serialize(dataNodeUpdate);
 
 
             //if (tableElement.HasElements)
@@ -281,7 +276,7 @@ namespace DbDarwin.Service
                 else
                 {
                     var table = currentDiffSchema.FirstOrDefault(x =>
-                        string.Equals(x.Name, model.TableName, StringComparison.CurrentCultureIgnoreCase));
+                        string.Equals(x.Name, model.TableName, StringComparison.OrdinalIgnoreCase));
                     if (table != null)
                     {
                         if (table.Update == null)
@@ -327,11 +322,6 @@ namespace DbDarwin.Service
         public static void GenerateDifference<T>(List<T> sourceData, List<T> targetData,
             XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
-            var emptyNamespaces = new XmlSerializerNamespaces(new[]
-            {
-                XmlQualifiedName.Empty,
-            });
-
             // Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
             var mustAdd = FindNewComponent<T>(sourceData, targetData);
 
