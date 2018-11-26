@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
-using System.Linq;
-using System.Text;
-using GCop.Core;
 
 namespace DbDarwin.Service
 {
@@ -22,6 +18,7 @@ namespace DbDarwin.Service
                 return dataTable.DataTableToList<T>();
             }
         }
+
         public static DataTable LoadData(SqlConnection connection, string tableName, string sqlScript)
         {
             using (var da = new SqlDataAdapter())
@@ -33,6 +30,7 @@ namespace DbDarwin.Service
                 return dataTable;
             }
         }
+
         public static List<dynamic> LoadDataDynamic(SqlConnection connection, string tableName, string sqlScript)
         {
             using (var da = new SqlDataAdapter())
@@ -49,6 +47,7 @@ namespace DbDarwin.Service
                         AddProperty(expando, column.ColumnName, row[column.ColumnName]);
                     dataResult.Add(expando);
                 }
+
                 return dataResult;
             }
         }

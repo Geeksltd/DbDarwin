@@ -1,17 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DbDarwin.Service;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using DbDarwin.Service;
 
 namespace DbDarwin.UI
 {
@@ -39,7 +29,7 @@ namespace DbDarwin.UI
             ServerName.Text = System.Environment.MachineName;
         }
 
-        private void DatabaseName_DropDownOpened(object sender, EventArgs e)
+        void DatabaseName_DropDownOpened(object sender, EventArgs e)
         {
             try
             {
@@ -55,15 +45,12 @@ namespace DbDarwin.UI
 
                 using (var sql = new System.Data.SqlClient.SqlConnection(connection))
                 {
-
                     sql.Open();
                     var databases = SqlService.LoadDataAsString(sql, "References",
                         "SELECT name FROM [master].[dbo].[sysdatabases] order by name");
                     DatabaseName.Items.Clear();
                     foreach (var database in databases)
-                    {
                         DatabaseName.Items.Add(database);
-                    }
                 }
             }
             catch (Exception exception)
@@ -72,13 +59,13 @@ namespace DbDarwin.UI
             }
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
+        void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
             Close();
         }
 
-        private void Connect_Click(object sender, RoutedEventArgs e)
+        void Connect_Click(object sender, RoutedEventArgs e)
         {
             ConnectionName = ServerName.Text + "." + DatabaseName.SelectedValue;
             if (((ComboBoxItem)Authentication.SelectedItem).Tag.ToString() == "1")
@@ -89,12 +76,10 @@ namespace DbDarwin.UI
             if (RememberPassword.IsEnabled)
                 ManageConnectionData.SaveConnection(_connectionType, UserName.Text, Password.Password);
 
-            this.DialogResult = true;
-
-
+            DialogResult = true;
         }
 
-        private void Authentication_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        void Authentication_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var combo = (ComboBox)sender;
             var item = (ComboBoxItem)combo.SelectedItem;

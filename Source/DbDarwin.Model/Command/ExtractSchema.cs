@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using GCop.Core;
+﻿using GCop.Core;
 
 namespace DbDarwin.Model.Command
 {

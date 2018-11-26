@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using Olive;
 using System.IO;
 using System.IO.IsolatedStorage;
-using System.Text;
-using Newtonsoft.Json;
-using Olive;
 
 namespace DbDarwin.Service
 {
@@ -17,7 +14,6 @@ namespace DbDarwin.Service
             using (IsolatedStorageFileStream isoStream = new IsolatedStorageFileStream(filename, FileMode.Create, isoStore))
             using (StreamWriter writer = new StreamWriter(isoStream))
                 writer.WriteLine(data);
-
         }
 
         public static string ReadData(string name)
@@ -30,6 +26,7 @@ namespace DbDarwin.Service
                 using (StreamReader reader = new StreamReader(isoStream))
                     return reader.ReadToEnd();
             }
+
             return null;
         }
     }
@@ -53,6 +50,7 @@ namespace DbDarwin.Service
             };
             DataIsolatedService.SaveData(fileName, data.GetJson());
         }
+
         public static ConnectionData ReadConnection(string fileName)
         {
             var jsonData = DataIsolatedService.ReadData(fileName);

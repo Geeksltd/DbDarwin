@@ -1,23 +1,22 @@
-﻿using DbDarwin.Model.Schema;
+﻿using DbDarwin.Model.Command;
+using DbDarwin.Model.Schema;
+using PowerMapper;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using DbDarwin.Model.Command;
-using PowerMapper;
 
 namespace DbDarwin.Service
 {
     public class ExtractSchemaService : IDisposable
     {
-        private bool _disposedValue = false;
-        private SqlConnection CurrentSqlConnection;
+        bool disposedValue;
+        SqlConnection CurrentSqlConnection;
         public List<ConstraintInformationModel> ConstraintInformation { get; set; }
         /// <summary>
         /// All Table Extend Property
@@ -79,8 +78,6 @@ namespace DbDarwin.Service
             // Get All Table Extend Property
             ExtendProperties = SqlService.LoadData<ExtendedProperty>(CurrentSqlConnection, "extendProperties", "SELECT [major_id] ,[name] ,[value] FROM [sys].[extended_properties] where minor_id = 0 and major_id <> 0");
 
-
-
             ConstraintInformation = (from ind in IndexMapped
                                      join ic in IndexColumnsMapped on new { ind.object_id, ind.index_id } equals new
                                      { ic.object_id, ic.index_id }
@@ -90,8 +87,6 @@ namespace DbDarwin.Service
             Model = model;
         }
 
-
-
         /// <summary>
         /// extract table schema
         /// </summary>
@@ -99,7 +94,6 @@ namespace DbDarwin.Service
         /// <returns>can be successful it is true</returns>
         public bool ExtractSchema()
         {
-
             // Create Connection to database
             var database = new Database();
 
@@ -112,7 +106,6 @@ namespace DbDarwin.Service
 
             try
             {
-
                 // Create Table Model
                 if (AllTables.Rows.Count > 0)
                     database.Tables = new List<Table>();
@@ -127,7 +120,6 @@ namespace DbDarwin.Service
 
                     var indexes = FetchIndexes(ConstraintInformation, tableId);
                     var primaryKey = FetchPrimary(ConstraintInformation, KeyConstraints, tableId);
-
 
                     var newTable = new Table
                     {
@@ -144,7 +136,7 @@ namespace DbDarwin.Service
 
                     };
 
-                    //If table is deference data
+                    // If table is deference data
                     // For check reference data
                     if (ExtendProperties.Any(x =>
                         x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
@@ -153,31 +145,30 @@ namespace DbDarwin.Service
                         var data = SqlService.LoadData(CurrentSqlConnection, newTable.Name, $"SELECT * FROM [{newTable.Schema}].[{newTable.Name}]");
                         if (data.Rows.Count > 0)
                         {
-
                             var tableElement = new XElement("Table");
                             var dataElement = new XElement("Data");
                             tableElement.SetAttributeValue(nameof(newTable.Name), newTable.Name);
                             if (newTable.Schema.ToLower() != "dbo")
                                 tableElement.SetAttributeValue(nameof(newTable.Schema), newTable.Schema);
-                            //tableElement.SetAttributeValue("PrimaryKey", primaryKey.Columns);
+                            // tableElement.SetAttributeValue("PrimaryKey", primaryKey.Columns);
                             foreach (DataRow rowData in data.Rows)
                             {
                                 var rowElement = new XElement("Row");
                                 foreach (DataColumn column in data.Columns)
                                 {
-                                    if (column.ColumnName.ToLower() == "id")
-                                        continue;
+                                    if (column.ColumnName.ToLower() == "id") continue;
                                     rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
                                 }
+
                                 dataElement.Add(rowElement);
                             }
+
                             tableElement.Add(dataElement);
                             rootDatabase.Add(tableElement);
                         }
                     }
 
                     database.Tables.Add(newTable);
-
                 }
 
                 database.Tables = database.Tables?.OrderBy(x => x.FullName).ToList();
@@ -185,7 +176,6 @@ namespace DbDarwin.Service
                 // Create Serialize Object and save as XML file
                 doc.Add(rootDatabase);
                 AddDataToTable(database, doc, Model.OutputFile);
-
             }
 
             catch (Exception ex)
@@ -196,11 +186,10 @@ namespace DbDarwin.Service
                 return false;
             }
 
-
             return true;
         }
 
-        private List<Index> FetchIndexes(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
+        List<Index> FetchIndexes(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
         {
             var indexRows = constraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "False")
@@ -219,7 +208,7 @@ namespace DbDarwin.Service
             return existsIndex;
         }
 
-        private PrimaryKey FetchPrimary(IEnumerable<ConstraintInformationModel> constraintInformation, IEnumerable<KeyConstraint> keyConstraints, int tableId)
+        PrimaryKey FetchPrimary(IEnumerable<ConstraintInformationModel> constraintInformation, IEnumerable<KeyConstraint> keyConstraints, int tableId)
         {
             var indexRows = constraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "True")
@@ -238,6 +227,7 @@ namespace DbDarwin.Service
                     primaryKeys.is_system_named = constraint.is_system_named;
                 return primaryKeys;
             }
+
             return null;
         }
 
@@ -274,15 +264,10 @@ namespace DbDarwin.Service
                 }
             }
 
-
-
-
             var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
             doc.Save(path);
             Console.WriteLine("Saving To xml");
         }
-
-
 
         public static void SaveToFile(Database database, string fileOutput)
         {
@@ -292,7 +277,6 @@ namespace DbDarwin.Service
 
             var xml = sw2.ToString();
 
-
             var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
             File.WriteAllText(path, xml);
             Console.WriteLine("Saving To xml");
@@ -300,19 +284,19 @@ namespace DbDarwin.Service
 
         #region IDisposable Support
 
-
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposedValue) return;
+            if (disposedValue) return;
             if (disposing)
             {
                 CurrentSqlConnection.Close();
                 CurrentSqlConnection.Dispose();
             }
+
             GC.Collect();
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
             // TODO: set large fields to null.
-            _disposedValue = true;
+            disposedValue = true;
         }
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.

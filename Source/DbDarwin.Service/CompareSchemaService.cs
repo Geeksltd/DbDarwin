@@ -1,18 +1,15 @@
 ﻿using DbDarwin.Model;
+using DbDarwin.Model.Command;
 using DbDarwin.Model.Schema;
+using GCop.Core;
 using KellermanSoftware.CompareNetObjects;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using System.Xml.XPath;
-using DbDarwin.Model.Command;
-using GCop.Core;
 
 namespace DbDarwin.Service
 {
@@ -58,7 +55,7 @@ namespace DbDarwin.Service
             return result;
         }
 
-        private static void CompareAndSave(Database sourceSchema, Database targetSchema, string output)
+        static void CompareAndSave(Database sourceSchema, Database targetSchema, string output)
         {
             var doc = new XDocument
             {
@@ -71,18 +68,14 @@ namespace DbDarwin.Service
             var addTables = new XElement("add");
             var removeTables = new XElement("remove");
 
-
-
             foreach (var sourceTable in sourceSchema.Tables)
             {
-
                 var foundTable = targetSchema.Tables.FirstOrDefault(x => x.FullName == sourceTable.FullName);
 
                 if (foundTable == null)
                 {
                     using (var navigatorAdd = addTables.CreateWriter())
                     {
-
                         var serializer1 = new XmlSerializer(sourceTable.GetType());
                         navigatorAdd.WriteWhitespace("");
                         serializer1.Serialize(navigatorAdd, sourceTable, emptyNamespaces);
@@ -90,8 +83,6 @@ namespace DbDarwin.Service
                 }
                 else
                 {
-
-
                     var root = new XElement("Table");
                     root.SetAttributeValue(nameof(sourceTable.Name), sourceTable.Name);
                     root.SetAttributeValue(nameof(sourceTable.Schema), sourceTable.Schema);
@@ -104,8 +95,6 @@ namespace DbDarwin.Service
 
                     var updateElement = new XElement("update");
                     var navigatorUpdate = updateElement.CreateWriter();
-
-
 
                     if (sourceTable.PrimaryKey == null && foundTable.PrimaryKey != null)
                     {
@@ -125,7 +114,6 @@ namespace DbDarwin.Service
                             navigatorRemove, navigatorUpdate);
                     }
 
-
                     GenerateDifference<Column>(sourceTable.Columns, foundTable.Columns, navigatorAdd, navigatorRemove,
                         navigatorUpdate);
                     GenerateDifference<Index>(sourceTable.Indexes, foundTable.Indexes, navigatorAdd, navigatorRemove,
@@ -136,7 +124,6 @@ namespace DbDarwin.Service
                     GenerateDifferenceData(sourceTable.Data, foundTable.Data, navigatorAdd,
                         navigatorRemove, navigatorUpdate);
 
-
                     navigatorAdd.Flush();
                     navigatorAdd.Close();
 
@@ -146,11 +133,9 @@ namespace DbDarwin.Service
                     navigatorUpdate.Flush();
                     navigatorUpdate.Close();
 
-                    if (!add.IsEmpty)
-                        root.Add(add);
+                    if (!add.IsEmpty) root.Add(add);
 
-                    if (!removeColumn.IsEmpty)
-                        root.Add(removeColumn);
+                    if (!removeColumn.IsEmpty) root.Add(removeColumn);
 
                     if (!updateElement.IsEmpty)
                         root.Add(updateElement);
@@ -159,6 +144,7 @@ namespace DbDarwin.Service
                         updateTables.Add(root);
                 }
             }
+
             var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.FullName).ToList().Contains(c.FullName)).ToList();
             using (var writer = removeTables.CreateWriter())
             {
@@ -170,7 +156,6 @@ namespace DbDarwin.Service
                 }
             }
 
-
             rootDatabase.Add(updateTables);
             rootDatabase.Add(addTables);
             rootDatabase.Add(removeTables);
@@ -180,12 +165,10 @@ namespace DbDarwin.Service
             doc.Save(output);
         }
 
-
-        private static void GenerateDifferenceData(TableData sourceData, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
+        static void GenerateDifferenceData(TableData sourceData, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
         {
             var sourceList = sourceData.ToDictionaryList();
             var targetList = targetData.ToDictionaryList();
-
 
             var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
             var dataNodeAdd = new XElement("Data");
@@ -205,6 +188,7 @@ namespace DbDarwin.Service
                         break;
                     }
                 }
+
                 if (!exists)
                     dataNodeAdd.Add(row.ToElement("Row"));
             }
@@ -220,6 +204,7 @@ namespace DbDarwin.Service
                     exists = data2.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString());
                     if (exists) break;
                 }
+
                 if (!exists)
                     dataNodeRemove.Add(row.ToElement("Row"));
             }
@@ -231,8 +216,7 @@ namespace DbDarwin.Service
             if (dataNodeUpdate.HasElements)
                 updateWriter.Serialize(dataNodeUpdate);
 
-
-            //if (tableElement.HasElements)
+            // if (tableElement.HasElements)
             //    rootDatabase.Add(tableElement);
         }
 
@@ -253,7 +237,6 @@ namespace DbDarwin.Service
         /// <param name="diffFileOutput">Output new XML file diff</param>
         public static void TransformationDiffFile(Transformation model)
         {
-
             var serializer = new XmlSerializer(typeof(List<Table>));
             List<Table> currentDiffSchema = null;
             using (var reader = new StreamReader(model.CurrentDiffFile))
@@ -296,14 +279,13 @@ namespace DbDarwin.Service
                 }
             }
 
-
             var sw2 = new StringWriter();
             serializer.Serialize(sw2, currentDiffSchema);
             var xml = sw2.ToString();
             File.WriteAllText(model.MigrateSqlFile, xml);
         }
 
-        private static void SetColumnName(Column column, Transformation model)
+        static void SetColumnName(Column column, Transformation model)
         {
             if (column != null) column.SetName = model.ToName;
         }
@@ -344,7 +326,6 @@ namespace DbDarwin.Service
                     sourceData = sourceData.Except(x => mustAdd.Contains(x)).ToList();
                 foreach (T currentObject in sourceData)
                 {
-
                     var foundObject = FindRemoveOrUpdate<T>(currentObject, targetData);
                     if (foundObject == null)
                     {
@@ -361,7 +342,6 @@ namespace DbDarwin.Service
                     }
                 }
 
-
                 foreach (T currentObject in targetData)
                 {
                     var foundObject = FindRemoveOrUpdate<T>(currentObject, sourceData);
@@ -371,7 +351,7 @@ namespace DbDarwin.Service
             }
         }
 
-        private static object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
+        static object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
         {
             object found = null;
             if (typeof(T) == typeof(Column))
@@ -390,13 +370,11 @@ namespace DbDarwin.Service
             return (T)Convert.ChangeType(found, typeof(T));
         }
 
-        private static List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
+        static List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
         {
             object tempAdd = null;
-            if (sourceList == null)
-                return new List<T>();
-            if (targetList == null)
-                return sourceList;
+            if (sourceList == null) return new List<T>();
+            if (targetList == null) return sourceList;
             if (typeof(T) == typeof(Column))
                 tempAdd = sourceList.Cast<Column>()
                     .Except(x => targetList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME))

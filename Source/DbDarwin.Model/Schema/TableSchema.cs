@@ -1,13 +1,8 @@
-﻿using System;
+﻿using Olive;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Text;
 using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Serialization;
-using DbDarwin.Model.Schema;
-using Olive;
 
 namespace DbDarwin.Model.Schema
 {
@@ -27,7 +22,7 @@ namespace DbDarwin.Model.Schema
         public TableData Delete { get; set; }
     }
 
-    //[XmlRoot("Table")]
+    // [XmlRoot("Table")]
     [Serializable]
     public class Table
     {
@@ -55,8 +50,6 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute("Set-Name")]
         public string SetName { get; set; }
 
-
-
         [XmlElement("Column")]
         public List<Column> Columns { get; set; }
 
@@ -69,10 +62,6 @@ namespace DbDarwin.Model.Schema
         [XmlElement("PrimaryKey")]
         public PrimaryKey PrimaryKey { get; set; }
 
-
-
-
-
         [XmlElement("add")]
         public Table Add { get; set; }
 
@@ -81,8 +70,5 @@ namespace DbDarwin.Model.Schema
 
         [XmlElement("update")]
         public Table Update { get; set; }
-
     }
-
-
 }

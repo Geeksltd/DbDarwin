@@ -1,6 +1,4 @@
-﻿using DbDarwin.Model.Schema;
-
-namespace DbDarwin.Model.Schema
+﻿namespace DbDarwin.Model.Schema
 {
     public class ConstraintInformationModel
     {

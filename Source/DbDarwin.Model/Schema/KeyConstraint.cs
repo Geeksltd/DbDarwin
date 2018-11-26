@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DbDarwin.Model.Schema
 {
@@ -33,7 +31,5 @@ namespace DbDarwin.Model.Schema
         public int? unique_index_id { get; set; }
 
         public bool is_system_named { get; set; }
-
     }
-
 }

@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Olive;
+using System;
 using System.Xml;
 using System.Xml.Serialization;
-using Olive;
 
 namespace DbDarwin.Model.Schema
 {

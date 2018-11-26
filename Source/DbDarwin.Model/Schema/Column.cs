@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Olive;
+using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Olive;
 
 namespace DbDarwin.Model.Schema
 {
@@ -97,7 +97,6 @@ namespace DbDarwin.Model.Schema
 
         [XmlAttribute(AttributeName = "CollationSchema")]
         public string COLLATION_SCHEMA { get; set; }
-
 
         [XmlAttribute(AttributeName = "CollationName")]
         public string COLLATION_NAME { get; set; }

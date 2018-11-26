@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DbDarwin.Model.Schema
+﻿namespace DbDarwin.Model.Schema
 {
     public class ExtendedProperty
     {

@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Olive;
+using System;
 using System.ComponentModel;
-using System.Text;
 using System.Xml.Serialization;
-using Olive;
 
 namespace DbDarwin.Model.Schema
 {
-
     [Serializable]
     public class PrimaryKey
     {
@@ -67,7 +64,6 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "IgnoreDupKey")]
         public string ignore_dup_key { get; set; }
 
-
         public bool ShouldSerializeignore_dup_key()
         {
             return ignore_dup_key.HasValue() && ignore_dup_key.ToLower() == "true";
@@ -84,7 +80,6 @@ namespace DbDarwin.Model.Schema
         [XmlIgnore]
         [XmlAttribute(AttributeName = "FillFactor")]
         public byte fill_factor { get; set; }
-
 
         [XmlIgnore]
         [XmlAttribute(AttributeName = "IsPadded")]

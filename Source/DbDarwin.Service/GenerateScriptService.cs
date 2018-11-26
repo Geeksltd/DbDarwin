@@ -14,7 +14,7 @@ namespace DbDarwin.Service
 {
     public class GenerateScriptService
     {
-        private readonly List<GeneratedScriptResult> results;
+        readonly List<GeneratedScriptResult> results;
         public GenerateScriptService()
         {
             results = new List<GeneratedScriptResult>();
@@ -35,6 +35,7 @@ namespace DbDarwin.Service
             });
             return results;
         }
+
         public List<GeneratedScriptResult> GenerateScript(GenerateScript model)
         {
             var serializer = new XmlSerializer(typeof(Database));
@@ -62,14 +63,12 @@ namespace DbDarwin.Service
                     sb.Append(GenerateRemoveForeignKey(foreignKey.ToList(), foreignKey.Key.TABLE_NAME,
                         foreignKey.Key.TABLE_SCHEMA));
 
-
                 if (diffFile.Update?.Tables != null)
                     sb.AppendLine(GenerateUpdateTables(diffFile.Update.Tables));
                 if (diffFile.Add?.Tables != null)
                     sb.AppendLine(GenerateAddTables(diffFile.Add.Tables));
                 if (diffFile.Remove?.Tables != null)
                     sb.AppendLine(GenerateRemoveTables(diffFile.Remove.Tables));
-
 
                 if (diffFile.Add?.Tables != null)
                     foreach (var table in diffFile.Add.Tables.Where(x => x.ForeignKeys.Any()))
@@ -99,7 +98,6 @@ namespace DbDarwin.Service
                             foreignKeys.AddRange(foreignKeysTemp);
                         }
                     }
-
             }
 
             sb.AppendLine("PRINT 'Update Completed Successfully'");
@@ -113,7 +111,7 @@ namespace DbDarwin.Service
             return results;
         }
 
-        private string GenerateRemoveTables(IEnumerable<Table> tables)
+        string GenerateRemoveTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
@@ -125,10 +123,11 @@ namespace DbDarwin.Service
                 sb.Append(builder);
                 SqlOperation($"Remove Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Delete, table.FullName, table.Name, SQLObject.Table);
             }
+
             return sb.ToString();
         }
 
-        private string GenerateAddTables(IEnumerable<Table> tables)
+        string GenerateAddTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
@@ -144,24 +143,21 @@ namespace DbDarwin.Service
                 builder.AppendLine(")");
                 builder.AppendLine(" ON [PRIMARY]");
 
-
-
                 if (table.Indexes.Any())
                 {
                     var indexExists = false;
                     builder.AppendLine(GenerateNewIndexes(table.Indexes, table.Name, table.Schema, indexExists));
                 }
 
-
-
                 SqlOperation($"Add New Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Add, table.FullName, table.Name, SQLObject.Table);
 
                 sb.Append(builder);
             }
+
             return sb.ToString();
         }
 
-        private string GenerateUpdateTables(IEnumerable<Table> tables)
+        string GenerateUpdateTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
@@ -207,7 +203,6 @@ namespace DbDarwin.Service
                         sb.Append(GenerateNewPrimaryKey(table.Add.PrimaryKey, table.Name, table.Schema));
                     if (table.Add.Indexes.Any())
                         sb.Append(GenerateNewIndexes(table.Add.Indexes, table.Name, table.Schema, indexExists: false));
-
                 }
 
                 if (table.Update != null)
@@ -219,14 +214,11 @@ namespace DbDarwin.Service
                         sb.Append(GenerateNewPrimaryKey(table.Update.PrimaryKey, table.Name, table.Schema));
                     if (table.Update.Indexes.Any())
                         sb.Append(GenerateUpdateIndexes(table.Update.Indexes, table.Name, table.Schema));
-
-
-
                 }
             }
+
             return sb.ToString();
         }
-
 
         /// <summary>
         /// Find PK name by table name and delete PK
@@ -273,10 +265,9 @@ END
             return sb.ToString();
         }
 
-        private string GenerateNewPrimaryKey(PrimaryKey key, string tableName, string schema)
+        string GenerateNewPrimaryKey(PrimaryKey key, string tableName, string schema)
         {
             var sb = new StringBuilder();
-
 
             sb.AppendLine(GenerateDeletePkBeforeAddOrUpdate(tableName, schema));
 
@@ -294,7 +285,7 @@ END
             return sb.ToString();
         }
 
-        private static string GeneratePrimaryKeyCore(PrimaryKey key)
+        static string GeneratePrimaryKeyCore(PrimaryKey key)
         {
             var sb = new StringBuilder();
             if (!key.is_system_named)
@@ -308,20 +299,17 @@ END
 
             sb.AppendLine(PrimaryKeyOptions(key));
 
-
-
             sb.AppendLine("ON [PRIMARY]");
 
             return sb.ToString();
         }
 
-        private static string PrimaryKeyOptions(PrimaryKey key)
+        static string PrimaryKeyOptions(PrimaryKey key)
         {
             var sb = new StringBuilder();
 
             if (key.is_padded.HasValue())
                 sb.AppendFormat("PAD_INDEX = {0}", key.is_padded.To_ON_OFF());
-
 
             if (key.ignore_dup_key.HasValue() && key.ignore_dup_key.ToLower() == "false")
             {
@@ -467,11 +455,9 @@ END
                         column.Name,
                         column.SetName);
 
-
                     SqlOperation(
                         $"Rename column name from {column.Name} to {column.SetName} from table [{schema}].[{tableName}]",
                         builder.ToString(), ViewMode.Rename, $"{schema}.{tableName}", column.Name, SQLObject.Column);
-
 
                     sb.Append(builder);
                     column.COLUMN_NAME = column.SetName;
@@ -512,28 +498,26 @@ END
                         builder.AppendLine();
                         builder.AppendLine("GO");
 
-
                         if (listPropertyChanged.Contains(nameof(column.COLUMN_DEFAULT)))
                         {
-
                             builder.AppendLine();
                             builder.AppendLine(string.Format(
                                 "ALTER TABLE [{0}].[{1}] ADD  CONSTRAINT [DF_{1}_{2}]  DEFAULT {3} FOR [{2}]", schema, tableName,
                                 column.Name, column.COLUMN_DEFAULT));
                             builder.AppendLine("GO");
                         }
+
                         sb.Append(builder);
                         SqlOperation(
                             $"Update column {column.Name} from table [{schema}].[{tableName}]",
                             builder.ToString(), ViewMode.Update, $"{schema}.{tableName}", column.Name, SQLObject.Column);
-
                     }
-
-
                 }
+
                 sb.AppendLine();
                 sb.AppendLine("GO");
             }
+
             return sb.ToString();
         }
 
@@ -574,8 +558,10 @@ END
                 sb.Append(builder);
                 SqlOperation($"Drop Foreign Key {key.Name}", builder.ToString(), ViewMode.Delete, $"{schema}.{tableName}", key.Name, SQLObject.ForeignKey);
             }
+
             return sb.ToString();
         }
+
         /// <summary>
         /// Generate Drop Indexes
         /// </summary>
@@ -600,6 +586,7 @@ END
 
                 SqlOperation($"Drop Index Name {index.Name}", builder.ToString(), ViewMode.Delete, $"{schema}.{tableName}", $"{index.Name}", SQLObject.Index);
             }
+
             return sb.ToString();
         }
 
@@ -624,7 +611,6 @@ END
                 sb.Append(builder);
             }
 
-
             return sb.ToString();
         }
 
@@ -645,7 +631,6 @@ END
                 var operationDescription =
                     $"Add new foreign key {key.COLUMN_NAME} from [{key.TABLE_SCHEMA}].[{key.TABLE_NAME}] to {key.Ref_COLUMN_NAME} on table [{key.Ref_TABLE_SCHEMA}].[{key.Ref_TABLE_NAME}] ";
 
-
                 var sqlBuilder = new SqlCommandGenerated();
 
                 sqlBuilder.AppendBody("GO", LineEnum.FirstLine);
@@ -658,7 +643,6 @@ END
                 sqlBuilder.AppendBody($"REFERENCES [{key.Ref_TABLE_SCHEMA}].[{key.Ref_TABLE_NAME}] ([{key.Ref_COLUMN_NAME}]) ", LineEnum.FirstLineWithTab);
                 sqlBuilder.AppendBody($"ON UPDATE {key.UPDATE_RULE} ON DELETE {key.DELETE_RULE}");
                 sqlBuilder.AppendBody(string.Empty, LineEnum.FullLine);
-
 
                 sqlBuilder.AppendAfterCommit("GO", LineEnum.FirstLine);
                 sqlBuilder.AppendAfterCommit("BEGIN TRY", LineEnum.FirstLine);
@@ -702,8 +686,8 @@ END
                         break;
                 }
             }
-            return typeLen;
 
+            return typeLen;
         }
 
         static string GenerateColumns(IEnumerable<Column> columns, string tableName)
@@ -719,6 +703,7 @@ END
                     columnsBuilder.AppendFormat(" CONSTRAINT [DF_{0}_{1}] DEFAULT ({2})", tableName, column.Name, column.COLUMN_DEFAULT);
                 columnsBuilder.AppendLine(",");
             }
+
             return columnsBuilder.ToString().Trim(',', '\r', '\n');
         }
 
@@ -745,6 +730,7 @@ END
 
                 sb.Append(builder);
             }
+
             return sb.ToString();
         }
 
@@ -797,10 +783,9 @@ END
             return sb.ToString();
         }
 
-        private static string IndexOptions(Index index, bool indexExists)
+        static string IndexOptions(Index index, bool indexExists)
         {
             var sb = new StringBuilder();
-
 
             if (index.is_padded.HasValue())
                 sb.AppendFormat("PAD_INDEX = {0}", index.is_padded.To_ON_OFF());

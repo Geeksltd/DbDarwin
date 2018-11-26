@@ -1,4 +1,8 @@
-﻿using System;
+﻿using DbDarwin.Model;
+using DbDarwin.Model.Command;
+using DbDarwin.Service;
+using Olive;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -7,18 +11,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
-using DbDarwin.Model;
-using DbDarwin.Model.Command;
-using DbDarwin.Service;
-using Olive;
 
 namespace DbDarwin.UI
 {
@@ -29,27 +24,26 @@ namespace DbDarwin.UI
     {
         public GeneratedScriptResult SelectedAddOrUpdate;
         public GeneratedScriptResult SelectedRemove;
-        private readonly Color RemoveItem = Color.FromArgb(255, 255, 192, 192);
-        private readonly Color AddItem = Color.FromArgb(255, 175, 220, 255);
+        readonly Color RemoveItem = Color.FromArgb(255, 255, 192, 192);
+        readonly Color AddItem = Color.FromArgb(255, 175, 220, 255);
 
         public MainWindow()
         {
             InitializeComponent();
-
-
         }
 
         public void EnableCompare()
         {
             CompareButton.IsEnabled = SelectSource.Items.Count > 1 && SelectTarget.Items.Count > 1;
         }
+
         public string SourceConnection { get; set; }
         public string TargetConnection { get; set; }
 
         public string SourceName { get; set; }
         public string TargetName { get; set; }
 
-        private void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var tag = ((ComboBoxItem)SelectSource.SelectedItem)?.Tag;
             if (tag?.ToString() == "1")
@@ -69,19 +63,17 @@ namespace DbDarwin.UI
                         DataContext = connect.ConnectionString,
                         IsSelected = true,
                     });
-
-
-
                 }
                 else
                 {
                     SelectSource.SelectedIndex = -1;
                 }
             }
+
             EnableCompare();
         }
 
-        private void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var tag = ((ComboBoxItem)SelectTarget.SelectedItem)?.Tag;
             if (tag?.ToString() == "1")
@@ -107,13 +99,12 @@ namespace DbDarwin.UI
                     SelectTarget.SelectedIndex = -1;
                 }
             }
+
             EnableCompare();
         }
 
-        private void CompareButton_Click(object sender, RoutedEventArgs e)
+        void CompareButton_Click(object sender, RoutedEventArgs e)
         {
-
-
             CompareButton.IsEnabled = false;
 
             Task.Factory.StartNew(() =>
@@ -124,15 +115,11 @@ namespace DbDarwin.UI
                       service.ExtractSchema();
                   UpdateState($"Extracted {SourceName} Schema.");
 
-
                   UpdateState($"Extracting {TargetName} Schema...");
                   using (var service = new ExtractSchemaService(new ExtractSchema
                   { ConnectionString = SourceConnection, OutputFile = "Target.xml" }))
                       service.ExtractSchema();
                   UpdateState($"Extracted {TargetName} Schema.");
-
-
-
 
                   UpdateState("Comparing Databases...");
                   CompareSchemaService.StartCompare(new GenerateDiffFile
@@ -143,20 +130,11 @@ namespace DbDarwin.UI
                   });
                   UpdateState("Databases Compared.");
 
-
                   GenerateSqlFileAndShowUpdates();
-
-
               });
-
-
-
-
-
-
         }
 
-        private void GenerateSqlFileAndShowUpdates()
+        void GenerateSqlFileAndShowUpdates()
         {
             var engine = new GenerateScriptService();
             var result = engine.GenerateScript(
@@ -165,7 +143,6 @@ namespace DbDarwin.UI
                     CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
                     MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
                 });
-
 
             Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
             {
@@ -183,9 +160,7 @@ namespace DbDarwin.UI
                             IsExpanded = true
                         };
 
-
                         TreeViewRoot.Items.Add(treeViewItems);
-
 
                         foreach (var script in table.ToList())
                         {
@@ -205,8 +180,6 @@ namespace DbDarwin.UI
 
 
                                 };
-
-
                             }
                             else
                             {
@@ -220,6 +193,7 @@ namespace DbDarwin.UI
 
                                 };
                             }
+
                             checkbox.Click += Checkbox_Click;
                             treeViewItems.Items.Add(checkbox);
                         }
@@ -229,7 +203,6 @@ namespace DbDarwin.UI
                 }
             }));
         }
-
 
         public void ValidateSelectedObject()
         {
@@ -242,7 +215,7 @@ namespace DbDarwin.UI
                                        && SelectedAddOrUpdate.TableName.ToLower() == SelectedRemove.TableName.ToLower();
         }
 
-        private void Checkbox_Click(object sender, RoutedEventArgs e)
+        void Checkbox_Click(object sender, RoutedEventArgs e)
         {
             if (((RadioButton)sender).Tag.ToString() == "AddOrUpdate")
                 SelectedAddOrUpdate = (GeneratedScriptResult)((RadioButton)sender).DataContext;
@@ -262,12 +235,10 @@ namespace DbDarwin.UI
             }));
         }
 
-
         public void ShowScript(RadioButton control)
         {
             ShowScript(((GeneratedScriptResult)control.DataContext).SQLScript);
         }
-
 
         public void ShowScript(string message)
         {
@@ -275,8 +246,7 @@ namespace DbDarwin.UI
             RichTextBox.Document.Blocks.Add(new Paragraph(new Run(message)));
         }
 
-
-        private void GenerateButton_OnClick(object sender, RoutedEventArgs e)
+        void GenerateButton_OnClick(object sender, RoutedEventArgs e)
         {
             var diffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml";
             var sqlOutput = AppContext.BaseDirectory + "\\output.sql";
@@ -298,7 +268,6 @@ namespace DbDarwin.UI
                     .Count(c => c.IS_NULLABLE == "NO" && c.COLUMN_DEFAULT.IsEmpty());
                 if (count > 0)
                 {
-
                     var needToSave = false;
                     var tables = database.Update?.Tables?.Where(v => v.Add?.Columns != null).ToList();
                     foreach (var table in tables)
@@ -315,7 +284,6 @@ namespace DbDarwin.UI
                         }
                     }
 
-
                     if (needToSave)
                     {
                         ExtractSchemaService.SaveToFile(database, "diff.xml");
@@ -328,20 +296,12 @@ namespace DbDarwin.UI
                             });
                     }
                 }
-
-
-
-
-
-
             }
 
             Process.Start(sqlOutput);
         }
 
-
-
-        private void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
+        void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
         {
             var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
             var table = database.Update?.Tables?.FirstOrDefault(x =>
@@ -350,8 +310,7 @@ namespace DbDarwin.UI
 
             var newSchema = table.Add.Columns.FirstOrDefault(x => x.Name == SelectedAddOrUpdate.ObjectName);
             var oldSchema = table.Remove.Columns.FirstOrDefault(x => x.Name == SelectedRemove.ObjectName);
-            if (oldSchema == null || newSchema == null)
-                return;
+            if (oldSchema == null || newSchema == null) return;
 
             newSchema.SetName = newSchema.Name;
             newSchema.COLUMN_NAME = oldSchema.Name;
@@ -371,7 +330,7 @@ namespace DbDarwin.UI
             GenerateSqlFileAndShowUpdates();
         }
 
-        private void TreeViewRemove_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        void TreeViewRemove_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             var tree = (TreeView)sender;
             if (tree.SelectedItem != null)
@@ -380,11 +339,10 @@ namespace DbDarwin.UI
                     ShowScript(control);
                 else if (tree.SelectedItem is TreeViewItem tab)
                     ShowScript(tab);
-
             }
         }
 
-        private void ShowScript(TreeViewItem tab)
+        void ShowScript(TreeViewItem tab)
         {
             var builder = new StringBuilder();
             foreach (var item in tab.Items)

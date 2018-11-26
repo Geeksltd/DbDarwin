@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Olive;
+using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Olive;
 
 namespace DbDarwin.Model.Schema
 {
@@ -110,6 +110,4 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "FilterDefinition")]
         public string filter_definition { get; set; }
     }
-
-
 }

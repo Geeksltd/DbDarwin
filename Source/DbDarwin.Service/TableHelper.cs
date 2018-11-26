@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using Olive;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Dynamic;
 using System.Linq;
-using Olive;
 
 namespace DbDarwin.Service
 {
@@ -23,7 +21,6 @@ namespace DbDarwin.Service
         {
             try
             {
-
                 var list = new List<T>();
 
                 var columns = table.Columns.Cast<DataColumn>()
@@ -45,7 +42,7 @@ namespace DbDarwin.Service
                     {
                         try
                         {
-                            if (!columns.Contains(propertyInfo.Name)) 
+                            if (!columns.Contains(propertyInfo.Name))
                                 continue;
                             var currentType = propertyInfo.PropertyType;
 
@@ -60,7 +57,6 @@ namespace DbDarwin.Service
                                             Nullable.GetUnderlyingType(currentType)), null);
                             }
                             else
-
                             {
                                 var result = Convert.ChangeType(row[propertyInfo.Name], propertyInfo.PropertyType);
                                 if (propertyInfo.PropertyType == typeof(string) &&
@@ -68,8 +64,6 @@ namespace DbDarwin.Service
                                     propertyInfo.SetValue(obj, null, null);
                                 else
                                     propertyInfo.SetValue(obj, result, null);
-
-
                             }
                         }
                         catch (Exception ex)
@@ -90,8 +84,6 @@ namespace DbDarwin.Service
             }
         }
 
-
-
         public static List<string> DataTableToListAsString(this DataTable table)
         {
             try
@@ -110,7 +102,6 @@ namespace DbDarwin.Service
                 return new List<string>();
             }
         }
-
 
         public static List<string> DataTableToString(this DataTable table)
         {
