@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -107,9 +108,52 @@ namespace DbDarwin.Service
             if (foreignKeys.Any())
                 sb.AppendLine(foreignKeys.Select(x => x.AfterCommit).Aggregate((x, y) => x + y));
 
+            if (diffFile?.Update != null)
+                sb.AppendLine(GenerateData(diffFile.Update));
+
             File.WriteAllText(model.MigrateSqlFile, sb.ToString());
 
             return results;
+        }
+
+        /// <summary>
+        /// Generate SQL Add or Update or Delete
+        /// </summary>
+        /// <param name="diffFile"></param>
+        /// <returns>SQL Scripts</returns>
+        private string GenerateData(Database diffFile)
+        {
+            var commandBuilder = new List<SqlCommandGenerated>();
+
+            foreach (var table in diffFile.Tables)
+            {
+                if (table.Add?.Data != null)
+                {
+                    var sourceTable = table.Add?.Data.ToDictionaryList();
+                    commandBuilder.Add(new SqlCommandGenerated
+                    {
+                        Body = GenerateInsertRows(table, sourceTable),
+                    });
+                }
+
+            }
+
+            return commandBuilder.Select(c => c.Full).Aggregate((x, y) => x + "\r\n" + y);
+        }
+
+        private string GenerateInsertRows(Table table, IEnumerable<IDictionary<string, object>> sourceTable)
+        {
+            var sb = new StringBuilder();
+
+            var columns = sourceTable.FirstOrDefault();
+            string columnsSql = string.Empty;
+            if (columns != null)
+            {
+                columnsSql = columns.Aggregate(columnsSql, (current, column) => current + ($"[{column.Key}]" + ","))
+                    .Trim(',', ' ');
+            }
+
+            return sb.ToString();
         }
 
         string GenerateRemoveTables(IEnumerable<Table> tables)

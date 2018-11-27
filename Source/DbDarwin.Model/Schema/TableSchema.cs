@@ -12,6 +12,11 @@ namespace DbDarwin.Model.Schema
         [XmlElement("Row")]
         public List<dynamic> Rows { get; set; }
 
+        [XmlElement("ColumnTypes")]
+        public dynamic ColumnTypes { get; set; }
+
+
+
         [XmlElement("Add")]
         public TableData Add { get; set; }
 

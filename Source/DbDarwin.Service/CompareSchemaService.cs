@@ -99,7 +99,7 @@ namespace DbDarwin.Service
                     GenerateDifference<Column>(sourceTable.Columns, foundTable.Columns, navigatorAdd, navigatorRemove, navigatorUpdate);
                     GenerateDifference<Index>(sourceTable.Indexes, foundTable.Indexes, navigatorAdd, navigatorRemove, navigatorUpdate);
                     GenerateDifference<ForeignKey>(sourceTable.ForeignKeys, foundTable.ForeignKeys, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifferenceData(sourceTable.Data, foundTable.Data, navigatorAdd, navigatorRemove, navigatorUpdate);
+                    GenerateDifferenceData(sourceTable, foundTable.Data, navigatorAdd, navigatorRemove, navigatorUpdate);
 
                     navigatorAdd.Flush();
                     navigatorAdd.Close();
@@ -154,15 +154,59 @@ namespace DbDarwin.Service
         /// <summary>
         /// Generate Difference Data
         /// </summary>
-        /// <param name="sourceData">Source Table Data</param>
+        /// <param name="source">Source Table</param>
         /// <param name="targetData">Target Table Data</param>
         /// <param name="addWriter">XML Writer for add data</param>
         /// <param name="removeWriter">XML Writer for remove data</param>
         /// <param name="updateWriter">XML Writer for update data</param>
-        void GenerateDifferenceData(TableData sourceData, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
+        void GenerateDifferenceData(Table source, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
         {
-            var sourceTable = sourceData.ToDictionaryList();
+            if (source.Data == null && targetData == null)
+                return;
+            var sourceTable = source.Data.ToDictionaryList();
             var targetTable = targetData.ToDictionaryList();
+            var columnType = GetColumnTypes(source.Columns);
+            // Detect Add Or Update
+            var result = DetectAddOrUpdate(sourceTable, targetTable);
+            result.TryGetValue("Add", out var dataNodeAdd);
+            result.TryGetValue("Update", out var dataNodeUpdate);
+            // Detect Remove Data
+            var dataNodeRemove = DetectRemoveData(sourceTable, targetTable);
+            AddDataElementToWriter(dataNodeAdd, columnType, addWriter);
+            AddDataElementToWriter(dataNodeRemove, columnType, removeWriter);
+            AddDataElementToWriter(dataNodeUpdate, columnType, updateWriter);
+        }
+
+        /// <summary>
+        /// Add XElement Data Row to writer
+        /// </summary>
+        /// <param name="dataNodeAdd"></param>
+        /// <param name="columnType"></param>
+        /// <param name="writer"></param>
+        private void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
+        {
+            if (dataNodeAdd != null && dataNodeAdd.HasElements)
+            {
+                writer.Serialize(columnType);
+                writer.Serialize(dataNodeAdd);
+            }
+        }
+
+        private XElement GetColumnTypes(IEnumerable<Column> columns)
+        {
+            var columnTypes = new XElement("ColumnTypes");
+            columns.ForEach(column => columnTypes.SetAttributeValue(XmlConvert.EncodeName(column.Name) ?? column.Name, column.DATA_TYPE));
+            return columnTypes;
+        }
+
+        /// <summary>
+        /// Detect Add Or Update Data
+        /// </summary>
+        /// <param name="sourceTable"></param>
+        /// <param name="targetTable"></param>
+        /// <returns></returns>
+        private Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
+        {
 
             var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
             var dataNodeAdd = new XElement("Data");
@@ -183,35 +227,34 @@ namespace DbDarwin.Service
                         break;
                     }
                 }
-
                 if (!exists)
                     dataNodeAdd.Add(sourceRow.ToElement("Row"));
             }
+            return new Dictionary<string, XElement> { { "Add", dataNodeAdd }, { "Update", dataNodeUpdate } };
+        }
 
-            // Detect Remove Data
+        /// <summary>
+        /// Detect Remove Data
+        /// </summary>
+        /// <param name="sourceTable">Souce Data</param>
+        /// <param name="targetTable">Target Data</param>
+        /// <returns>Data XML Node</returns>
+        private XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
+        {
             var dataNodeRemove = new XElement("Data");
-
             foreach (IDictionary<string, object> row in targetTable)
             {
                 row.TryGetValue("Name", out var val);
-
                 var exists = false;
                 foreach (var data2 in sourceTable)
                 {
                     exists = data2.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString());
                     if (exists) break;
                 }
-
                 if (!exists)
                     dataNodeRemove.Add(row.ToElement("Row"));
             }
-
-            if (dataNodeAdd.HasElements)
-                addWriter.Serialize(dataNodeAdd);
-            if (dataNodeRemove.HasElements)
-                removeWriter.Serialize(dataNodeRemove);
-            if (dataNodeUpdate.HasElements)
-                updateWriter.Serialize(dataNodeUpdate);
+            return dataNodeRemove;
         }
 
         public static Database LoadXMLFile(string currentFileName)
