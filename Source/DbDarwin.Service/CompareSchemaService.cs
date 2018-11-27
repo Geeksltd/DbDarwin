@@ -172,6 +172,7 @@ namespace DbDarwin.Service
             result.TryGetValue("Update", out var dataNodeUpdate);
             // Detect Remove Data
             var dataNodeRemove = DetectRemoveData(sourceTable, targetTable);
+
             AddDataElementToWriter(dataNodeAdd, columnType, addWriter);
             AddDataElementToWriter(dataNodeRemove, columnType, removeWriter);
             AddDataElementToWriter(dataNodeUpdate, columnType, updateWriter);
@@ -187,7 +188,7 @@ namespace DbDarwin.Service
         {
             if (dataNodeAdd != null && dataNodeAdd.HasElements)
             {
-                writer.Serialize(columnType);
+                dataNodeAdd.AddFirst(columnType);
                 writer.Serialize(dataNodeAdd);
             }
         }

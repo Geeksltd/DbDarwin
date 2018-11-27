@@ -9,7 +9,7 @@ using DbDarwin.Model.Schema;
 
 namespace DbDarwin.Service
 {
-    public static class XMLExtention
+    public static class XmlExtention
     {
         public static XElement ToElement(this IDictionary<string, object> rows, string node)
         {
@@ -35,15 +35,32 @@ namespace DbDarwin.Service
         public static List<IDictionary<string, object>> ToDictionaryList(this TableData data)
         {
             var dictionary = new List<IDictionary<string, object>>();
-            if (data == null) return dictionary;
-            foreach (XmlNode[] o in data.Rows)
-            {
-                var expando = new ExpandoObject();
-                foreach (XmlNode node in o)
-                    AddProperty(expando, node.Name, node.InnerText);
-                dictionary.Add((IDictionary<string, object>)expando);
-            }
+            if (data == null)
+                return dictionary;
+            return data.Rows.ToDictionaryList();
+        }
+
+        public static List<IDictionary<string, object>> ToDictionaryList(this List<dynamic> data)
+        {
+            var dictionary = new List<IDictionary<string, object>>();
+            foreach (XmlNode[] o in data)
+                dictionary.Add(o.ToDictionary());
             return dictionary;
+        }
+
+        public static IDictionary<string, object> ToDictionary(this XmlNode[] data)
+        {
+            var expando = new ExpandoObject();
+            foreach (XmlNode node in data)
+                AddProperty(expando, node.Name, node.InnerText);
+            return (IDictionary<string, object>)expando;
+        }
+        public static IDictionary<string, object> ToDictionary(dynamic data)
+        {
+            var expando = new ExpandoObject();
+            foreach (XmlNode node in data)
+                AddProperty(expando, node.Name, node.InnerText);
+            return (IDictionary<string, object>)expando;
         }
         //https://www.oreilly.com/learning/building-c-objects-dynamically
         public static void AddProperty(ExpandoObject expando, string propertyName, object propertyValue)

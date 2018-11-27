@@ -9,10 +9,36 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace DbDarwin.Service
 {
+    public static class ExtentionGenerateScriptService
+    {
+        public static string NormalData(this object data, string type)
+        {
+            switch (type)
+            {
+                case "datetimeoffset":
+                case "datetime2":
+                case "uniqueidentifier":
+                case "char":
+                case "date":
+                case "datetime":
+                case "ntext":
+                case "nvarchar":
+                case "text":
+                case "varchar":
+                    return $"'{data}'";
+                case "bit":
+                    return data.ToString().ToLower() == "true" ? "1" : "0";
+                default:
+                    return data.ToString();
+            }
+
+        }
+    }
     public class GenerateScriptService
     {
         readonly List<GeneratedScriptResult> results;
@@ -129,10 +155,9 @@ namespace DbDarwin.Service
             {
                 if (table.Add?.Data != null)
                 {
-                    var sourceTable = table.Add?.Data.ToDictionaryList();
                     commandBuilder.Add(new SqlCommandGenerated
                     {
-                        Body = GenerateInsertRows(table, sourceTable),
+                        Body = GenerateInsertRows(table),
                     });
                 }
 
@@ -141,19 +166,33 @@ namespace DbDarwin.Service
             return commandBuilder.Select(c => c.Full).Aggregate((x, y) => x + "\r\n" + y);
         }
 
-        private string GenerateInsertRows(Table table, IEnumerable<IDictionary<string, object>> sourceTable)
+        private string GenerateInsertRows(Table table)
         {
             var sb = new StringBuilder();
+            var sourceDataTable = table.Add?.Data?.Rows.ToDictionaryList();
 
-            var columns = sourceTable.FirstOrDefault();
+            if (sourceDataTable == null)
+                return sb.ToString();
+
+            var columns = sourceDataTable.FirstOrDefault();
             string columnsSql = string.Empty;
             if (columns != null)
-            {
-                columnsSql = columns.Aggregate(columnsSql, (current, column) => current + ($"[{column.Key}]" + ","))
-                    .Trim(',', ' ');
-            }
+                columnsSql = $"INSERT [{table.Schema}].[{table.Name}] (" +
+                             columns.Aggregate(columnsSql, (current, column) => current + ($"[{column.Key}]" + ", "))
+                                 .Trim(',', ' ') + ") VALUES ";
 
+            foreach (var rows in sourceDataTable)
+            {
+                sb.AppendLine(columnsSql + GenerateData(rows, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes)));
+                sb.AppendLine("GO");
+            }
             return sb.ToString();
+        }
+
+        private string GenerateData(IDictionary<string, object> columns, IDictionary<string, object> attributes)
+        {
+            return
+                $"({columns.Aggregate("", (current, data) => current + (data.Value.NormalData(attributes[data.Key].ToString()) + ", ")).Trim(',', ' ')})";
         }
 
         string GenerateRemoveTables(IEnumerable<Table> tables)
@@ -171,6 +210,8 @@ namespace DbDarwin.Service
 
             return sb.ToString();
         }
+
+
 
         string GenerateAddTables(IEnumerable<Table> tables)
         {
