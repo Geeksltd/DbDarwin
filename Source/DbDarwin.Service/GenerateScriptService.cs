@@ -145,7 +145,7 @@ namespace DbDarwin.Service
         /// <summary>
         /// Generate SQL Add or Update or Delete
         /// </summary>
-        /// <param name="diffFile"></param>
+        /// <param name="diffFile">Diff file</param>
         /// <returns>SQL Scripts</returns>
         private string GenerateData(Database diffFile)
         {
@@ -154,31 +154,45 @@ namespace DbDarwin.Service
             foreach (var table in diffFile.Tables)
             {
                 if (table.Add?.Data != null)
-                {
                     commandBuilder.Add(new SqlCommandGenerated
                     {
                         Body = GenerateInsertRows(table),
                     });
-                }
+                if (table.Remove?.Data != null)
+                    commandBuilder.Add(new SqlCommandGenerated
+                    {
+                        Body = GenerateRemoveRows(table),
+                    });
 
             }
-
             return commandBuilder.Select(c => c.Full).Aggregate((x, y) => x + "\r\n" + y);
+        }
+
+        private string GenerateRemoveRows(Table table)
+        {
+            var sb = new StringBuilder();
+            var sourceDataTable = table.Remove?.Data?.Rows.ToDictionaryList();
+            if (sourceDataTable == null)
+                return sb.ToString();
+            var data = "";
+            sourceDataTable.ForEach(row => data += $"'{row["Name"]}',");
+            sb.Append($"DELETE FROM [{table.Schema}].[{table.Name}] WHERE Name IN ({data.Trim(',', ' ')})");
+            return sb.ToString();
+
         }
 
         private string GenerateInsertRows(Table table)
         {
             var sb = new StringBuilder();
             var sourceDataTable = table.Add?.Data?.Rows.ToDictionaryList();
-
             if (sourceDataTable == null)
                 return sb.ToString();
-
             var columns = sourceDataTable.FirstOrDefault();
             string columnsSql = string.Empty;
             if (columns != null)
                 columnsSql = $"INSERT [{table.Schema}].[{table.Name}] (" +
-                             columns.Aggregate(columnsSql, (current, column) => current + ($"[{column.Key}]" + ", "))
+                             columns
+                                 .Aggregate(columnsSql, (current, column) => current + ($"[{column.Key}]" + ", "))
                                  .Trim(',', ' ') + ") VALUES ";
 
             foreach (var rows in sourceDataTable)

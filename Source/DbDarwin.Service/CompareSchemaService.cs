@@ -181,9 +181,9 @@ namespace DbDarwin.Service
         /// <summary>
         /// Add XElement Data Row to writer
         /// </summary>
-        /// <param name="dataNodeAdd"></param>
-        /// <param name="columnType"></param>
-        /// <param name="writer"></param>
+        /// <param name="dataNode">Data Node</param>
+        /// <param name="columnType">Column Type</param>
+        /// <param name="writer">XML Writer</param>
         private void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
         {
             if (dataNodeAdd != null && dataNodeAdd.HasElements)
@@ -203,12 +203,11 @@ namespace DbDarwin.Service
         /// <summary>
         /// Detect Add Or Update Data
         /// </summary>
-        /// <param name="sourceTable"></param>
-        /// <param name="targetTable"></param>
-        /// <returns></returns>
+        /// <param name="sourceTable">soucre table</param>
+        /// <param name="targetTable">target table</param>
+        /// <returns>return ditionary</returns>
         private Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
-
             var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
             var dataNodeAdd = new XElement("Data");
             var dataNodeUpdate = new XElement("Data");
