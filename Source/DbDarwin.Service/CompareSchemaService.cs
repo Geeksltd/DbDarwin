@@ -161,8 +161,7 @@ namespace DbDarwin.Service
         /// <param name="updateWriter">XML Writer for update data</param>
         void GenerateDifferenceData(Table source, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
         {
-            if (source.Data == null && targetData == null)
-                return;
+            if (source.Data == null && targetData == null) return;
             var sourceTable = source.Data.ToDictionaryList();
             var targetTable = targetData.ToDictionaryList();
             var columnType = GetColumnTypes(source.Columns);
@@ -184,7 +183,7 @@ namespace DbDarwin.Service
         /// <param name="dataNode">Data Node</param>
         /// <param name="columnType">Column Type</param>
         /// <param name="writer">XML Writer</param>
-        private void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
+        void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
         {
             if (dataNodeAdd != null && dataNodeAdd.HasElements)
             {
@@ -193,7 +192,7 @@ namespace DbDarwin.Service
             }
         }
 
-        private XElement GetColumnTypes(IEnumerable<Column> columns)
+        XElement GetColumnTypes(IEnumerable<Column> columns)
         {
             var columnTypes = new XElement("ColumnTypes");
             columns.ForEach(column => columnTypes.SetAttributeValue(XmlConvert.EncodeName(column.Name) ?? column.Name, column.DATA_TYPE));
@@ -206,7 +205,7 @@ namespace DbDarwin.Service
         /// <param name="sourceTable">soucre table</param>
         /// <param name="targetTable">target table</param>
         /// <returns>return ditionary</returns>
-        private Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
+        Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
             var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
             var dataNodeAdd = new XElement("Data");
@@ -227,9 +226,11 @@ namespace DbDarwin.Service
                         break;
                     }
                 }
+
                 if (!exists)
                     dataNodeAdd.Add(sourceRow.ToElement("Row"));
             }
+
             return new Dictionary<string, XElement> { { "Add", dataNodeAdd }, { "Update", dataNodeUpdate } };
         }
 
@@ -239,7 +240,7 @@ namespace DbDarwin.Service
         /// <param name="sourceTable">Souce Data</param>
         /// <param name="targetTable">Target Data</param>
         /// <returns>Data XML Node</returns>
-        private XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
+        XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
             var dataNodeRemove = new XElement("Data");
             foreach (IDictionary<string, object> row in targetTable)
@@ -251,9 +252,11 @@ namespace DbDarwin.Service
                     exists = data2.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString());
                     if (exists) break;
                 }
+
                 if (!exists)
                     dataNodeRemove.Add(row.ToElement("Row"));
             }
+
             return dataNodeRemove;
         }
 

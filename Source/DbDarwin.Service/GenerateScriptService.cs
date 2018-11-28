@@ -7,9 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Xml;
 using System.Xml.Serialization;
 
 namespace DbDarwin.Service
@@ -36,7 +34,6 @@ namespace DbDarwin.Service
                 default:
                     return data.ToString();
             }
-
         }
     }
     public class GenerateScriptService
@@ -147,40 +144,47 @@ namespace DbDarwin.Service
         /// </summary>
         /// <param name="diffFile">Diff file</param>
         /// <returns>SQL Scripts</returns>
-        private string GenerateData(Database diffFile)
+        string GenerateData(Database diffFile)
         {
-            var commandBuilder = new List<SqlCommandGenerated>();
+            var builder = new StringBuilder();
 
             foreach (var table in diffFile.Tables)
             {
                 if (table.Add?.Data != null)
-                    commandBuilder.Add(new SqlCommandGenerated
-                    {
-                        Body = GenerateInsertRows(table),
-                    });
-                if (table.Remove?.Data != null)
-                    commandBuilder.Add(new SqlCommandGenerated
-                    {
-                        Body = GenerateRemoveRows(table),
-                    });
-                if (table.Update?.Data != null)
-                    commandBuilder.Add(new SqlCommandGenerated
-                    {
-                        Body = GenerateUpdateRows(table),
-                    });
+                {
+                    SqlOperation($"Add {table.Remove?.Data.Rows.Count} row data on table", GenerateRemoveRows(table),
+                        ViewMode.Add, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
+                        SQLObject.RowData);
+                }
 
+                if (table.Remove?.Data != null)
+                {
+                    SqlOperation($"Remove {table.Remove?.Data.Rows.Count} row data on table", GenerateRemoveRows(table),
+                        ViewMode.Delete, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
+                        SQLObject.RowData);
+                }
+
+                if (table.Update?.Data != null)
+                {
+                    SqlOperation($"Update {table.Update?.Data.Rows.Count} row data on table", GenerateUpdateRows(table),
+                        ViewMode.Update, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
+                        SQLObject.RowData);
+                }
             }
-            return commandBuilder.Select(c => c.Full).Aggregate((x, y) => x + "\r\n" + y);
+
+            return results
+                .Where(c => c.ObjectType == SQLObject.RowData)
+                .OrderBy(c => c.Order)
+                .Select(c => c.SQLScript).Aggregate((x, y) => x + "\r\n" + y);
         }
 
-        private string GenerateUpdateRows(Table table)
+        string GenerateUpdateRows(Table table)
         {
             var sb = new StringBuilder();
             var sourceDataTable = table.Update?.Data?.Rows.ToDictionaryList();
-            if (sourceDataTable == null)
-                return sb.ToString();
+            if (sourceDataTable == null) return sb.ToString();
             var columns = sourceDataTable.FirstOrDefault();
-            string columnsSql = string.Empty;
+            var columnsSql = string.Empty;
             if (columns != null)
                 columnsSql = $"UPDATE [{table.Schema}].[{table.Name}] SET ";
 
@@ -189,31 +193,29 @@ namespace DbDarwin.Service
                 sb.AppendLine(columnsSql + GenerateUpdateData(rows, XmlExtention.ToDictionary(table.Update?.Data?.ColumnTypes)));
                 sb.AppendLine("GO");
             }
+
             return sb.ToString();
         }
 
-        private string GenerateRemoveRows(Table table)
+        string GenerateRemoveRows(Table table)
         {
             var sb = new StringBuilder();
             var sourceDataTable = table.Remove?.Data?.Rows.ToDictionaryList();
-            if (sourceDataTable == null)
-                return sb.ToString();
+            if (sourceDataTable == null) return sb.ToString();
             var data = "";
             sourceDataTable.ForEach(row => data += $"'{row["Name"]}',");
             sb.AppendLine($"DELETE FROM [{table.Schema}].[{table.Name}] WHERE Name IN ({data.Trim(',', ' ')})");
             sb.AppendLine("GO");
             return sb.ToString();
-
         }
 
-        private string GenerateInsertRows(Table table)
+        string GenerateInsertRows(Table table)
         {
             var sb = new StringBuilder();
             var sourceDataTable = table.Add?.Data?.Rows.ToDictionaryList();
-            if (sourceDataTable == null)
-                return sb.ToString();
+            if (sourceDataTable == null) return sb.ToString();
             var columns = sourceDataTable.FirstOrDefault();
-            string columnsSql = string.Empty;
+            var columnsSql = string.Empty;
             if (columns != null)
                 columnsSql = $"INSERT [{table.Schema}].[{table.Name}] (" +
                              columns
@@ -225,14 +227,16 @@ namespace DbDarwin.Service
                 sb.AppendLine(columnsSql + GenerateInsertData(rows, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes)));
                 sb.AppendLine("GO");
             }
+
             return sb.ToString();
         }
 
-        private string GenerateInsertData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
+        string GenerateInsertData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
         {
             return $"({rowData.Aggregate("", (current, data) => current + (data.Value.NormalData(columnTypes[data.Key].ToString()) + ", ")).Trim(',', ' ')})";
         }
-        private string GenerateUpdateData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
+
+        string GenerateUpdateData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
         {
             var builder = new StringBuilder();
             var condition = string.Empty;
@@ -264,8 +268,6 @@ namespace DbDarwin.Service
 
             return sb.ToString();
         }
-
-
 
         string GenerateAddTables(IEnumerable<Table> tables)
         {

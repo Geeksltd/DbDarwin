@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace DbDarwin.Model.Schema
@@ -15,8 +14,6 @@ namespace DbDarwin.Model.Schema
 
         [XmlElement("ColumnTypes")]
         public dynamic ColumnTypes { get; set; }
-
-
 
         [XmlElement("Add")]
         public TableData Add { get; set; }

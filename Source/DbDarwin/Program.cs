@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DbDarwin.Model.Command;
+﻿using DbDarwin.Model.Command;
 using DbDarwin.Service;
 using Olive;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DbDarwin
 {
@@ -112,6 +112,7 @@ namespace DbDarwin
                 Console.ReadLine();
                 return string.Empty;
             }
+
             if (argList.Count > index + 1)
                 return argList[index + 1];
             return string.Empty;

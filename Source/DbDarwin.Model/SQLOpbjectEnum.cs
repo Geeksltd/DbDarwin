@@ -7,5 +7,6 @@
         Index = 3,
         PrimaryKey = 4,
         ForeignKey = 5,
+        RowData = 6
     }
 }
