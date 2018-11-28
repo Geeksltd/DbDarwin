@@ -222,7 +222,7 @@ namespace DbDarwin.Service
                     {
                         var result = compareLogic.Compare(sourceRow, targetRow);
                         if (!result.AreEqual)
-                            dataNodeUpdate.Add(sourceRow.ToElement("Update"));
+                            dataNodeUpdate.Add(sourceRow.ToElement("Row"));
                         exists = true;
                         break;
                     }

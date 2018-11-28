@@ -128,7 +128,7 @@ namespace DbDarwin.Service
                     }
             }
 
-            sb.AppendLine("PRINT 'Update Completed Successfully'");
+            sb.AppendLine("PRINT 'Schema update completed successfully'");
             sb.AppendLine("COMMIT");
 
             if (foreignKeys.Any())
@@ -163,9 +163,33 @@ namespace DbDarwin.Service
                     {
                         Body = GenerateRemoveRows(table),
                     });
+                if (table.Update?.Data != null)
+                    commandBuilder.Add(new SqlCommandGenerated
+                    {
+                        Body = GenerateUpdateRows(table),
+                    });
 
             }
             return commandBuilder.Select(c => c.Full).Aggregate((x, y) => x + "\r\n" + y);
+        }
+
+        private string GenerateUpdateRows(Table table)
+        {
+            var sb = new StringBuilder();
+            var sourceDataTable = table.Update?.Data?.Rows.ToDictionaryList();
+            if (sourceDataTable == null)
+                return sb.ToString();
+            var columns = sourceDataTable.FirstOrDefault();
+            string columnsSql = string.Empty;
+            if (columns != null)
+                columnsSql = $"UPDATE [{table.Schema}].[{table.Name}] SET ";
+
+            foreach (var rows in sourceDataTable)
+            {
+                sb.AppendLine(columnsSql + GenerateUpdateData(rows, XmlExtention.ToDictionary(table.Update?.Data?.ColumnTypes)));
+                sb.AppendLine("GO");
+            }
+            return sb.ToString();
         }
 
         private string GenerateRemoveRows(Table table)
@@ -176,7 +200,8 @@ namespace DbDarwin.Service
                 return sb.ToString();
             var data = "";
             sourceDataTable.ForEach(row => data += $"'{row["Name"]}',");
-            sb.Append($"DELETE FROM [{table.Schema}].[{table.Name}] WHERE Name IN ({data.Trim(',', ' ')})");
+            sb.AppendLine($"DELETE FROM [{table.Schema}].[{table.Name}] WHERE Name IN ({data.Trim(',', ' ')})");
+            sb.AppendLine("GO");
             return sb.ToString();
 
         }
@@ -197,16 +222,31 @@ namespace DbDarwin.Service
 
             foreach (var rows in sourceDataTable)
             {
-                sb.AppendLine(columnsSql + GenerateData(rows, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes)));
+                sb.AppendLine(columnsSql + GenerateInsertData(rows, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes)));
                 sb.AppendLine("GO");
             }
             return sb.ToString();
         }
 
-        private string GenerateData(IDictionary<string, object> columns, IDictionary<string, object> attributes)
+        private string GenerateInsertData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
         {
-            return
-                $"({columns.Aggregate("", (current, data) => current + (data.Value.NormalData(attributes[data.Key].ToString()) + ", ")).Trim(',', ' ')})";
+            return $"({rowData.Aggregate("", (current, data) => current + (data.Value.NormalData(columnTypes[data.Key].ToString()) + ", ")).Trim(',', ' ')})";
+        }
+        private string GenerateUpdateData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
+        {
+            var builder = new StringBuilder();
+            var condition = string.Empty;
+            foreach (var row in rowData)
+            {
+                if (row.Key == "Name")
+                    condition = $" WHERE Name = {row.Value.NormalData(columnTypes[row.Key].ToString())}";
+                else
+                    builder.Append($", [{row.Key}] = {row.Value.NormalData(columnTypes[row.Key].ToString())}");
+            }
+
+            builder = new StringBuilder(builder.ToString().Trim(',', ' '));
+            builder.Append(condition);
+            return builder.ToString();
         }
 
         string GenerateRemoveTables(IEnumerable<Table> tables)
@@ -242,13 +282,8 @@ namespace DbDarwin.Service
 
                 builder.AppendLine(")");
                 builder.AppendLine(" ON [PRIMARY]");
-
                 if (table.Indexes.Any())
-                {
-                    var indexExists = false;
-                    builder.AppendLine(GenerateNewIndexes(table.Indexes, table.Name, table.Schema, indexExists));
-                }
-
+                    builder.AppendLine(GenerateNewIndexes(table.Indexes, table.Name, table.Schema, indexExists: false));
                 SqlOperation($"Add New Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Add, table.FullName, table.Name, SQLObject.Table);
 
                 sb.Append(builder);
