@@ -52,14 +52,14 @@ namespace DbDarwin.Service
         {
             var expando = new ExpandoObject();
             foreach (var node in data)
-                AddProperty(expando, node.Name, node.InnerText);
+                AddProperty(expando, XmlConvert.DecodeName(node.Name), node.InnerText);
             return (IDictionary<string, object>)expando;
         }
         public static IDictionary<string, object> ToDictionary(dynamic data)
         {
             var expando = new ExpandoObject();
             foreach (var node in data)
-                AddProperty(expando, node.Name, node.InnerText);
+                AddProperty(expando, XmlConvert.DecodeName(node.Name), node.InnerText);
             return (IDictionary<string, object>)expando;
         }
         //https://www.oreilly.com/learning/building-c-objects-dynamically
