@@ -35,9 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="GCop.Core">
-      <HintPath>..\packages\GCop.Collections.2.3.6\lib\netstandard\GCop.Core.dll</HintPath>
-    </Reference>
     <Reference Include="Olive">
       <HintPath>..\packages\Olive.1.0.129\lib\netstandard2.0\Olive.dll</HintPath>
     </Reference>

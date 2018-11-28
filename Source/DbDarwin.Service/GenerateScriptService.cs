@@ -29,7 +29,7 @@ namespace DbDarwin.Service
                 case "nvarchar":
                 case "varchar":
                 case "nchar":
-                
+
                     return $"'{data}'";
                 case "bit":
                     return data.ToString().ToLower() == "true" ? "1" : "0";
@@ -154,7 +154,7 @@ namespace DbDarwin.Service
             {
                 if (table.Add?.Data != null)
                 {
-                    SqlOperation($"Add {table.Remove?.Data.Rows.Count} row data on table", GenerateInsertRows(table),
+                    SqlOperation($"Add {table.Add?.Data.Rows.Count} row data on table", GenerateInsertRows(table),
                         ViewMode.Add, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
                         SQLObject.RowData);
                 }
