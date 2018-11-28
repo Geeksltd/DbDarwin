@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GCop.All.Geeks" Version="2.3.9" />
-    <PackageReference Include="Olive" Version="1.0.129" />
+    <PackageReference Include="GCop.All.Geeks" Version="2.4.4" />
+    <PackageReference Include="Olive" Version="1.0.136" />
   </ItemGroup>
 
 </Project>

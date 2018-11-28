@@ -1,7 +1,6 @@
 ﻿using DbDarwin.Model;
 using DbDarwin.Model.Command;
 using DbDarwin.Model.Schema;
-using GCop.Core;
 using KellermanSoftware.CompareNetObjects;
 using System;
 using System.Collections.Generic;
@@ -10,6 +9,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using GCop.Core;
 
 namespace DbDarwin.Service
 {
@@ -211,7 +211,7 @@ namespace DbDarwin.Service
             var dataNodeAdd = new XElement("Data");
             var dataNodeUpdate = new XElement("Data");
             // Detect new data or updates
-            foreach (IDictionary<string, object> sourceRow in sourceTable)
+            foreach (var sourceRow in sourceTable)
             {
                 sourceRow.TryGetValue("Name", out var val);
                 var exists = false;
