@@ -153,25 +153,11 @@ namespace DbDarwin.Service
             foreach (var table in diffFile.Tables)
             {
                 if (table.Add?.Data != null)
-                {
-                    SqlOperation($"Add {table.Add?.Data.Rows.Count} row data on table", GenerateInsertRows(table),
-                        ViewMode.Add, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
-                        SQLObject.RowData);
-                }
-
+                    builder.AppendLine(GenerateInsertRows(table));
                 if (table.Remove?.Data != null)
-                {
-                    SqlOperation($"Remove {table.Remove?.Data.Rows.Count} row data on table", GenerateRemoveRows(table),
-                        ViewMode.Delete, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
-                        SQLObject.RowData);
-                }
-
+                    builder.AppendLine(GenerateRemoveRows(table));
                 if (table.Update?.Data != null)
-                {
-                    SqlOperation($"Update {table.Update?.Data.Rows.Count} row data on table", GenerateUpdateRows(table),
-                        ViewMode.Update, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
-                        SQLObject.RowData);
-                }
+                    builder.AppendLine(GenerateUpdateRows(table));
             }
 
             return results
@@ -190,10 +176,18 @@ namespace DbDarwin.Service
             if (columns != null)
                 columnsSql = $"UPDATE [{table.Schema}].[{table.Name}] SET ";
 
-            foreach (var rows in sourceDataTable)
+            foreach (var row in sourceDataTable)
             {
-                sb.AppendLine(columnsSql + GenerateUpdateData(rows, XmlExtention.ToDictionary(table.Update?.Data?.ColumnTypes)));
-                sb.AppendLine("GO");
+                var builder = new StringBuilder();
+
+                builder.AppendLine(columnsSql + GenerateUpdateData(row, XmlExtention.ToDictionary(table.Update?.Data?.ColumnTypes)));
+                builder.AppendLine("GO");
+
+                SqlOperation($"Update record {GenerateName(row)}", builder.ToString(),
+                    ViewMode.Update, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
+                    SQLObject.RowData);
+
+                sb.Append(builder);
             }
 
             return sb.ToString();
@@ -204,10 +198,17 @@ namespace DbDarwin.Service
             var sb = new StringBuilder();
             var sourceDataTable = table.Remove?.Data?.Rows.ToDictionaryList();
             if (sourceDataTable == null) return sb.ToString();
-            var data = "";
-            sourceDataTable.ForEach(row => data += $"'{row["Name"]}',");
-            sb.AppendLine($"DELETE FROM [{table.Schema}].[{table.Name}] WHERE Name IN ({data.Trim(',', ' ')})");
-            sb.AppendLine("GO");
+            foreach (var row in sourceDataTable)
+            {
+                var builder = new StringBuilder();
+                builder.AppendLine($"DELETE FROM [{table.Schema}].[{table.Name}] WHERE Name = '{row["Name"]}'");
+                builder.AppendLine("GO");
+
+                SqlOperation($"Delete record {GenerateName(row)}", builder.ToString(),
+                    ViewMode.Delete, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
+                    SQLObject.RowData);
+                sb.Append(builder);
+            }
             return sb.ToString();
         }
 
@@ -226,15 +227,32 @@ namespace DbDarwin.Service
 
             foreach (var rows in sourceDataTable)
             {
-                sb.AppendLine(columnsSql + GenerateInsertData(rows, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes)));
+                var insertSql = columnsSql +
+                                GenerateInsertData(rows, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes));
+                sb.AppendLine(insertSql);
                 sb.AppendLine("GO");
+
+                SqlOperation($"Add record {GenerateName(rows)}", insertSql,
+                    ViewMode.Add, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
+                    SQLObject.RowData);
+
+
             }
 
             return sb.ToString();
         }
 
+        private string GenerateName(IDictionary<string, object> rowData)
+        {
+            return "{ " +
+                   rowData.Aggregate("", (current, data) => current + (data.Key + ": " + data.Value + " | "))
+                       .Trim(',', ' ') + " }";
+        }
+
         string GenerateInsertData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
         {
+
+
             return $"({rowData.Aggregate("", (current, data) => current + (data.Value.NormalData(columnTypes[data.Key].ToString()) + ", ")).Trim(',', ' ')})";
         }
 
