@@ -34,32 +34,29 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GCop.Core, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\GCop.Collections.2.3.6\lib\netstandard\GCop.Core.dll</HintPath>
-    </Reference>
     <Reference Include="KellermanSoftware.Compare-NET-Objects, Version=4.57.0.0, Culture=neutral, PublicKeyToken=d970ace04cc85217, processorArchitecture=MSIL">
       <HintPath>..\packages\CompareNETObjects.4.57.0\lib\net46\KellermanSoftware.Compare-NET-Objects.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.Common.2.8.0\lib\netstandard1.3\Microsoft.CodeAnalysis.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CodeAnalysis.Common.2.8.2\lib\netstandard1.3\Microsoft.CodeAnalysis.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.2.8.0\lib\netstandard1.3\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.2.8.2\lib\netstandard1.3\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.Workspaces.2.8.0\lib\netstandard1.3\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.Workspaces.2.8.2\lib\netstandard1.3\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.VisualBasic, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.VisualBasic.2.8.0\lib\netstandard1.3\Microsoft.CodeAnalysis.VisualBasic.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CodeAnalysis.VisualBasic.2.8.2\lib\netstandard1.3\Microsoft.CodeAnalysis.VisualBasic.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.VisualBasic.Workspaces.2.8.0\lib\netstandard1.3\Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CodeAnalysis.VisualBasic.Workspaces.2.8.2\lib\netstandard1.3\Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.Workspaces, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.Workspaces.Common.2.8.0\lib\net46\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CodeAnalysis.Workspaces.Common.2.8.2\lib\net46\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.Workspaces.Desktop, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.Workspaces.Common.2.8.0\lib\net46\Microsoft.CodeAnalysis.Workspaces.Desktop.dll</HintPath>
+      <HintPath>..\packages\Microsoft.CodeAnalysis.Workspaces.Common.2.8.2\lib\net46\Microsoft.CodeAnalysis.Workspaces.Desktop.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.Configuration, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Configuration.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll</HintPath>
@@ -103,11 +100,16 @@
     <Reference Include="Microsoft.Extensions.Primitives, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Primitives.2.1.1\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Microsoft.Win32.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Win32.Primitives.4.3.0\lib\net46\Microsoft.Win32.Primitives.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Olive, Version=1.0.129.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Olive.1.0.129\lib\netstandard2.0\Olive.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Olive, Version=1.0.136.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Olive.1.0.136\lib\netstandard2.0\Olive.dll</HintPath>
     </Reference>
     <Reference Include="PowerMapper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4d5ab713866e0486, processorArchitecture=MSIL">
       <HintPath>..\packages\PowerMapper.1.0.0\lib\net40\PowerMapper.dll</HintPath>
@@ -149,6 +151,9 @@
     <Reference Include="System.Data.SqlClient, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Data.SqlClient.4.5.1\lib\net461\System.Data.SqlClient.dll</HintPath>
     </Reference>
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Diagnostics.DiagnosticSource.4.3.0\lib\net46\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
     <Reference Include="System.Diagnostics.FileVersionInfo, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Diagnostics.FileVersionInfo.4.3.0\lib\net46\System.Diagnostics.FileVersionInfo.dll</HintPath>
       <Private>True</Private>
@@ -159,8 +164,19 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Globalization.Calendars, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Globalization.Calendars.4.3.0\lib\net46\System.Globalization.Calendars.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.IO.Compression.ZipFile, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Compression.ZipFile.4.3.0\lib\net46\System.IO.Compression.ZipFile.dll</HintPath>
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
@@ -177,6 +193,16 @@
     <Reference Include="System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.1\lib\netstandard2.0\System.Memory.dll</HintPath>
     </Reference>
+    <Reference Include="System.Net.Http, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Net.Http.4.3.0\lib\net46\System.Net.Http.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Net.Sockets, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Net.Sockets.4.3.0\lib\net46\System.Net.Sockets.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.4.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
@@ -186,6 +212,11 @@
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.1\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Security.Cryptography.Algorithms, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Security.Cryptography.Algorithms.4.3.0\lib\net461\System.Security.Cryptography.Algorithms.dll</HintPath>
@@ -226,12 +257,11 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Xml.ReaderWriter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Xml.ReaderWriter.4.3.0\lib\net46\System.Xml.ReaderWriter.dll</HintPath>
+      <HintPath>..\packages\System.Xml.ReaderWriter.4.3.1\lib\net46\System.Xml.ReaderWriter.dll</HintPath>
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
@@ -315,32 +345,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\GCop.All.Common.2.3.9\analyzers\dotnet\cs\GCop.All.Common.dll" />
-    <Analyzer Include="..\packages\GCop.All.Common.2.3.9\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.All.Geeks.2.3.9\analyzers\dotnet\cs\GCop.All.Geeks.dll" />
-    <Analyzer Include="..\packages\GCop.All.Geeks.2.3.9\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.Collections.2.3.6\analyzers\dotnet\cs\GCop.Collections.dll" />
-    <Analyzer Include="..\packages\GCop.Collections.2.3.6\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.Common.2.3.7\analyzers\dotnet\cs\GCop.Common.dll" />
-    <Analyzer Include="..\packages\GCop.Common.2.3.7\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.Conditional.2.3.6\analyzers\dotnet\cs\GCop.Conditional.dll" />
-    <Analyzer Include="..\packages\GCop.Conditional.2.3.6\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.ErrorHandling.2.3.6\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.ErrorHandling.2.3.6\analyzers\dotnet\cs\GCop.ErrorHandling.dll" />
-    <Analyzer Include="..\packages\GCop.IO.2.3.6\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.IO.2.3.6\analyzers\dotnet\cs\GCop.IO.dll" />
-    <Analyzer Include="..\packages\GCop.Linq.2.3.6\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.Linq.2.3.6\analyzers\dotnet\cs\GCop.Linq.dll" />
-    <Analyzer Include="..\packages\GCop.OliveZebbleMSharp.2.3.7\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.OliveZebbleMSharp.2.3.7\analyzers\dotnet\cs\GCop.OliveZebbleMSharp.dll" />
-    <Analyzer Include="..\packages\GCop.String.2.3.6\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.String.2.3.6\analyzers\dotnet\cs\GCop.String.dll" />
-    <Analyzer Include="..\packages\GCop.Thread.2.3.6\analyzers\dotnet\cs\GCop.Core.dll" />
-    <Analyzer Include="..\packages\GCop.Thread.2.3.6\analyzers\dotnet\cs\GCop.Thread.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\DbDarwin.Model\DbDarwin.Model.csproj">
       <Project>{8dd4dd82-4ce1-4c84-83d4-846a821e6db5}</Project>
       <Name>DbDarwin.Model</Name>
@@ -349,6 +353,11 @@
       <Project>{736ce6ec-10b4-4892-9624-bc994212b8f8}</Project>
       <Name>DbDarwin.Service</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\packages\GCop.Common.2.4.4\analyzers\dotnet\cs\GCop.Common.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -51,14 +51,14 @@ namespace DbDarwin.Service
         public static IDictionary<string, object> ToDictionary(this XmlNode[] data)
         {
             var expando = new ExpandoObject();
-            foreach (XmlNode node in data)
+            foreach (var node in data)
                 AddProperty(expando, node.Name, node.InnerText);
             return (IDictionary<string, object>)expando;
         }
         public static IDictionary<string, object> ToDictionary(dynamic data)
         {
             var expando = new ExpandoObject();
-            foreach (XmlNode node in data)
+            foreach (var node in data)
                 AddProperty(expando, node.Name, node.InnerText);
             return (IDictionary<string, object>)expando;
         }

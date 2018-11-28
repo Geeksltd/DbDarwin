@@ -22,8 +22,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GCop.All.Geeks" Version="2.3.9" />
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="2.8.0" />
+    <PackageReference Include="GCop.All.Common" Version="2.4.4" />
+    <PackageReference Include="GCop.All.Geeks" Version="2.4.4" />
+    <PackageReference Include="GCop.Collections" Version="2.4.4" />
+    <PackageReference Include="GCop.Common" Version="2.4.4" />
+    <PackageReference Include="GCop.Conditional" Version="2.4.4" />
+    <PackageReference Include="GCop.ErrorHandling" Version="2.4.4" />
+    <PackageReference Include="GCop.IO" Version="2.4.4" />
+    <PackageReference Include="GCop.Linq" Version="2.4.4" />
+    <PackageReference Include="GCop.OliveZebbleMSharp" Version="2.4.4" />
+    <PackageReference Include="GCop.String" Version="2.4.4" />
+    <PackageReference Include="GCop.Thread" Version="2.4.4" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="2.8.2" />
     <PackageReference Include="Olive" Version="1.0.136" />
     <PackageReference Include="PowerMapper" Version="1.0.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />

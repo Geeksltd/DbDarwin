@@ -9,7 +9,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using GCop.Core;
+using Olive;
 
 namespace DbDarwin.Service
 {
@@ -192,7 +192,7 @@ namespace DbDarwin.Service
             }
         }
 
-        XElement GetColumnTypes(IEnumerable<Column> columns)
+        XElement GetColumnTypes(List<Column> columns)
         {
             var columnTypes = new XElement("ColumnTypes");
             columns.ForEach(column => columnTypes.SetAttributeValue(XmlConvert.EncodeName(column.Name) ?? column.Name, column.DATA_TYPE));
@@ -243,7 +243,7 @@ namespace DbDarwin.Service
         XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
             var dataNodeRemove = new XElement("Data");
-            foreach (IDictionary<string, object> row in targetTable)
+            foreach (var row in targetTable)
             {
                 row.TryGetValue("Name", out var val);
                 var exists = false;
@@ -346,10 +346,10 @@ namespace DbDarwin.Service
         {
             // Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
             var mustAdd = FindNewComponent<T>(sourceData, targetData);
-
+                                   
             // Add new objects to xml
             if (mustAdd != null)
-                foreach (T sqlObject in mustAdd)
+                foreach (var sqlObject in mustAdd)
                     navigatorAdd.Serialize(sqlObject);
 
             var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
@@ -364,7 +364,7 @@ namespace DbDarwin.Service
             {
                 if (mustAdd != null)
                     sourceData = sourceData.Except(x => mustAdd.Contains(x)).ToList();
-                foreach (T currentObject in sourceData)
+                foreach (var currentObject in sourceData)
                 {
                     var foundObject = FindRemoveOrUpdate<T>(currentObject, targetData);
                     if (foundObject == null)
@@ -382,7 +382,7 @@ namespace DbDarwin.Service
                     }
                 }
 
-                foreach (T currentObject in targetData)
+                foreach (var currentObject in targetData)
                 {
                     var foundObject = FindRemoveOrUpdate<T>(currentObject, sourceData);
                     if (foundObject == null)

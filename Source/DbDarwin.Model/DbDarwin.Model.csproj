@@ -5,7 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="GCop.All.Common" Version="2.4.4" />
     <PackageReference Include="GCop.All.Geeks" Version="2.4.4" />
+    <PackageReference Include="GCop.Collections" Version="2.4.4" />
+    <PackageReference Include="GCop.Common" Version="2.4.4" />
+    <PackageReference Include="GCop.Conditional" Version="2.4.4" />
+    <PackageReference Include="GCop.ErrorHandling" Version="2.4.4" />
+    <PackageReference Include="GCop.IO" Version="2.4.4" />
+    <PackageReference Include="GCop.Linq" Version="2.4.4" />
+    <PackageReference Include="GCop.OliveZebbleMSharp" Version="2.4.4" />
+    <PackageReference Include="GCop.String" Version="2.4.4" />
+    <PackageReference Include="GCop.Thread" Version="2.4.4" />
     <PackageReference Include="Olive" Version="1.0.136" />
   </ItemGroup>
 
