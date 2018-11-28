@@ -25,9 +25,11 @@ namespace DbDarwin.Service
                 case "date":
                 case "datetime":
                 case "ntext":
-                case "nvarchar":
                 case "text":
+                case "nvarchar":
                 case "varchar":
+                case "nchar":
+                
                     return $"'{data}'";
                 case "bit":
                     return data.ToString().ToLower() == "true" ? "1" : "0";
