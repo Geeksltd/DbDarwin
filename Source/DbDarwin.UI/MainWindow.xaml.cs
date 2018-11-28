@@ -212,7 +212,7 @@ namespace DbDarwin.UI
                                        SelectedRemove.Mode == ViewMode.Delete &&
                                        SelectedAddOrUpdate.ObjectType == SQLObject.Column &&
                                        SelectedRemove.ObjectType == SQLObject.Column
-                                       && SelectedAddOrUpdate.TableName.ToLower() == SelectedRemove.TableName.ToLower();
+                                       && String.Equals(SelectedAddOrUpdate.TableName, SelectedRemove.TableName, StringComparison.CurrentCultureIgnoreCase);
         }
 
         void Checkbox_Click(object sender, RoutedEventArgs e)
@@ -305,7 +305,7 @@ namespace DbDarwin.UI
         {
             var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
             var table = database.Update?.Tables?.FirstOrDefault(x =>
-                x.FullName.ToLower() == SelectedAddOrUpdate.TableName.ToLower());
+                String.Equals(x.FullName, SelectedAddOrUpdate.TableName, StringComparison.CurrentCultureIgnoreCase));
             if (table == null) return;
 
             var newSchema = table.Add.Columns.FirstOrDefault(x => x.Name == SelectedAddOrUpdate.ObjectName);
