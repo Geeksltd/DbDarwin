@@ -17,6 +17,7 @@
 
             <Button x:Name="GenerateButton" IsEnabled="False" Content="Generate All" Height="31" VerticalAlignment="Top" Click="GenerateButton_OnClick"  Padding="10,2"/>
             <Button x:Name="ActuallyRename" IsEnabled="False" Content="Its actually a rename" Height="31" VerticalAlignment="Top" Click="ActuallyRename_OnClick"  Padding="10,2"/>
+            <Button x:Name="ActuallyUpdate" IsEnabled="False" Content="Its actually an update" Height="31" VerticalAlignment="Top" Click="ActuallyUpdate_OnClick"  Padding="10,2"/>
 
             <Button x:Name="GenerateSelectedButton" IsEnabled="False" Content="Generate Selected (Next version)" Height="31" VerticalAlignment="Top"   Padding="10,2"/>
 

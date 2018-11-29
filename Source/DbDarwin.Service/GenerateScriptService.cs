@@ -160,10 +160,13 @@ namespace DbDarwin.Service
                     builder.AppendLine(GenerateUpdateRows(table));
             }
 
-            return results
+            var data = results
                 .Where(c => c.ObjectType == SQLObject.RowData)
                 .OrderBy(c => c.Order)
-                .Select(c => c.SQLScript).Aggregate((x, y) => x + "\r\n" + y);
+                .Select(c => c.SQLScript).ToList();
+            if (data.Any())
+                return data.Aggregate((x, y) => x + "\r\n" + y);
+            return string.Empty;
         }
 
         string GenerateUpdateRows(Table table)

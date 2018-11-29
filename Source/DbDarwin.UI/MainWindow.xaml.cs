@@ -30,6 +30,7 @@ namespace DbDarwin.UI
         public MainWindow()
         {
             InitializeComponent();
+            ActuallyUpdate.Visibility = Visibility.Hidden;
         }
 
         public void EnableCompare()
@@ -213,6 +214,14 @@ namespace DbDarwin.UI
                                        SelectedAddOrUpdate.ObjectType == SQLObject.Column &&
                                        SelectedRemove.ObjectType == SQLObject.Column
                                        && String.Equals(SelectedAddOrUpdate.TableName, SelectedRemove.TableName, StringComparison.CurrentCultureIgnoreCase);
+
+            ActuallyUpdate.IsEnabled = SelectedAddOrUpdate != null &&
+                                       SelectedRemove != null &&
+                                       SelectedAddOrUpdate.Mode == ViewMode.Add &&
+                                       SelectedRemove.Mode == ViewMode.Delete &&
+                                       SelectedAddOrUpdate.ObjectType == SQLObject.RowData &&
+                                       SelectedRemove.ObjectType == SQLObject.RowData
+                                       && String.Equals(SelectedAddOrUpdate.TableName, SelectedRemove.TableName, StringComparison.CurrentCultureIgnoreCase);
         }
 
         void Checkbox_Click(object sender, RoutedEventArgs e)
@@ -349,6 +358,13 @@ namespace DbDarwin.UI
                 if (item is RadioButton radio)
                     builder.AppendLine(((GeneratedScriptResult)radio.DataContext).SQLScript);
             ShowScript(builder.ToString());
+        }
+
+        private void ActuallyUpdate_OnClick(object sender, RoutedEventArgs e)
+        {
+
+
+
         }
     }
 
