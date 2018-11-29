@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -238,17 +239,16 @@ namespace DbDarwin.Service
 
         public static void AddDataToTable(Database database, XDocument data, string fileOutput)
         {
-            var ser = new XmlSerializer(typeof(Database));
-            var sw2 = new StringWriter();
-            ser.Serialize(sw2, database);
-
-            var xml = sw2.ToString();
-            var doc = XDocument.Parse(xml);
-
+            var doc = new XDocument();
+            using (var writer = doc.CreateWriter())
+            {
+                var serializer = new XmlSerializer(typeof(Database));
+                serializer.Serialize(writer, database);
+            }
             var dataElements = data.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
             var schemaElements = doc.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
             if (schemaElements != null)
-                foreach (XElement element in schemaElements)
+                foreach (var element in schemaElements)
                 {
                     if (element.Name.ToString().ToLower() != "table") continue;
 
@@ -266,9 +266,7 @@ namespace DbDarwin.Service
                         x.Attributes().Any(c => c.Name == "Name" && c.Value == tableName) &&
                         x.Elements(XName.Get("Data")).Any());
                     if (foundData != null)
-                    {
                         element.Add(foundData.Elements(XName.Get("Data")));
-                    }
                 }
 
             var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
