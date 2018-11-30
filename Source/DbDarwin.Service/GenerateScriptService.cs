@@ -46,18 +46,19 @@ namespace DbDarwin.Service
             results = new List<GeneratedScriptResult>();
         }
 
-        public List<GeneratedScriptResult> SqlOperation(string title, string sqlScript, ViewMode mode, string fullTableName, string objectName, SQLObject objectType)
+        public List<GeneratedScriptResult> SqlOperation(string title, string sqlScript, ViewMode mode, string fullTableName, string objectName, SQLObject objectType, dynamic orginalObject = null)
         {
             results.Add(new GeneratedScriptResult
             {
                 ID = Guid.NewGuid().ToString(),
-                TableName = fullTableName,
+                FullTableName = fullTableName,
                 ObjectName = objectName,
                 ObjectType = objectType,
                 Mode = mode,
                 Title = title,
                 SQLScript = sqlScript,
-                Order = results.Count + 1
+                Order = results.Count + 1,
+                OrginalObject = orginalObject
             });
             return results;
         }
@@ -174,26 +175,28 @@ namespace DbDarwin.Service
             var sb = new StringBuilder();
             var sourceDataTable = table.Update?.Data?.Rows.ToDictionaryList();
             if (sourceDataTable == null) return sb.ToString();
-            var columns = sourceDataTable.FirstOrDefault();
-            var columnsSql = string.Empty;
-            if (columns != null)
-                columnsSql = $"UPDATE [{table.Schema}].[{table.Name}] SET ";
 
             foreach (var row in sourceDataTable)
             {
-                var builder = new StringBuilder();
-
-                builder.AppendLine(columnsSql + GenerateUpdateData(row, XmlExtention.ToDictionary(table.Update?.Data?.ColumnTypes)));
-                builder.AppendLine("GO");
+                var builder = CreateUpdateRowScript(row, table.Name, table.Schema, table.Update?.Data?.ColumnTypes);
 
                 SqlOperation($"Update record {GenerateName(row)}", builder.ToString(),
-                    ViewMode.Update, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
-                    SQLObject.RowData);
+                    ViewMode.Update, $"{table.Schema}.{table.Name}", row["Name"].ToString(),
+                    SQLObject.RowData, row);
 
                 sb.Append(builder);
             }
 
             return sb.ToString();
+        }
+
+        public static string CreateUpdateRowScript(IDictionary<string, object> row, string tableName, string schema, dynamic columnTypes)
+        {
+            var builder = new StringBuilder();
+
+            builder.AppendLine($"UPDATE [{schema}].[{tableName}] SET " + GenerateUpdateData(row, XmlExtention.ToDictionary(columnTypes)));
+            builder.AppendLine("GO");
+            return builder.ToString();
         }
 
         string GenerateRemoveRows(Table table)
@@ -208,8 +211,8 @@ namespace DbDarwin.Service
                 builder.AppendLine("GO");
 
                 SqlOperation($"Delete record {GenerateName(row)}", builder.ToString(),
-                    ViewMode.Delete, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
-                    SQLObject.RowData);
+                    ViewMode.Delete, $"{table.Schema}.{table.Name}", row["Name"].ToString(),
+                    SQLObject.RowData, row);
                 sb.Append(builder);
             }
             return sb.ToString();
@@ -228,28 +231,27 @@ namespace DbDarwin.Service
                                  .Aggregate(columnsSql, (current, column) => current + ($"[{column.Key}]" + ", "))
                                  .Trim(',', ' ') + ") VALUES ";
 
-            foreach (var rows in sourceDataTable)
+            foreach (var row in sourceDataTable)
             {
-                var insertSql = columnsSql +
-                                GenerateInsertData(rows, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes));
-                sb.AppendLine(insertSql);
-                sb.AppendLine("GO");
+                var builder = new StringBuilder();
+                builder.AppendLine(columnsSql + GenerateInsertData(row, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes)));
+                builder.AppendLine("GO");
 
-                SqlOperation($"Add record {GenerateName(rows)}", insertSql,
-                    ViewMode.Add, $"{table.Schema}.{table.Name}", $"{table.Schema}.{table.Name}",
-                    SQLObject.RowData);
+                sb.Append(builder);
 
-
+                SqlOperation($"Add record {GenerateName(row)}", builder.ToString(),
+                    ViewMode.Add, $"{table.Schema}.{table.Name}", row["Name"].ToString(),
+                    SQLObject.RowData, row);
             }
 
             return sb.ToString();
         }
 
-        private string GenerateName(IDictionary<string, object> rowData)
+        public static string GenerateName(IDictionary<string, object> rowData)
         {
             return "{ " +
-                   rowData.Aggregate("", (current, data) => current + (data.Key + ": " + data.Value + " | "))
-                       .Trim(',', ' ') + " }";
+                   rowData.Aggregate("", (current, data) => current + (data.Key + ": \"" + data.Value + "\" | "))
+                       .Trim(',', ' ', '|') + " }";
         }
 
         string GenerateInsertData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
@@ -259,7 +261,7 @@ namespace DbDarwin.Service
             return $"({rowData.Aggregate("", (current, data) => current + (data.Value.NormalData(columnTypes[data.Key].ToString()) + ", ")).Trim(',', ' ')})";
         }
 
-        string GenerateUpdateData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
+        static string GenerateUpdateData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
         {
             var builder = new StringBuilder();
             var condition = string.Empty;

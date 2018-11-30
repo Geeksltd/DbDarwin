@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,9 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Xml.Linq;
+using System.Xml.Serialization;
+using DbDarwin.Model.Schema;
 
 namespace DbDarwin.UI
 {
@@ -22,7 +26,12 @@ namespace DbDarwin.UI
     /// </summary>
     public partial class MainWindow : Window
     {
+        public RadioButton SelectedAddOrUpdateRadio { get; set; }
+
         public GeneratedScriptResult SelectedAddOrUpdate;
+
+        public RadioButton SelectedRemoveRadio { get; private set; }
+
         public GeneratedScriptResult SelectedRemove;
         readonly Color RemoveItem = Color.FromArgb(255, 255, 192, 192);
         readonly Color AddItem = Color.FromArgb(255, 175, 220, 255);
@@ -30,7 +39,6 @@ namespace DbDarwin.UI
         public MainWindow()
         {
             InitializeComponent();
-            ActuallyUpdate.Visibility = Visibility.Hidden;
         }
 
         public void EnableCompare()
@@ -153,7 +161,7 @@ namespace DbDarwin.UI
 
                     TreeViewRoot.Items.Clear();
 
-                    foreach (var table in result.GroupBy(x => x.TableName).OrderBy(x => x.Key))
+                    foreach (var table in result.GroupBy(x => x.FullTableName).OrderBy(x => x.Key))
                     {
                         var treeViewItems = new TreeViewItem
                         {
@@ -213,7 +221,7 @@ namespace DbDarwin.UI
                                        SelectedRemove.Mode == ViewMode.Delete &&
                                        SelectedAddOrUpdate.ObjectType == SQLObject.Column &&
                                        SelectedRemove.ObjectType == SQLObject.Column
-                                       && String.Equals(SelectedAddOrUpdate.TableName, SelectedRemove.TableName, StringComparison.CurrentCultureIgnoreCase);
+                                       && String.Equals(SelectedAddOrUpdate.FullTableName, SelectedRemove.FullTableName, StringComparison.CurrentCultureIgnoreCase);
 
             ActuallyUpdate.IsEnabled = SelectedAddOrUpdate != null &&
                                        SelectedRemove != null &&
@@ -221,15 +229,21 @@ namespace DbDarwin.UI
                                        SelectedRemove.Mode == ViewMode.Delete &&
                                        SelectedAddOrUpdate.ObjectType == SQLObject.RowData &&
                                        SelectedRemove.ObjectType == SQLObject.RowData
-                                       && String.Equals(SelectedAddOrUpdate.TableName, SelectedRemove.TableName, StringComparison.CurrentCultureIgnoreCase);
+                                       && String.Equals(SelectedAddOrUpdate.FullTableName, SelectedRemove.FullTableName, StringComparison.CurrentCultureIgnoreCase);
         }
 
         void Checkbox_Click(object sender, RoutedEventArgs e)
         {
             if (((RadioButton)sender).Tag.ToString() == "AddOrUpdate")
+            {
+                SelectedAddOrUpdateRadio = (RadioButton)sender;
                 SelectedAddOrUpdate = (GeneratedScriptResult)((RadioButton)sender).DataContext;
+            }
             else if (((RadioButton)sender).Tag.ToString() == "Remove")
+            {
+                SelectedRemoveRadio = (RadioButton)sender;
                 SelectedRemove = (GeneratedScriptResult)((RadioButton)sender).DataContext;
+            }
 
             ValidateSelectedObject();
             ShowScript((RadioButton)sender);
@@ -314,7 +328,7 @@ namespace DbDarwin.UI
         {
             var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
             var table = database.Update?.Tables?.FirstOrDefault(x =>
-                String.Equals(x.FullName, SelectedAddOrUpdate.TableName, StringComparison.CurrentCultureIgnoreCase));
+                String.Equals(x.FullName, SelectedAddOrUpdate.FullTableName, StringComparison.CurrentCultureIgnoreCase));
             if (table == null) return;
 
             var newSchema = table.Add.Columns.FirstOrDefault(x => x.Name == SelectedAddOrUpdate.ObjectName);
@@ -363,8 +377,96 @@ namespace DbDarwin.UI
         private void ActuallyUpdate_OnClick(object sender, RoutedEventArgs e)
         {
 
+            var path = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml";
+            var database = XDocument.Parse(File.ReadAllText(path));
 
 
+
+            var tablesElements = (from tables in database.Descendants("Table")
+                                  where tables.Attribute("Name").Value.Equals(SelectedAddOrUpdate.TableName) &&
+                                        (tables.Attribute("Schema")?.Value == String.Empty || tables.Attribute("Schema")?.Value == SelectedAddOrUpdate.Schema)
+                                  select tables).FirstOrDefault();
+
+            if (tablesElements == null)
+                return;
+            var addRecords = tablesElements.Descendants("add").Descendants("Data").Descendants("Row");
+            var deleteRecords = tablesElements.Descendants("remove").Descendants("Data").Descendants("Row");
+
+
+            var findRemove = (from rows in deleteRecords
+                              where rows.Attributes("Name").Any() && rows.Attribute("Name").Value.Equals(SelectedRemove.ObjectName)
+                              select rows).FirstOrDefault();
+            findRemove?.Remove();
+
+            var findAdd = (from rows in addRecords
+                           where rows.Attributes("Name").Any() && rows.Attribute("Name").Value.Equals(SelectedAddOrUpdate.ObjectName)
+                           select rows).FirstOrDefault();
+
+
+            if (findAdd != null)
+            {
+                var updateElement = tablesElements.Descendants("update").FirstOrDefault();
+                var columnTypes = tablesElements.Descendants("add").Descendants("Data").Descendants("ColumnTypes")
+                    .FirstOrDefault();
+
+
+
+                if (updateElement != null)
+                {
+                    var dataNode = updateElement.Descendants("Data").FirstOrDefault();
+                    if (dataNode != null)
+                        dataNode.Add(findAdd);
+                    else
+                    {
+                        var updateData = new XElement(XName.Get("Data"));
+                        updateData.Add(columnTypes);
+                        updateData.Add(findAdd);
+                        updateElement.Add(updateData);
+                    }
+                }
+                else
+                {
+                    var updateAdd = new XElement(XName.Get("update"));
+                    var updateData = new XElement(XName.Get("Data"));
+                    updateData.Add(columnTypes);
+                    updateData.Add(findAdd);
+                    updateAdd.Add(updateData);
+                    tablesElements.Add(updateAdd);
+                }
+
+                findAdd.Remove();
+
+
+                var tree = TreeViewRoot.Items.Cast<TreeViewItem>().FirstOrDefault(x => x.Header.ToString() == SelectedRemove.FullTableName);
+                tree?.Items.Remove(SelectedRemoveRadio);
+
+                var xRoot = new XmlRootAttribute { ElementName = "Data", IsNullable = true };
+                var dataAdd = tablesElements?.Descendants("add").Descendants("Data").FirstOrDefault();
+                var reader = new StringReader(dataAdd?.ToString());
+                var ser = new XmlSerializer(typeof(TableData), xRoot);
+                var addTableData = (TableData)ser.Deserialize(reader);
+
+                var dic = (IDictionary<string, object>)SelectedRemove.OrginalObject;
+                var dicAdd = (IDictionary<string, object>)SelectedAddOrUpdate.OrginalObject;
+                SelectedAddOrUpdate.SQLScript = GenerateScriptService.CreateUpdateRowScript(dicAdd,
+                    SelectedAddOrUpdate.TableName, SelectedAddOrUpdate.Schema, addTableData.ColumnTypes);
+                dicAdd.Remove("Name");
+                SelectedAddOrUpdateRadio.Content = $"Update record {GenerateScriptService.GenerateName(dic)} to set {GenerateScriptService.GenerateName(dicAdd)}";
+
+                SelectedAddOrUpdate.Mode = ViewMode.Update;
+
+
+
+
+
+
+
+
+            }
+            database.Save(path);
+
+
+            //GenerateSqlFileAndShowUpdates();
         }
     }
 
