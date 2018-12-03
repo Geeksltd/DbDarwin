@@ -81,16 +81,7 @@ namespace DbDarwin.UnitTestProject
         }
 
 
-        //https://www.oreilly.com/learning/building-c-objects-dynamically
-        public static void AddProperty(ExpandoObject expando, string propertyName, object propertyValue)
-        {
-            // ExpandoObject supports IDictionary so we can extend it like this
-            var expandoDict = expando as IDictionary<string, object>;
-            if (expandoDict.ContainsKey(propertyName))
-                expandoDict[propertyName] = propertyValue;
-            else
-                expandoDict.Add(propertyName, propertyValue);
-        }
+
 
         [TestMethod]
         public void TransformationForRenameTableNameDiff()

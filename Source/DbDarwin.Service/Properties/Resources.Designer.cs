@@ -61,6 +61,24 @@ namespace DbDarwin.Service.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DECLARE @sql NVARCHAR(MAX) = N&apos;&apos;;
+        ///SELECT @sql += N&apos;
+        ///ALTER TABLE &apos; + QUOTENAME(OBJECT_SCHEMA_NAME(f.parent_object_id))
+        ///    + &apos;.&apos; + QUOTENAME(OBJECT_NAME(f.parent_object_id)) + 
+        ///    &apos; DROP CONSTRAINT &apos; + QUOTENAME(f.name) + &apos;;&apos;
+        ///  FROM sys.key_constraints k
+        ///join sys.foreign_keys f on k.parent_object_id = f.referenced_object_id
+        ///where OBJECT_SCHEMA_NAME (k.parent_object_id) = N&apos;{0}&apos; AND OBJECT_NAME(k.parent_object_id) = N&apos;{1}&apos;
+        ///PRINT @sql
+        ///EXECUTE sp_executesql @sql.
+        /// </summary>
+        internal static string DeleteAllForeigenKeyFromTable {
+            get {
+                return ResourceManager.GetString("DeleteAllForeigenKeyFromTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SELECT  
         ///  RC.CONSTRAINT_SCHEMA,
         ///  RC.CONSTRAINT_NAME,
@@ -69,6 +87,7 @@ namespace DbDarwin.Service.Properties {
         ///  RC.UPDATE_RULE,
         ///  RC.DELETE_RULE,
         ///
+        ///  KCU1.TABLE_SCHEMA,
         ///  KCU1.Table_Name,
         ///  KCU1.COLUMN_NAME,
         ///  KCU1.ORDINAL_POSITION,
@@ -80,8 +99,7 @@ namespace DbDarwin.Service.Properties {
         ///
         ///FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS RC 
         ///
-        ///INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU1 
-        ///    ON KC [rest of string was truncated]&quot;;.
+        ///INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USA [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string REFERENTIAL_CONSTRAINTS {
             get {

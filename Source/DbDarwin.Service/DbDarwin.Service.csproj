@@ -5,10 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="DeleteAllForeigenKeyFromTable.sql" />
     <None Remove="REFERENTIAL_CONSTRAINTS.sql" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="DeleteAllForeigenKeyFromTable.sql" />
     <Content Include="REFERENTIAL_CONSTRAINTS.sql" />
   </ItemGroup>
 

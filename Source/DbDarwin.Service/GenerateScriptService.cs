@@ -285,9 +285,13 @@ namespace DbDarwin.Service
             {
                 var builder = new StringBuilder();
                 builder.AppendLine("GO");
+                builder.AppendLine(String.Format(
+                    Properties.Resources.DeleteAllForeigenKeyFromTable, table.Schema,
+                    table.Name));
+                builder.AppendLine("GO");
                 builder.AppendLine($"DROP TABLE [{table.Schema}].[{table.Name}]");
 
-                sb.Append(builder);
+                sb.AppendLine(builder.ToString());
                 SqlOperation($"Remove Table [{table.Schema}].[{table.Name}]", builder.ToString(), ViewMode.Delete, table.FullName, table.Name, SQLObject.Table);
             }
 
