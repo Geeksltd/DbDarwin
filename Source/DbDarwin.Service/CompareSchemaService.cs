@@ -287,7 +287,7 @@ namespace DbDarwin.Service
                 if (model.TableName.HasValue())
                 {
                     var table = currentDiffSchema.FirstOrDefault(x =>
-                        string.Equals(x.Name, model.FromName, StringComparison.CurrentCultureIgnoreCase));
+                        string.Equals(x.Name, model.FromName, StringComparison.OrdinalIgnoreCase));
                     if (table != null)
                         table.SetName = model.ToName;
                     else
@@ -312,7 +312,7 @@ namespace DbDarwin.Service
                         {
                             var column = table.Update.Columns.FirstOrDefault(x =>
                                 string.Equals(x.COLUMN_NAME, model.FromName,
-                                    StringComparison.CurrentCultureIgnoreCase));
+                                    StringComparison.OrdinalIgnoreCase));
                             SetColumnName(column, model);
                         }
                     }

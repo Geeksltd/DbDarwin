@@ -4,20 +4,22 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DbDarwin.UI"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+
+
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
         Title="Connect" Height="320" Width="441" ResizeMode="NoResize" Topmost="True">
 
-
-    <Grid  Height="212" VerticalAlignment="Top" Background="WhiteSmoke" Margin="10,10,10,0" >
+    <Grid VerticalAlignment="Top" Background="WhiteSmoke" Margin="10,10,10,0" >
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="35"  />
-            <RowDefinition Height="35" />
-            <RowDefinition Height="35" />
-            <RowDefinition Height="35" />
-            <RowDefinition Height="35" />
-            <RowDefinition Height="35" />
+            <RowDefinition Height="Auto"  />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
 
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -31,7 +33,7 @@
         <Label  Content="Database Name:"  Grid.Column="0" Grid.Row="5" VerticalAlignment="Center"  />
         <TextBox x:Name="ServerName" Grid.Column="1"  Grid.Row="0"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
 
-        <ComboBox  x:Name="Authentication"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="1" Margin="5" FontSize="14" Height="25" SelectionChanged="Authentication_SelectionChanged"  >
+        <ComboBox  materialDesign:HintAssist.Hint="Authentication" x:Name="Authentication"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="1" Margin="5" FontSize="14"  SelectionChanged="Authentication_SelectionChanged"  >
             <ComboBoxItem IsSelected="True" Tag="1" >Windows Authentication</ComboBoxItem>
             <ComboBoxItem Tag="2" >SQL Authentication</ComboBoxItem>
         </ComboBox>
@@ -40,7 +42,7 @@
         <PasswordBox x:Name="Password" Grid.Column="1"  Grid.Row="3" IsEnabled="False" Width="300" Margin="5" FontSize="14" Height="25"/>
         <CheckBox x:Name="RememberPassword"  IsEnabled="False" Content="Remember Password" Grid.Column="1" Grid.Row="4" Margin="5" FontSize="14" Height="25" />
 
-        <ComboBox  x:Name="DatabaseName"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="5" IsEditable="True" DropDownOpened="DatabaseName_DropDownOpened" Margin="5" FontSize="14" Height="25">
+        <ComboBox  x:Name="DatabaseName"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="5" IsEditable="True" DropDownOpened="DatabaseName_DropDownOpened" Margin="5" FontSize="14" >
         </ComboBox>
         <Button x:Name="Connect" Content="Connect" HorizontalAlignment="Left" Height="28" Margin="5,55,0,-48" Grid.Row="5" VerticalAlignment="Top" Width="101" Grid.Column="1" Click="Connect_Click"/>
         <Button x:Name="Cancel" Content="Cancel" HorizontalAlignment="Left" Height="28" Margin="206,55,0,-48" Grid.Row="5" VerticalAlignment="Top" Width="100" Grid.Column="1" Click="Cancel_Click"/>

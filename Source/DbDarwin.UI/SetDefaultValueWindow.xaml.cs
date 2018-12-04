@@ -36,5 +36,10 @@ namespace DbDarwin.UI
                 DialogResult = true;
             }
         }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            DefaultValueTextBox.Focus();
+        }
     }
 }

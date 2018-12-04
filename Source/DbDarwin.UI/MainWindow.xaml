@@ -6,32 +6,55 @@
         xmlns:local="clr-namespace:DbDarwin.UI"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="DbDarwin UI" Height="527.027" Width="766.555">
+        Title="DbDarwin UI" Height="527.027" Width="902.555">
+    <Window.Resources>
+        <Style x:Key="RadioTemplate"   TargetType="{x:Type RadioButton}" BasedOn="{StaticResource MaterialDesignRadioButton}">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="MinWidth" Value="700" />
+            <Setter Property="FontFamily" Value="Verdana" />
+            <Setter Property="FontStretch" Value="ExtraExpanded" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+
+ 
+       
+
+    </Window.Resources>
     <Grid>
         <StatusBar Height="26" Margin="0" VerticalAlignment="Bottom" Background="#FF007ACC" Foreground="White">
-            <Label x:Name="StatusLabel" Content="Ready"  HorizontalAlignment="Left" Padding="0" ScrollViewer.CanContentScroll="True" Margin="5,0,0,0" VerticalAlignment="Top" Foreground="{DynamicResource White}"/>
+            <Label x:Name="StatusLabel" Content="Ready"  HorizontalAlignment="Left" Padding="0" ScrollViewer.CanContentScroll="True" Margin="5,0,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
         </StatusBar>
-        <ToolBar x:Name="ToolBar" VerticalAlignment="Top" Height="36">
-            <Button x:Name="CompareButton" IsEnabled="False" Content="Compare" Height="31" VerticalAlignment="Top" Width="75" Click="CompareButton_Click"/>
+        <ToolBar x:Name="ToolBar" VerticalAlignment="Top" Height="36" Style="{DynamicResource MaterialDesignToolBar}">
+            <Button x:Name="CompareButton" IsEnabled="False" Content="Compare" Height="31" VerticalAlignment="Top"  Click="CompareButton_Click" Margin="2,0" Style="{DynamicResource MaterialDesignRaisedButton}"/>
 
 
-            <Button x:Name="GenerateButton" IsEnabled="False" Content="Generate All" Height="31" VerticalAlignment="Top" Click="GenerateButton_OnClick"  Padding="10,2"/>
-            <Button x:Name="ActuallyRename" IsEnabled="False" Content="Its actually a rename" Height="31" VerticalAlignment="Top" Click="ActuallyRename_OnClick"  Padding="10,2"/>
-            <Button x:Name="ActuallyUpdate" IsEnabled="False" Content="Its actually an update" Height="31" VerticalAlignment="Top" Click="ActuallyUpdate_OnClick"  Padding="10,2"/>
+            <Button x:Name="GenerateButton" IsEnabled="False" Content="Generate All" Height="31" VerticalAlignment="Top" Click="GenerateButton_OnClick" Margin="2,0" Style="{DynamicResource MaterialDesignRaisedButton}"/>
+            <Button x:Name="ActuallyRename" IsEnabled="False" Content="Its actually a rename" Height="31" VerticalAlignment="Top" Click="ActuallyRename_OnClick"  Margin="2,0" Style="{DynamicResource MaterialDesignRaisedButton}"/>
+            <Button x:Name="ActuallyUpdate" IsEnabled="False" Content="Its actually an update" Height="31" VerticalAlignment="Top" Click="ActuallyUpdate_OnClick"  Margin="2,0" Style="{DynamicResource MaterialDesignRaisedButton}"/>
 
-            <Button x:Name="GenerateSelectedButton" IsEnabled="False" Content="Generate Selected (Next version)" Height="31" VerticalAlignment="Top"   Padding="10,2"/>
+            <Button x:Name="GenerateSelectedButton" IsEnabled="False" Content="Generate Selected (Next version)" Height="31" VerticalAlignment="Top"  Style="{DynamicResource MaterialDesignRaisedButton}"/>
 
+            <!--<Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                    ToolTip="MaterialDesignFloatingActionMiniLightButton">
+                <materialDesign:PackIcon Kind="Alarm" Height="24" Width="24" />
+            </Button>-->
 
 
         </ToolBar>
-        <ToolBar VerticalAlignment="Top" Height="36" Margin="0,35,0,0">
+        <ToolBar VerticalAlignment="Top" Height="36" Margin="0,35,0,0" Style="{DynamicResource MaterialDesignToolBar}">
 
-            <Label Content="Source" Padding="10,5" />
+            <Label Content="Source" Margin="0,5" />
 
             <ComboBox  x:Name="SelectSource"  Width="300" Text="Select Source" SelectionChanged="SelectSource_SelectionChanged"  >
                 <ComboBoxItem  Tag="1" >Select Source...</ComboBoxItem>
             </ComboBox>
-            <Label Content="Target" Padding="10,5" />
+            <Label Content="Target" Margin="0,5" />
             <ComboBox  x:Name="SelectTarget" Width="300" Text="Select Target"  Margin="10,0,0,0" SelectionChanged="SelectTarget_SelectionChanged"  >
                 <ComboBoxItem  Tag="1"  >Select Target...</ComboBoxItem>
             </ComboBox>
@@ -43,25 +66,25 @@
         <Grid x:Name="LayoutRoot" Background="White" ShowGridLines="False" Margin="0,71,0,26" HorizontalAlignment="Stretch"   VerticalAlignment="Stretch" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="*"   />
+                <RowDefinition Height="200"   />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <!--<Rectangle Grid.Column="0" Fill="#FFC0C0"  />-->
-            <Rectangle Grid.Row="0" Grid.Column="0"  Fill="#FFDAFFF8" Grid.ColumnSpan="2" />
+            <Rectangle Grid.Row="0" Grid.Column="0"  Fill="#FFE2E2E2" Grid.ColumnSpan="1" />
             <Rectangle Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="1"  Fill="#B2D3FF" />
 
 
 
 
 
-            <TreeView Grid.Row="0" Grid.Column="0" x:Name="TreeViewRoot" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" SelectedItemChanged="TreeViewRemove_OnSelectedItemChanged" Background="{x:Null}" Grid.ColumnSpan="2" />
+            <TreeView Grid.Row="0" Grid.Column="0" x:Name="TreeViewRoot" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" SelectedItemChanged="TreeViewRemove_OnSelectedItemChanged" Background="{x:Null}"  />
 
-
-            <RichTextBox x:Name="RichTextBox" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+       
+            <RichTextBox x:Name="RichTextBox" Grid.Row="1" Grid.Column="0" FontSize="16" FontFamily="Verdana" Grid.ColumnSpan="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <FlowDocument>
-                    <Paragraph>
+                    <Paragraph >
                         <Run Text=""/>
                     </Paragraph>
                 </FlowDocument>

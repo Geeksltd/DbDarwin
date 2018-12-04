@@ -33,8 +33,8 @@ namespace DbDarwin.UI
         public RadioButton SelectedRemoveRadio { get; private set; }
 
         public GeneratedScriptResult SelectedRemove;
-        readonly Color RemoveItem = Color.FromArgb(255, 255, 192, 192);
-        readonly Color AddItem = Color.FromArgb(255, 175, 220, 255);
+        readonly Color RemoveItem = Color.FromArgb(255, 255, 76, 76);
+        readonly Color AddItem = Color.FromArgb(255, 0, 143, 255);
 
         public MainWindow()
         {
@@ -186,6 +186,7 @@ namespace DbDarwin.UI
                                     DataContext = script,
                                     GroupName = "AddOrUpdateGroup",
                                     Background = add,
+                                    Style = this.FindResource("RadioTemplate") as Style,
 
 
                                 };
@@ -199,6 +200,7 @@ namespace DbDarwin.UI
                                     DataContext = script,
                                     GroupName = "RemoveGroup",
                                     Background = removed,
+                                    Style = this.FindResource("RadioTemplate") as Style,
 
                                 };
                             }
@@ -221,7 +223,7 @@ namespace DbDarwin.UI
                                        SelectedRemove.Mode == ViewMode.Delete &&
                                        SelectedAddOrUpdate.ObjectType == SQLObject.Column &&
                                        SelectedRemove.ObjectType == SQLObject.Column
-                                       && String.Equals(SelectedAddOrUpdate.FullTableName, SelectedRemove.FullTableName, StringComparison.CurrentCultureIgnoreCase);
+                                       && String.Equals(SelectedAddOrUpdate.FullTableName, SelectedRemove.FullTableName, StringComparison.OrdinalIgnoreCase);
 
             ActuallyUpdate.IsEnabled = SelectedAddOrUpdate != null &&
                                        SelectedRemove != null &&
@@ -229,7 +231,7 @@ namespace DbDarwin.UI
                                        SelectedRemove.Mode == ViewMode.Delete &&
                                        SelectedAddOrUpdate.ObjectType == SQLObject.RowData &&
                                        SelectedRemove.ObjectType == SQLObject.RowData
-                                       && String.Equals(SelectedAddOrUpdate.FullTableName, SelectedRemove.FullTableName, StringComparison.CurrentCultureIgnoreCase);
+                                       && String.Equals(SelectedAddOrUpdate.FullTableName, SelectedRemove.FullTableName, StringComparison.OrdinalIgnoreCase);
         }
 
         void Checkbox_Click(object sender, RoutedEventArgs e)
@@ -328,7 +330,7 @@ namespace DbDarwin.UI
         {
             var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
             var table = database.Update?.Tables?.FirstOrDefault(x =>
-                String.Equals(x.FullName, SelectedAddOrUpdate.FullTableName, StringComparison.CurrentCultureIgnoreCase));
+                String.Equals(x.FullName, SelectedAddOrUpdate.FullTableName, StringComparison.OrdinalIgnoreCase));
             if (table == null) return;
 
             var newSchema = table.Add.Columns.FirstOrDefault(x => x.Name == SelectedAddOrUpdate.ObjectName);
@@ -351,6 +353,9 @@ namespace DbDarwin.UI
                 table.Update.Columns.Add(newSchema);
             ExtractSchemaService.SaveToFile(database, "diff.xml");
             GenerateSqlFileAndShowUpdates();
+
+            SelectedAddOrUpdate = null;
+            SelectedRemove = null;
         }
 
         void TreeViewRemove_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -465,7 +470,8 @@ namespace DbDarwin.UI
             }
             database.Save(path);
 
-
+            SelectedAddOrUpdate = null;
+            SelectedRemove = null;
             //GenerateSqlFileAndShowUpdates();
         }
     }
