@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -43,7 +44,7 @@ namespace DbDarwin.Service
         public static List<IDictionary<string, object>> ToDictionaryList(this List<dynamic> data)
         {
             var dictionary = new List<IDictionary<string, object>>();
-            foreach (XmlNode[] o in data)
+            foreach (var o in data.Cast<XmlNode[]>())
                 dictionary.Add(o.ToDictionary());
             return dictionary;
         }

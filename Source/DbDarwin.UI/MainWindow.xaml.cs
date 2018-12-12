@@ -457,22 +457,12 @@ namespace DbDarwin.UI
                     SelectedAddOrUpdate.TableName, SelectedAddOrUpdate.Schema, addTableData.ColumnTypes);
                 dicAdd.Remove("Name");
                 SelectedAddOrUpdateRadio.Content = $"Update record {GenerateScriptService.GenerateName(dic)} to set {GenerateScriptService.GenerateName(dicAdd)}";
-
                 SelectedAddOrUpdate.Mode = ViewMode.Update;
-
-
-
-
-
-
-
-
             }
             database.Save(path);
 
             SelectedAddOrUpdate = null;
             SelectedRemove = null;
-            //GenerateSqlFileAndShowUpdates();
         }
     }
 

@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
+using System.Linq;
 
 namespace DbDarwin.Service
 {
@@ -40,10 +41,10 @@ namespace DbDarwin.Service
                 da.SelectCommand.CommandText = sqlScript;
                 da.Fill(dataTable);
                 var dataResult = new List<dynamic>();
-                foreach (DataRow row in dataTable.Rows)
+                foreach (var row in dataTable.Rows.Cast<DataRow>())
                 {
                     dynamic expando = new ExpandoObject();
-                    foreach (DataColumn column in dataTable.Columns)
+                    foreach (var column in dataTable.Columns.Cast<DataColumn>())
                         AddProperty(expando, column.ColumnName, row[column.ColumnName]);
                     dataResult.Add(expando);
                 }

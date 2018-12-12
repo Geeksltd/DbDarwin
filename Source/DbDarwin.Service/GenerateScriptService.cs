@@ -685,7 +685,7 @@ END
                         sb.Append(initialBuilder);
                         sb.Append(builder);
 
-                        SqlOperation(new GeneratedScriptResult()
+                        SqlOperation(new GeneratedScriptResult
                         {
                             Title= $"Update column {column.Name} from table [{schema}].[{tableName}]",
                             Mode = ViewMode.Update,

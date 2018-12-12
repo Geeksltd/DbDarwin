@@ -34,7 +34,7 @@ namespace DbDarwin.Service
                     .Where(x => columns.Contains(x.Name))
                     .ToArray();
 
-                foreach (DataRow row in table.Rows)
+                foreach (var row in table.Rows.Cast<DataRow>())
                 {
                     var obj = new T();
 
@@ -92,7 +92,7 @@ namespace DbDarwin.Service
                 var columns = table.Columns.Cast<DataColumn>()
                     .Select(x => x.ColumnName)
                     .ToArray();
-                foreach (DataRow row in table.Rows)
+                foreach (var row in table.Rows.Cast<DataRow>())
                     list.Add(row[0].ToString());
                 return list;
             }
@@ -111,7 +111,7 @@ namespace DbDarwin.Service
                 var columns = table.Columns.Cast<DataColumn>()
                     .Select(x => x.ColumnName)
                     .ToArray();
-                foreach (DataRow row in table.Rows)
+                foreach (var row in table.Rows.Cast<DataRow>())
                     list.Add(row[0].ToString());
                 return list;
             }

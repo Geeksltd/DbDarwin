@@ -112,7 +112,7 @@ namespace DbDarwin.Service
                 if (AllTables.Rows.Count > 0)
                     Database.Tables = new List<Table>();
 
-                foreach (DataRow tableSchema in AllTables.Rows)
+                foreach (var tableSchema in AllTables.Rows.Cast<DataRow>())
                 {
                     var schemaTable = tableSchema["TABLE_SCHEMA"].ToString();
                     var tableName = tableSchema["TABLE_NAME"].ToString();
@@ -177,10 +177,10 @@ namespace DbDarwin.Service
                     tableElement.SetAttributeValue("Name", tableName);
                     if (schema.ToLower() != "dbo")
                         tableElement.SetAttributeValue("Schema", schema);
-                    foreach (DataRow rowData in data.Rows)
+                    foreach (var rowData in data.Rows.Cast<DataRow>())
                     {
                         var rowElement = new XElement("Row");
-                        foreach (DataColumn column in data.Columns)
+                        foreach (var column in data.Columns.Cast<DataColumn>())
                         {
                             if (column.ColumnName.ToLower() == "id") continue;
                             rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
