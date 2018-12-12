@@ -14,15 +14,10 @@ namespace DbDarwin.Service
     {
         public static XElement ToElement(this IDictionary<string, object> rows, string node)
         {
-            var rowElement = new XElement(node);
+            var result = new XElement(node);
             foreach (var column in rows)
-            {
-                rowElement.SetAttributeValue(
-                    XmlConvert.EncodeName(column.Key) ?? column.Key,
-                    column.Value.ToString());
-            }
-
-            return rowElement;
+                result.SetAttributeValue(XmlConvert.EncodeName(column.Key) ?? column.Key, column.Value.ToString());
+            return result;
         }
 
         public static void Serialize(this XmlWriter writer, object element)
@@ -43,10 +38,10 @@ namespace DbDarwin.Service
 
         public static List<IDictionary<string, object>> ToDictionaryList(this List<dynamic> data)
         {
-            var dictionary = new List<IDictionary<string, object>>();
+            var result = new List<IDictionary<string, object>>();
             foreach (var o in data.Cast<XmlNode[]>())
-                dictionary.Add(o.ToDictionary());
-            return dictionary;
+                result.Add(o.ToDictionary());
+            return result;
         }
 
         public static IDictionary<string, object> ToDictionary(this XmlNode[] data)

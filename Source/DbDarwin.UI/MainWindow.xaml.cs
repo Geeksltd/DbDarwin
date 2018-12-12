@@ -382,72 +382,13 @@ namespace DbDarwin.UI
         private void ActuallyUpdate_OnClick(object sender, RoutedEventArgs e)
         {
 
-            var path = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml";
-            var database = XDocument.Parse(File.ReadAllText(path));
-
-
-
-            var tablesElements = (from tables in database.Descendants("Table")
-                                  where tables.Attribute("Name").Value.Equals(SelectedAddOrUpdate.TableName) &&
-                                        (tables.Attribute("Schema")?.Value == String.Empty || tables.Attribute("Schema")?.Value == SelectedAddOrUpdate.Schema)
-                                  select tables).FirstOrDefault();
-
-            if (tablesElements == null)
-                return;
-            var addRecords = tablesElements.Descendants("add").Descendants("Data").Descendants("Row");
-            var deleteRecords = tablesElements.Descendants("remove").Descendants("Data").Descendants("Row");
-
-
-            var findRemove = (from rows in deleteRecords
-                              where rows.Attributes("Name").Any() && rows.Attribute("Name").Value.Equals(SelectedRemove.ObjectName)
-                              select rows).FirstOrDefault();
-            findRemove?.Remove();
-
-            var findAdd = (from rows in addRecords
-                           where rows.Attributes("Name").Any() && rows.Attribute("Name").Value.Equals(SelectedAddOrUpdate.ObjectName)
-                           select rows).FirstOrDefault();
-
-
-            if (findAdd != null)
+            var dataAdd = GenerateScriptService.ActuallyUpdate(SelectedAddOrUpdate, SelectedRemove);
+            if (dataAdd != null)
             {
-                var updateElement = tablesElements.Descendants("update").FirstOrDefault();
-                var columnTypes = tablesElements.Descendants("add").Descendants("Data").Descendants("ColumnTypes")
-                    .FirstOrDefault();
-
-
-
-                if (updateElement != null)
-                {
-                    var dataNode = updateElement.Descendants("Data").FirstOrDefault();
-                    if (dataNode != null)
-                        dataNode.Add(findAdd);
-                    else
-                    {
-                        var updateData = new XElement(XName.Get("Data"));
-                        updateData.Add(columnTypes);
-                        updateData.Add(findAdd);
-                        updateElement.Add(updateData);
-                    }
-                }
-                else
-                {
-                    var updateAdd = new XElement(XName.Get("update"));
-                    var updateData = new XElement(XName.Get("Data"));
-                    updateData.Add(columnTypes);
-                    updateData.Add(findAdd);
-                    updateAdd.Add(updateData);
-                    tablesElements.Add(updateAdd);
-                }
-
-                findAdd.Remove();
-
-
                 var tree = TreeViewRoot.Items.Cast<TreeViewItem>().FirstOrDefault(x => x.Header.ToString() == SelectedRemove.FullTableName);
                 tree?.Items.Remove(SelectedRemoveRadio);
-
                 var xRoot = new XmlRootAttribute { ElementName = "Data", IsNullable = true };
-                var dataAdd = tablesElements?.Descendants("add").Descendants("Data").FirstOrDefault();
-                var reader = new StringReader(dataAdd?.ToString());
+                var reader = new StringReader(dataAdd.ToString());
                 var ser = new XmlSerializer(typeof(TableData), xRoot);
                 var addTableData = (TableData)ser.Deserialize(reader);
 
@@ -458,11 +399,12 @@ namespace DbDarwin.UI
                 dicAdd.Remove("Name");
                 SelectedAddOrUpdateRadio.Content = $"Update record {GenerateScriptService.GenerateName(dic)} to set {GenerateScriptService.GenerateName(dicAdd)}";
                 SelectedAddOrUpdate.Mode = ViewMode.Update;
-            }
-            database.Save(path);
 
-            SelectedAddOrUpdate = null;
-            SelectedRemove = null;
+
+                SelectedAddOrUpdate = null;
+                SelectedRemove = null;
+                ((Button)sender).IsEnabled = false;
+            }
         }
     }
 

@@ -21,7 +21,7 @@ namespace DbDarwin.Model
             switch (liner)
             {
                 case LineEnum.NoLine:
-                    message = message + command;
+                    message += command;
                     break;
                 case LineEnum.FirstLine:
                     message = message + Line + command;

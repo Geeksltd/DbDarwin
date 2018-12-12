@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace DbDarwin.Service
@@ -392,6 +393,82 @@ namespace DbDarwin.Service
             }
 
             return sb.ToString();
+        }
+
+
+        /// <summary>
+        /// Implement Actually Update
+        /// </summary>
+        /// <param name="selectedAddOrUpdate">selected add row</param>
+        /// <param name="selectedRemove">selected delete row</param>
+        /// <returns>Data Node</returns>
+        public static XElement ActuallyUpdate(GeneratedScriptResult selectedAddOrUpdate, GeneratedScriptResult selectedRemove)
+        {
+
+            var path = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml";
+            var database = XDocument.Parse(File.ReadAllText(path));
+
+            var tablesElements = (from tables in database.Descendants("Table")
+                                  where tables.Attribute("Name").Value.Equals(selectedAddOrUpdate.TableName) &&
+                                        (tables.Attribute("Schema")?.Value == String.Empty || tables.Attribute("Schema")?.Value == selectedAddOrUpdate.Schema)
+                                  select tables).FirstOrDefault();
+            if (tablesElements == null)
+                return null;
+            var addRecords = tablesElements.Descendants("add").Descendants("Data").Descendants("Row");
+            var deleteRecords = tablesElements.Descendants("remove").Descendants("Data").Descendants("Row");
+
+
+            var findRemove = (from rows in deleteRecords
+                              where rows.Attributes("Name").Any() && rows.Attribute("Name").Value.Equals(selectedRemove.ObjectName)
+                              select rows).FirstOrDefault();
+           
+
+            var findAdd = (from rows in addRecords
+                           where rows.Attributes("Name").Any() && rows.Attribute("Name").Value.Equals(selectedAddOrUpdate.ObjectName)
+                           select rows).FirstOrDefault();
+
+            
+
+            if (findAdd != null)
+            {
+                var mustUpdateRow = findRemove.Attribute(XName.Get("Name"));
+                findRemove?.Remove();
+                findAdd.SetAttributeValue(XName.Get("Name"), mustUpdateRow.Value);
+
+                var updateElement = tablesElements.Descendants("update").FirstOrDefault();
+                var columnTypes = tablesElements.Descendants("add").Descendants("Data").Descendants("ColumnTypes")
+                    .FirstOrDefault();
+
+
+
+                if (updateElement != null)
+                {
+                    var dataNode = updateElement.Descendants("Data").FirstOrDefault();
+                    if (dataNode != null)
+                        dataNode.Add(findAdd);
+                    else
+                    {
+                        var updateData = new XElement(XName.Get("Data"));
+                        updateData.Add(columnTypes);
+                        updateData.Add(findAdd);
+                        updateElement.Add(updateData);
+                    }
+                }
+                else
+                {
+                    var updateAdd = new XElement(XName.Get("update"));
+                    var updateData = new XElement(XName.Get("Data"));
+                    updateData.Add(columnTypes);
+                    updateData.Add(findAdd);
+                    updateAdd.Add(updateData);
+                    tablesElements.Add(updateAdd);
+                }
+
+                findAdd.Remove();
+                database.Save(path);
+                return tablesElements?.Descendants("add").Descendants("Data").FirstOrDefault();
+            }
+            return null;
         }
 
         /// <summary>
