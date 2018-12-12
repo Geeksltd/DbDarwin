@@ -62,6 +62,14 @@ namespace DbDarwin.Service
             });
             return results;
         }
+        public List<GeneratedScriptResult> SqlOperation(GeneratedScriptResult model)
+        {
+            model.ID = Guid.NewGuid().ToString();
+            model.Order = results.Count + 1;
+            results.Add(model);
+            return results;
+        }
+
 
         public List<GeneratedScriptResult> GenerateScript(GenerateScript model)
         {
@@ -644,23 +652,24 @@ END
                     var intersected = listPropertyChanged.Intersect(detectChanges).ToList();
                     if (intersected.Any())
                     {
-                        var builder = new StringBuilder();
-                        builder.AppendLine();
-                        builder.AppendLine();
-                        builder.AppendLine();
-                        builder.AppendLine("GO");
-                        builder.AppendLine("PRINT 'Updating Column Type and Length...'");
-                        builder.AppendLine();
-                        builder.AppendLine();
-                        builder.AppendLine("GO");
+                        var initialBuilder = new StringBuilder();
 
-                        builder.AppendLine(GenerateDeleteConstraintBeforeAddOrUpdate(tableName, schema,
+                        var builder = new StringBuilder();
+                        initialBuilder.AppendLine();
+                        initialBuilder.AppendLine();
+                        initialBuilder.AppendLine();
+                        initialBuilder.AppendLine("GO");
+                        initialBuilder.AppendLine("PRINT 'Updating Column Type and Length...'");
+                        initialBuilder.AppendLine();
+                        initialBuilder.AppendLine();
+                        initialBuilder.AppendLine("GO");
+
+                        initialBuilder.AppendLine(GenerateDeleteConstraintBeforeAddOrUpdate(tableName, schema,
                             $"DF_{tableName}_{column.Name}"));
 
-                        var typeLen = GenerateLength(column);
                         builder.AppendFormat("ALTER TABLE [{0}].[{1}] ALTER COLUMN [{2}] {3}", schema, tableName, column.Name,
                             column.DATA_TYPE);
-                        builder.AppendFormat("{0} {1};", typeLen, column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
+                        builder.AppendFormat("{0} {1};", GenerateLength(column), column.IS_NULLABLE == "NO" ? "NOT NULL" : "NULL");
                         builder.AppendLine();
                         builder.AppendLine("GO");
 
@@ -673,10 +682,19 @@ END
                             builder.AppendLine("GO");
                         }
 
+                        sb.Append(initialBuilder);
                         sb.Append(builder);
-                        SqlOperation(
-                            $"Update column {column.Name} from table [{schema}].[{tableName}]",
-                            builder.ToString(), ViewMode.Update, $"{schema}.{tableName}", column.Name, SQLObject.Column);
+
+                        SqlOperation(new GeneratedScriptResult()
+                        {
+                            Title= $"Update column {column.Name} from table [{schema}].[{tableName}]",
+                            Mode = ViewMode.Update,
+                            SQLScriptInitial = initialBuilder.ToString(),
+                            SQLScript = builder.ToString(),
+                            FullTableName = $"{schema}.{tableName}",
+                            ObjectName = column.Name,
+                            ObjectType = SQLObject.Column,
+                        });
                     }
                 }
 
@@ -767,7 +785,6 @@ END
                 var builder = new StringBuilder();
 
                 builder.Append($"ALTER TABLE [{schema}].[{tableName}]");
-                //   var columnNames = columns.Select(x => x.Name).Aggregate("", (current, c) => current + $"[{c}] ,").Trim(',');
                 builder.AppendLine($" DROP COLUMN [{column.Name}]");
                 builder.AppendLine("GO");
                 builder.AppendLine($"ALTER TABLE [{schema}].[{tableName}] SET (LOCK_ESCALATION = TABLE)");
@@ -823,7 +840,6 @@ END
 
                 commandBuilder.Add(sqlBuilder);
 
-                // sb.Append(builder);
                 SqlOperation(operationDescription, sqlBuilder.Full, ViewMode.Add, $"{schema}.{tableName}", key.Name,
                     SQLObject.ForeignKey);
             }

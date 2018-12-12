@@ -7,6 +7,7 @@ namespace DbDarwin.Model
     {
         public string ID { get; set; }
         public string Title { get; set; }
+        public string SQLScriptInitial { get; set; }
         public string SQLScript { get; set; }
         public ViewMode Mode { get; set; }
         public int Order { get; set; }
