@@ -1,5 +1,6 @@
 ﻿using DbDarwin.Model.Command;
 using DbDarwin.Model.Schema;
+using Olive;
 using PowerMapper;
 using System;
 using System.Collections.Generic;
@@ -259,12 +260,13 @@ namespace DbDarwin.Service
                     var schemaName = string.Empty;
                     if (tableNameAttribute != null)
                         tableName = tableNameAttribute.Value;
-                    if (schemaAttribute != null)
-                        schemaName = schemaAttribute.Value;
+                    schemaName = schemaAttribute?.Value;
 
-                    var foundData = dataElements?.FirstOrDefault(x =>
-                        x.Attributes().Any(c => c.Name == "Name" && c.Value == tableName) &&
-                        x.Elements(XName.Get("Data")).Any());
+
+                    var foundData = (from d in dataElements
+                                    where d.Attribute(XName.Get("Name"))?.Value == tableName
+                                    && d.Attribute(XName.Get("Schema"))?.Value == schemaName
+                                     select d).FirstOrDefault();
                     if (foundData != null)
                         element.Add(foundData.Elements(XName.Get("Data")));
                 }

@@ -74,7 +74,7 @@ namespace DbDarwin.Service
         {
             foreach (var sourceTable in sourceSchema.Tables)
             {
-                var foundTable = targetSchema.Tables.FirstOrDefault(x => x.FullName == sourceTable.FullName);
+                var foundTable = targetSchema.Tables.FirstOrDefault(x => x.FullName.Equals(sourceTable.FullName,StringComparison.OrdinalIgnoreCase));
                 if (foundTable == null)
                 {
                     using (var navigatorAdd = AddTables.CreateWriter())
@@ -396,16 +396,16 @@ namespace DbDarwin.Service
             object found = null;
             if (typeof(T) == typeof(Column))
                 found = newList.Cast<Column>().FirstOrDefault(x =>
-                    x.Name == currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString());
+                    x.Name.Equals(currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString(), StringComparison.OrdinalIgnoreCase));
             else if (typeof(T) == typeof(Index))
                 found = newList.Cast<Index>().FirstOrDefault(x =>
-                    x.Name == currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString());
+                    x.Name.Equals(currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString(), StringComparison.OrdinalIgnoreCase));
             else if (typeof(T) == typeof(ForeignKey))
                 found = newList.Cast<ForeignKey>().FirstOrDefault(x =>
-                    x.Name == currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString());
+                    x.Name.Equals(currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString(), StringComparison.OrdinalIgnoreCase));
             else if (typeof(T) == typeof(PrimaryKey))
                 found = newList.Cast<PrimaryKey>().FirstOrDefault(x =>
-                    x.Columns == currentObject.GetType().GetProperty("Columns")?.GetValue(currentObject).ToString());
+                    x.Columns.Equals(currentObject.GetType().GetProperty("Columns")?.GetValue(currentObject).ToString(), StringComparison.OrdinalIgnoreCase));
 
             return (T)Convert.ChangeType(found, typeof(T));
         }
@@ -417,16 +417,16 @@ namespace DbDarwin.Service
             if (targetList == null) return sourceList;
             if (typeof(T) == typeof(Column))
                 tempAdd = sourceList.Cast<Column>()
-                    .Except(x => targetList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME))
+                    .Except(x => targetList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME,false))
                     .ToList();
             else if (typeof(T) == typeof(Index))
                 tempAdd = sourceList.Cast<Index>()
-                    .Except(x => targetList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name)).ToList();
+                    .Except(x => targetList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name, false)).ToList();
             else if (typeof(T) == typeof(ForeignKey))
                 tempAdd = sourceList.Cast<ForeignKey>()
                     .Except(x =>
                         targetList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList()
-                            .Contains(x.CONSTRAINT_NAME)).ToList();
+                            .Contains(x.CONSTRAINT_NAME, false)).ToList();
             return (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
         }
 
