@@ -77,6 +77,8 @@ namespace DbDarwin.Service
                 var foundTable = targetSchema.Tables.FirstOrDefault(x => x.FullName.Equals(sourceTable.FullName,StringComparison.OrdinalIgnoreCase));
                 if (foundTable == null)
                 {
+                    sourceTable.Add = new Table() { Data = sourceTable.Data };
+                    sourceTable.Data = null;
                     using (var navigatorAdd = AddTables.CreateWriter())
                         navigatorAdd.Serialize(sourceTable);
                 }
@@ -164,7 +166,7 @@ namespace DbDarwin.Service
             if (source.Data == null && targetData == null) return;
             var sourceTable = source.Data.ToDictionaryList();
             var targetTable = targetData.ToDictionaryList();
-            var columnType = GetColumnTypes(source.Columns);
+            var columnType = ExtractSchemaService.GetColumnTypes(source.Columns);
             // Detect Add Or Update
             var result = DetectAddOrUpdate(sourceTable, targetTable);
             result.TryGetValue("Add", out var dataNodeAdd);
@@ -192,12 +194,7 @@ namespace DbDarwin.Service
             }
         }
 
-        XElement GetColumnTypes(List<Column> columns)
-        {
-            var columnTypes = new XElement("ColumnTypes");
-            columns.ForEach(column => columnTypes.SetAttributeValue(XmlConvert.EncodeName(column.Name) ?? column.Name, column.DATA_TYPE));
-            return columnTypes;
-        }
+  
 
         /// <summary>
         /// Detect Add Or Update Data

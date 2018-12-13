@@ -143,7 +143,10 @@ namespace DbDarwin.Service
             if (foreignKeys.Any())
                 sb.AppendLine(foreignKeys.Select(x => x.AfterCommit).Aggregate((x, y) => x + y));
 
-            if (diffFile?.Update != null)
+      
+            if (diffFile?.Add != null)
+                sb.AppendLine(GenerateData(diffFile.Add));
+                  if (diffFile?.Update != null)
                 sb.AppendLine(GenerateData(diffFile.Update));
 
             File.WriteAllText(model.MigrateSqlFile, sb.ToString());
@@ -232,16 +235,14 @@ namespace DbDarwin.Service
             var sb = new StringBuilder();
             var sourceDataTable = table.Add?.Data?.Rows.ToDictionaryList();
             if (sourceDataTable == null) return sb.ToString();
-            var columns = sourceDataTable.FirstOrDefault();
-            var columnsSql = string.Empty;
-            if (columns != null)
-                columnsSql = $"INSERT [{table.Schema}].[{table.Name}] (" +
-                             columns
-                                 .Aggregate(columnsSql, (current, column) => current + ($"[{column.Key}]" + ", "))
-                                 .Trim(',', ' ') + ") VALUES ";
+          
+
 
             foreach (var row in sourceDataTable)
             {
+                var columnsSql = $"INSERT [{table.Schema}].[{table.Name}] (" +
+                                row.Aggregate(string.Empty, (current, column) => current + ($"[{column.Key}]" + ", "))
+                                    .Trim(',', ' ') + ") VALUES ";
                 var builder = new StringBuilder();
                 builder.AppendLine(columnsSql + GenerateInsertData(row, XmlExtention.ToDictionary(table.Add?.Data?.ColumnTypes)));
                 builder.AppendLine("GO");

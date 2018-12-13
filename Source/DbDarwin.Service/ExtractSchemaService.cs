@@ -139,7 +139,7 @@ namespace DbDarwin.Service
 
                     };
 
-                    CheckReferenceData(tableId, newTable.Name, newTable.Schema);
+                    CheckReferenceData(tableId, newTable.Name, newTable.Schema,newTable.Columns);
 
                     Database.Tables.Add(newTable);
                 }
@@ -162,7 +162,7 @@ namespace DbDarwin.Service
             return true;
         }
 
-        void CheckReferenceData(long tableId, string tableName, string schema)
+        void CheckReferenceData(long tableId, string tableName, string schema,List<Column> columns)
         {
             // If table is deference data
             // For check reference data
@@ -183,17 +183,26 @@ namespace DbDarwin.Service
                         var rowElement = new XElement("Row");
                         foreach (var column in data.Columns.Cast<DataColumn>())
                         {
-                            if (column.ColumnName.ToLower() == "id") continue;
+                            if (column.ColumnName.ToLower() == "id" || rowData[column.ColumnName] == System.DBNull.Value) continue;
+
                             rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
                         }
 
                         dataElement.Add(rowElement);
                     }
-
+                    var columnType = GetColumnTypes(columns);
+                    dataElement.AddFirst(columnType);
                     tableElement.Add(dataElement);
                     RootDatabase.Add(tableElement);
                 }
             }
+        }
+
+        public static XElement GetColumnTypes(List<Column> columns)
+        {
+            var columnTypes = new XElement("ColumnTypes");
+            columns.ForEach(column => columnTypes.SetAttributeValue(XmlConvert.EncodeName(column.Name) ?? column.Name, column.DATA_TYPE));
+            return columnTypes;
         }
 
         List<Index> FetchIndexes(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
