@@ -8,7 +8,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -17,13 +16,15 @@ namespace DbDarwin.Service
 {
     public class ExtractSchemaService : IDisposable
     {
-        bool disposedValue;
-        readonly SqlConnection CurrentSqlConnection;
+        private bool disposedValue;
+        private readonly SqlConnection CurrentSqlConnection;
         public List<ConstraintInformationModel> ConstraintInformation { get; set; }
         /// <summary>
         /// All Table Extend Property
         /// </summary>
         public List<ExtendedProperty> ExtendProperties { get; set; }
+        public List<IdentityData> IdentityColumns { get; set; }
+
         /// <summary>
         /// All Key Constraint
         /// </summary>
@@ -83,6 +84,9 @@ namespace DbDarwin.Service
             KeyConstraints = SqlService.LoadData<KeyConstraint>(CurrentSqlConnection, "keyConstraints", "SELECT * FROM [sys].[key_constraints]");
             // Get All Table Extend Property
             ExtendProperties = SqlService.LoadData<ExtendedProperty>(CurrentSqlConnection, "extendProperties", "SELECT [major_id] ,[name] ,[value] FROM [sys].[extended_properties] where minor_id = 0 and major_id <> 0");
+            // Identity Columns
+            IdentityColumns = SqlService.LoadData<IdentityData>(CurrentSqlConnection, "IdentityData", "select OBJECT_NAME(object_id) as TableName,OBJECT_SCHEMA_NAME(object_id) as SchemaName, * FROM sys.identity_columns");
+
 
             ConstraintInformation = (from ind in IndexMapped
                                      join ic in IndexColumnsMapped on new { ind.object_id, ind.index_id } equals new
@@ -118,20 +122,20 @@ namespace DbDarwin.Service
                     var schemaTable = tableSchema["TABLE_SCHEMA"].ToString();
                     var tableName = tableSchema["TABLE_NAME"].ToString();
                     Console.WriteLine(schemaTable + @"." + tableName);
-                    var tableId = ObjectMapped.Where(x => x.schemaName == schemaTable && x.name == tableName).Select(x => x.object_id)
+                    int tableId = ObjectMapped
+                        .Where(x => x.schemaName.Equals(schemaTable, StringComparison.OrdinalIgnoreCase) && x.name.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+                        .Select(x => x.object_id)
                         .FirstOrDefault();
 
-                    var indexes = FetchIndexes(ConstraintInformation, tableId);
-                    var primaryKey = FetchPrimary(ConstraintInformation, KeyConstraints, tableId);
+                    var indexes = FetchIndexes(tableId);
+                    var primaryKey = FetchPrimary(tableId);
+                    var columns = FetchCulomns(tableName, schemaTable);
 
                     var newTable = new Table
                     {
                         Name = tableName,
                         Schema = schemaTable,
-                        Columns = ColumnsMapped.Where(x =>
-                                x.TABLE_NAME == tableName &&
-                                x.TABLE_SCHEMA == schemaTable)
-                            .ToList(),
+                        Columns = columns,
                         Indexes = indexes,
                         PrimaryKey = primaryKey,
                         ForeignKeys = ReferencesMapped.Where(x =>
@@ -139,7 +143,7 @@ namespace DbDarwin.Service
 
                     };
 
-                    CheckReferenceData(tableId, newTable.Name, newTable.Schema,newTable.Columns);
+                    CheckReferenceData(tableId, newTable.Name, newTable.Schema, newTable.Columns);
 
                     Database.Tables.Add(newTable);
                 }
@@ -162,7 +166,27 @@ namespace DbDarwin.Service
             return true;
         }
 
-        void CheckReferenceData(long tableId, string tableName, string schema,List<Column> columns)
+        private List<Column> FetchCulomns(string tableName, string schemaTable)
+        {
+            var result = ColumnsMapped.Where(x => x.TABLE_NAME == tableName && x.TABLE_SCHEMA == schemaTable).ToList();
+            foreach (var column in result)
+            {
+                var identity = IdentityColumns.FirstOrDefault(x =>
+                x.TableName.Equals(tableName, StringComparison.OrdinalIgnoreCase)
+                && x.SchemaName.Equals(schemaTable, StringComparison.OrdinalIgnoreCase)
+                && x.name.Equals(column.Name, StringComparison.OrdinalIgnoreCase));
+                if (identity != null)
+                {
+                    column.IsIdentity = true;
+                    column.SeedValue = identity.seed_value;
+                    column.IncrementValue = identity.increment_value;
+                }
+            }
+            return result;
+
+        }
+
+        private void CheckReferenceData(long tableId, string tableName, string schema, List<Column> columns)
         {
             // If table is deference data
             // For check reference data
@@ -200,14 +224,14 @@ namespace DbDarwin.Service
 
         public static XElement GetColumnTypes(List<Column> columns)
         {
-            var columnTypes = new XElement("ColumnTypes");
-            columns.ForEach(column => columnTypes.SetAttributeValue(XmlConvert.EncodeName(column.Name) ?? column.Name, column.DATA_TYPE));
-            return columnTypes;
+            var result = new XElement("ColumnTypes");
+            columns.ForEach(column => result.SetAttributeValue(XmlConvert.EncodeName(column.Name) ?? column.Name, column.DATA_TYPE));
+            return result;
         }
 
-        List<Index> FetchIndexes(IEnumerable<ConstraintInformationModel> constraintInformation, int tableId)
+        private List<Index> FetchIndexes(int tableId)
         {
-            var indexRows = constraintInformation
+            var indexRows = ConstraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "False")
                 .GroupBy(x => x.Index.name);
             var existsIndex = new List<Index>();
@@ -224,9 +248,9 @@ namespace DbDarwin.Service
             return existsIndex;
         }
 
-        PrimaryKey FetchPrimary(IEnumerable<ConstraintInformationModel> constraintInformation, IEnumerable<KeyConstraint> keyConstraints, int tableId)
+        private PrimaryKey FetchPrimary(int tableId)
         {
-            var indexRows = constraintInformation
+            var indexRows = ConstraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "True")
                 .GroupBy(x => x.Index.name);
             var index = indexRows.FirstOrDefault();
@@ -238,7 +262,7 @@ namespace DbDarwin.Service
                         .Select(x => x.SystemColumn.name)
                         .Aggregate((x, y) => x + "|" + y).Trim('|');
                 var primaryKeys = resultIndex.MapTo<PrimaryKey>();
-                var constraint = keyConstraints.FirstOrDefault(x => x.name == primaryKeys.Name);
+                var constraint = KeyConstraints.FirstOrDefault(x => x.name == primaryKeys.Name);
                 if (constraint != null)
                     primaryKeys.is_system_named = constraint.is_system_named;
                 return primaryKeys;
@@ -273,8 +297,8 @@ namespace DbDarwin.Service
 
 
                     var foundData = (from d in dataElements
-                                    where d.Attribute(XName.Get("Name"))?.Value == tableName
-                                    && d.Attribute(XName.Get("Schema"))?.Value == schemaName
+                                     where d.Attribute(XName.Get("Name"))?.Value == tableName
+                                     && d.Attribute(XName.Get("Schema"))?.Value == schemaName
                                      select d).FirstOrDefault();
                     if (foundData != null)
                         element.Add(foundData.Elements(XName.Get("Data")));
