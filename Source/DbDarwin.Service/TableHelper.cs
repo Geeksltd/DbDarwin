@@ -58,12 +58,19 @@ namespace DbDarwin.Service
                             }
                             else
                             {
-                                var result = Convert.ChangeType(row[propertyInfo.Name], propertyInfo.PropertyType);
-                                if (propertyInfo.PropertyType == typeof(string) &&
-                                    (row[propertyInfo.Name] == null || row[propertyInfo.Name].ToString().IsEmpty()))
+                                if (row[propertyInfo.Name] == System.DBNull.Value)
+                                {
                                     propertyInfo.SetValue(obj, null, null);
+                                }
                                 else
-                                    propertyInfo.SetValue(obj, result, null);
+                                {
+                                    var result = Convert.ChangeType(row[propertyInfo.Name], propertyInfo.PropertyType);
+                                    if (propertyInfo.PropertyType == typeof(string) &&
+                                        (row[propertyInfo.Name] == null || row[propertyInfo.Name].ToString().IsEmpty()))
+                                        propertyInfo.SetValue(obj, null, null);
+                                    else
+                                        propertyInfo.SetValue(obj, result, null);
+                                }
                             }
                         }
                         catch (Exception ex)

@@ -2,6 +2,7 @@
 using DbDarwin.Model.Command;
 using DbDarwin.Model.Schema;
 using KellermanSoftware.CompareNetObjects;
+using Olive;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,18 +10,22 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using Olive;
 
 namespace DbDarwin.Service
 {
     public class CompareSchemaService : IDisposable
     {
-        bool disposedValue; // To detect redundant calls
-        readonly XElement UpdateTables;
-        readonly XElement AddTables;
-        readonly XElement RemoveTables;
-        readonly XElement RootDatabase;
-        readonly XDocument Doc;
+        private bool disposedValue; // To detect redundant calls
+        private readonly XElement UpdateTables;
+        private readonly XElement AddTables;
+        private readonly XElement RemoveTables;
+        private readonly XElement RootDatabase;
+        private readonly XDocument Doc;
+
+        private Database TargetSchema;
+        private Database SourceSchema;
+
+
 
         public CompareSchemaService()
         {
@@ -41,13 +46,10 @@ namespace DbDarwin.Service
             var result = new ResultMessage();
             try
             {
-                var targetSchema = LoadXMLFile(model.TargetSchemaFile);
-                var sourceSchema = LoadXMLFile(model.SourceSchemaFile);
+                TargetSchema = LoadXMLFile(model.TargetSchemaFile);
+                SourceSchema = LoadXMLFile(model.SourceSchemaFile);
 
-                CompareAndSave(
-                    sourceSchema,
-                    targetSchema,
-                    model.OutputFile);
+                CompareAndSave(model.OutputFile);
 
                 result.IsSuccessfully = true;
                 Console.WriteLine("Saving To xml");
@@ -70,14 +72,14 @@ namespace DbDarwin.Service
             return result;
         }
 
-        void CompareAndSave(Database sourceSchema, Database targetSchema, string output)
+        private void CompareAndSave(string output)
         {
-            foreach (var sourceTable in sourceSchema.Tables)
+            foreach (var sourceTable in SourceSchema.Tables)
             {
-                var foundTable = targetSchema.Tables.FirstOrDefault(x => x.FullName.Equals(sourceTable.FullName,StringComparison.OrdinalIgnoreCase));
+                var foundTable = TargetSchema.Tables.FirstOrDefault(x => x.FullName.Equals(sourceTable.FullName, StringComparison.OrdinalIgnoreCase));
                 if (foundTable == null)
                 {
-                    sourceTable.Add = new Table() { Data = sourceTable.Data };
+                    sourceTable.Add = new Table { Data = sourceTable.Data };
                     sourceTable.Data = null;
                     using (var navigatorAdd = AddTables.CreateWriter())
                         navigatorAdd.Serialize(sourceTable);
@@ -119,14 +121,18 @@ namespace DbDarwin.Service
                 }
             }
 
-            var mustRemove = targetSchema.Tables.Except(c => sourceSchema.Tables.Select(x => x.FullName).ToList().Contains(c.FullName)).ToList();
-            using (var writer = RemoveTables.CreateWriter())
-                mustRemove.ForEach(c => writer.Serialize(c));
-
+            DetectRemoveTables();
             SaveChanges(output);
         }
 
-        void GenerateDifferencePrimaryKey(Table sourceTable, Table foundTable, XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
+        private void DetectRemoveTables()
+        {
+            var mustRemove = TargetSchema.Tables.Except(c => SourceSchema.Tables.Select(x => x.FullName).ToList().Contains(c.FullName, false)).ToList();
+            using (var writer = RemoveTables.CreateWriter())
+                mustRemove.ForEach(c => writer.Serialize(c));
+        }
+
+        private void GenerateDifferencePrimaryKey(Table sourceTable, Table foundTable, XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
             if (sourceTable.PrimaryKey == null && foundTable.PrimaryKey != null)
                 navigatorRemove.Serialize(foundTable.PrimaryKey);
@@ -143,7 +149,7 @@ namespace DbDarwin.Service
             }
         }
 
-        void SaveChanges(string output)
+        private void SaveChanges(string output)
         {
             if (UpdateTables.HasElements) RootDatabase.Add(UpdateTables);
             if (AddTables.HasElements) RootDatabase.Add(AddTables);
@@ -161,7 +167,7 @@ namespace DbDarwin.Service
         /// <param name="addWriter">XML Writer for add data</param>
         /// <param name="removeWriter">XML Writer for remove data</param>
         /// <param name="updateWriter">XML Writer for update data</param>
-        void GenerateDifferenceData(Table source, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
+        private void GenerateDifferenceData(Table source, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
         {
             if (source.Data == null && targetData == null) return;
             var sourceTable = source.Data.ToDictionaryList();
@@ -185,7 +191,7 @@ namespace DbDarwin.Service
         /// <param name="dataNode">Data Node</param>
         /// <param name="columnType">Column Type</param>
         /// <param name="writer">XML Writer</param>
-        void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
+        private void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
         {
             if (dataNodeAdd != null && dataNodeAdd.HasElements)
             {
@@ -194,17 +200,23 @@ namespace DbDarwin.Service
             }
         }
 
-  
-
         /// <summary>
         /// Detect Add Or Update Data
         /// </summary>
         /// <param name="sourceTable">soucre table</param>
         /// <param name="targetTable">target table</param>
         /// <returns>return ditionary</returns>
-        Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
+        private Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
-            var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
+            var compareLogic = new CompareLogic
+            {
+                Config =
+                {
+                    MaxDifferences = int.MaxValue,
+                    AttributesToIgnore = new List<Type>{ typeof(CompareIgnoreAttribute) },
+                    CaseSensitive = false
+                }
+            };
             var dataNodeAdd = new XElement("Data");
             var dataNodeUpdate = new XElement("Data");
             // Detect new data or updates
@@ -212,9 +224,13 @@ namespace DbDarwin.Service
             {
                 sourceRow.TryGetValue("Name", out var val);
                 var exists = false;
+                if (val == null)
+                    continue;
                 foreach (var targetRow in targetTable)
                 {
-                    if (targetRow.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString()))
+                    if (targetRow.Any(x => x.Key.Equals("Name", StringComparison.OrdinalIgnoreCase)
+                    && x.Value != null
+                    && x.Value.ToString().Equals(val.ToString(), StringComparison.OrdinalIgnoreCase)))
                     {
                         var result = compareLogic.Compare(sourceRow, targetRow);
                         if (!result.AreEqual)
@@ -237,16 +253,20 @@ namespace DbDarwin.Service
         /// <param name="sourceTable">Souce Data</param>
         /// <param name="targetTable">Target Data</param>
         /// <returns>Data XML Node</returns>
-        XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
+        private XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
             var dataNodeRemove = new XElement("Data");
             foreach (var row in targetTable)
             {
                 row.TryGetValue("Name", out var val);
+                if (val == null)
+                    continue;
                 var exists = false;
                 foreach (var data2 in sourceTable)
                 {
-                    exists = data2.Any(x => x.Key == "Name" && x.Value?.ToString() == val?.ToString());
+                    exists = data2.Any(x => x.Key.Equals("Name", StringComparison.OrdinalIgnoreCase)
+                    && x.Value != null
+                    && x.Value.ToString().Equals(val.ToString(), StringComparison.OrdinalIgnoreCase));
                     if (exists) break;
                 }
 
@@ -322,7 +342,7 @@ namespace DbDarwin.Service
             File.WriteAllText(model.MigrateSqlFile, xml);
         }
 
-        static void SetColumnName(Column column, Transformation model)
+        private static void SetColumnName(Column column, Transformation model)
         {
             if (column != null) column.SetName = model.ToName;
         }
@@ -343,13 +363,21 @@ namespace DbDarwin.Service
         {
             // Detect new sql object like as INDEX , Column , REFERENTIAL_CONSTRAINTS 
             var mustAdd = FindNewComponent<T>(sourceData, targetData);
-                                   
+
             // Add new objects to xml
             if (mustAdd != null)
                 foreach (var sqlObject in mustAdd)
                     navigatorAdd.Serialize(sqlObject);
 
-            var compareLogic = new CompareLogic { Config = { MaxDifferences = int.MaxValue } };
+            var compareLogic = new CompareLogic
+            {
+                Config =
+                {
+                    MaxDifferences = int.MaxValue,
+                    AttributesToIgnore = new List<Type>{ typeof(CompareIgnoreAttribute) },
+                    CaseSensitive = false,
+                }
+            };
             if (typeof(T) == typeof(PrimaryKey))
             {
                 compareLogic.Config.MembersToIgnore.Add("Name");
@@ -388,7 +416,7 @@ namespace DbDarwin.Service
             }
         }
 
-        object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
+        private object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
         {
             object found = null;
             if (typeof(T) == typeof(Column))
@@ -407,14 +435,14 @@ namespace DbDarwin.Service
             return (T)Convert.ChangeType(found, typeof(T));
         }
 
-        List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
+        private List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
         {
             object tempAdd = null;
             if (sourceList == null) return new List<T>();
             if (targetList == null) return sourceList;
             if (typeof(T) == typeof(Column))
                 tempAdd = sourceList.Cast<Column>()
-                    .Except(x => targetList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME,false))
+                    .Except(x => targetList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME, false))
                     .ToList();
             else if (typeof(T) == typeof(Index))
                 tempAdd = sourceList.Cast<Index>()
@@ -437,25 +465,16 @@ namespace DbDarwin.Service
             }
 
             GC.Collect();
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             disposedValue = true;
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~CompareSchemaService() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
 
         // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
         }
         #endregion
     }

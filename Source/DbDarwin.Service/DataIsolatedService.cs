@@ -36,7 +36,7 @@ namespace DbDarwin.Service
         public string Password { get; set; }
         public string UserName { get; set; }
 
-        public string GetJson() => JsonConvert.SerializeObject(this);
+        public string Json => JsonConvert.SerializeObject(this);
     }
 
     public class ManageConnectionData
@@ -48,7 +48,7 @@ namespace DbDarwin.Service
                 Password = password,
                 UserName = username
             };
-            DataIsolatedService.SaveData(fileName, data.GetJson());
+            DataIsolatedService.SaveData(fileName, data.Json);
         }
 
         public static ConnectionData ReadConnection(string fileName)

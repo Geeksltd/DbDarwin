@@ -1,15 +1,7 @@
+using DbDarwin.Model.Command;
 using DbDarwin.Service;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
-using System.Xml;
-using System.Linq;
-using DbDarwin.Model.Command;
-using KellermanSoftware.CompareNetObjects;
-using Olive;
-using System.Dynamic;
-using System.Xml.Linq;
-using System.Xml.Serialization;
 
 namespace DbDarwin.UnitTestProject
 {

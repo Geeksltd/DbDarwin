@@ -1,12 +1,11 @@
-﻿using System;
+﻿using DbDarwin.Model.Schema;
+using Olive;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using DbDarwin.Model.Schema;
 
 namespace DbDarwin.Service
 {
@@ -46,17 +45,17 @@ namespace DbDarwin.Service
 
         public static IDictionary<string, object> ToDictionary(this XmlNode[] data)
         {
-            var expando = new ExpandoObject();
+            var result = new ExpandoObject();
             foreach (var node in data)
-                AddProperty(expando, XmlConvert.DecodeName(node.Name), node.InnerText);
-            return (IDictionary<string, object>)expando;
+                AddProperty(result, XmlConvert.DecodeName(node.Name), node.InnerText);
+            return result;
         }
         public static IDictionary<string, object> ToDictionary(dynamic data)
         {
-            var expando = new ExpandoObject();
+            var result = new ExpandoObject();
             foreach (var node in data)
-                AddProperty(expando, XmlConvert.DecodeName(node.Name), node.InnerText);
-            return (IDictionary<string, object>)expando;
+                AddProperty(result, XmlConvert.DecodeName(node.Name), node.InnerText);
+            return result;
         }
         //https://www.oreilly.com/learning/building-c-objects-dynamically
         public static void AddProperty(ExpandoObject expando, string propertyName, object propertyValue)

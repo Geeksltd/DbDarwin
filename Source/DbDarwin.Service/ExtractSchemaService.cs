@@ -87,7 +87,6 @@ namespace DbDarwin.Service
             // Identity Columns
             IdentityColumns = SqlService.LoadData<IdentityData>(CurrentSqlConnection, "IdentityData", "select OBJECT_NAME(object_id) as TableName,OBJECT_SCHEMA_NAME(object_id) as SchemaName, * FROM sys.identity_columns");
 
-
             ConstraintInformation = (from ind in IndexMapped
                                      join ic in IndexColumnsMapped on new { ind.object_id, ind.index_id } equals new
                                      { ic.object_id, ic.index_id }
@@ -122,7 +121,7 @@ namespace DbDarwin.Service
                     var schemaTable = tableSchema["TABLE_SCHEMA"].ToString();
                     var tableName = tableSchema["TABLE_NAME"].ToString();
                     Console.WriteLine(schemaTable + @"." + tableName);
-                    int tableId = ObjectMapped
+                    var tableId = ObjectMapped
                         .Where(x => x.schemaName.Equals(schemaTable, StringComparison.OrdinalIgnoreCase) && x.name.Equals(tableName, StringComparison.OrdinalIgnoreCase))
                         .Select(x => x.object_id)
                         .FirstOrDefault();
@@ -182,8 +181,8 @@ namespace DbDarwin.Service
                     column.IncrementValue = identity.increment_value;
                 }
             }
-            return result;
 
+            return result;
         }
 
         private void CheckReferenceData(long tableId, string tableName, string schema, List<Column> columns)
@@ -191,8 +190,8 @@ namespace DbDarwin.Service
             // If table is deference data
             // For check reference data
             if (ExtendProperties.Any(x =>
-                x.major_id == tableId && x.name.ToLower() == "ReferenceData".ToLower() &&
-                x.value.ToLower() == "enum"))
+                x.major_id == tableId && x.name.Equals("ReferenceData", StringComparison.OrdinalIgnoreCase) &&
+                x.value.Equals("Enum", StringComparison.OrdinalIgnoreCase)))
             {
                 var data = SqlService.LoadData(CurrentSqlConnection, tableName, $"SELECT * FROM [{schema}].[{tableName}]");
                 if (data.Rows.Count > 0)
@@ -207,13 +206,15 @@ namespace DbDarwin.Service
                         var rowElement = new XElement("Row");
                         foreach (var column in data.Columns.Cast<DataColumn>())
                         {
-                            if (column.ColumnName.ToLower() == "id" || rowData[column.ColumnName] == System.DBNull.Value) continue;
-
+                            if (column.ColumnName.Equals("ID", StringComparison.OrdinalIgnoreCase)
+                                || rowData[column.ColumnName] == System.DBNull.Value)
+                                continue;
                             rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
                         }
 
                         dataElement.Add(rowElement);
                     }
+
                     var columnType = GetColumnTypes(columns);
                     dataElement.AddFirst(columnType);
                     tableElement.Add(dataElement);
@@ -232,7 +233,7 @@ namespace DbDarwin.Service
         private List<Index> FetchIndexes(int tableId)
         {
             var indexRows = ConstraintInformation
-                .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "False")
+                .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key.Equals("False", StringComparison.OrdinalIgnoreCase))
                 .GroupBy(x => x.Index.name);
             var existsIndex = new List<Index>();
             foreach (var index in indexRows)
@@ -251,7 +252,7 @@ namespace DbDarwin.Service
         private PrimaryKey FetchPrimary(int tableId)
         {
             var indexRows = ConstraintInformation
-                .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key == "True")
+                .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key.Equals("True", StringComparison.OrdinalIgnoreCase))
                 .GroupBy(x => x.Index.name);
             var index = indexRows.FirstOrDefault();
             if (index != null)
@@ -279,6 +280,7 @@ namespace DbDarwin.Service
                 var serializer = new XmlSerializer(typeof(Database));
                 serializer.Serialize(writer, database);
             }
+
             var dataElements = data.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
             var schemaElements = doc.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
             if (schemaElements != null)
@@ -294,7 +296,6 @@ namespace DbDarwin.Service
                     if (tableNameAttribute != null)
                         tableName = tableNameAttribute.Value;
                     schemaName = schemaAttribute?.Value;
-
 
                     var foundData = (from d in dataElements
                                      where d.Attribute(XName.Get("Name"))?.Value == tableName

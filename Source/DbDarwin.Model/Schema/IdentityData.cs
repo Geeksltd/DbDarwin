@@ -61,6 +61,5 @@
         public bool is_sparse { get; set; }
 
         public bool is_column_set { get; set; }
-
     }
 }

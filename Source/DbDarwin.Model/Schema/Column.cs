@@ -115,28 +115,22 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "DomainName")]
         public string DOMAIN_NAME { get; set; }
 
+        [CompareIgnore]
         [XmlAttribute(AttributeName = "IsIdentity")]
         public bool IsIdentity { get; set; }
 
-        public bool ShouldSerializeIsIdentity()
-        {
-            return IsIdentity == true;
-        }
+        public bool ShouldSerializeIsIdentity => IsIdentity == true;
 
+        [CompareIgnore]
         [XmlAttribute(AttributeName = "SeedValue")]
         public string SeedValue { get; set; }
 
-        public bool GetShouldSerializeSeedValue()
-        {
-            return IsIdentity == true;
-        }
+        public bool ShouldSerializeSeedValue => IsIdentity == true;
 
+        [CompareIgnore]
         [XmlAttribute(AttributeName = "IncrementValue")]
         public string IncrementValue { get; set; }
 
-        public bool GetShouldSerializeIncrementValue()
-        {
-            return IsIdentity == true;
-        }
+        public bool ShouldSerializeIncrementValue => IsIdentity == true;
     }
 }
