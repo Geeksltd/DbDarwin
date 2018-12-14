@@ -16,8 +16,8 @@ namespace DbDarwin.Service
 {
     public class ExtractSchemaService : IDisposable
     {
-        private bool disposedValue;
-        private readonly SqlConnection CurrentSqlConnection;
+        bool disposedValue;
+        readonly SqlConnection CurrentSqlConnection;
         public List<ConstraintInformationModel> ConstraintInformation { get; set; }
         /// <summary>
         /// All Table Extend Property
@@ -165,7 +165,7 @@ namespace DbDarwin.Service
             return true;
         }
 
-        private List<Column> FetchCulomns(string tableName, string schemaTable)
+        List<Column> FetchCulomns(string tableName, string schemaTable)
         {
             var result = ColumnsMapped.Where(x => x.TABLE_NAME == tableName && x.TABLE_SCHEMA == schemaTable).ToList();
             foreach (var column in result)
@@ -185,7 +185,7 @@ namespace DbDarwin.Service
             return result;
         }
 
-        private void CheckReferenceData(long tableId, string tableName, string schema, List<Column> columns)
+        void CheckReferenceData(long tableId, string tableName, string schema, List<Column> columns)
         {
             // If table is deference data
             // For check reference data
@@ -230,7 +230,7 @@ namespace DbDarwin.Service
             return result;
         }
 
-        private List<Index> FetchIndexes(int tableId)
+        List<Index> FetchIndexes(int tableId)
         {
             var indexRows = ConstraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key.Equals("False", StringComparison.OrdinalIgnoreCase))
@@ -249,7 +249,7 @@ namespace DbDarwin.Service
             return existsIndex;
         }
 
-        private PrimaryKey FetchPrimary(int tableId)
+        PrimaryKey FetchPrimary(int tableId)
         {
             var indexRows = ConstraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key.Equals("True", StringComparison.OrdinalIgnoreCase))

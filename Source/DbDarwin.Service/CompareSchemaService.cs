@@ -15,17 +15,11 @@ namespace DbDarwin.Service
 {
     public class CompareSchemaService : IDisposable
     {
-        private bool disposedValue; // To detect redundant calls
-        private readonly XElement UpdateTables;
-        private readonly XElement AddTables;
-        private readonly XElement RemoveTables;
-        private readonly XElement RootDatabase;
-        private readonly XDocument Doc;
+        bool disposedValue; // To detect redundant calls
+        readonly XElement UpdateTables, AddTables, RemoveTables, RootDatabase;
+        readonly XDocument Doc;
 
-        private Database TargetSchema;
-        private Database SourceSchema;
-
-
+        Database TargetSchema, SourceSchema;
 
         public CompareSchemaService()
         {
@@ -72,7 +66,7 @@ namespace DbDarwin.Service
             return result;
         }
 
-        private void CompareAndSave(string output)
+        void CompareAndSave(string output)
         {
             foreach (var sourceTable in SourceSchema.Tables)
             {
@@ -125,14 +119,14 @@ namespace DbDarwin.Service
             SaveChanges(output);
         }
 
-        private void DetectRemoveTables()
+        void DetectRemoveTables()
         {
             var mustRemove = TargetSchema.Tables.Except(c => SourceSchema.Tables.Select(x => x.FullName).ToList().Contains(c.FullName, false)).ToList();
             using (var writer = RemoveTables.CreateWriter())
                 mustRemove.ForEach(c => writer.Serialize(c));
         }
 
-        private void GenerateDifferencePrimaryKey(Table sourceTable, Table foundTable, XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
+        void GenerateDifferencePrimaryKey(Table sourceTable, Table foundTable, XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
             if (sourceTable.PrimaryKey == null && foundTable.PrimaryKey != null)
                 navigatorRemove.Serialize(foundTable.PrimaryKey);
@@ -149,7 +143,7 @@ namespace DbDarwin.Service
             }
         }
 
-        private void SaveChanges(string output)
+        void SaveChanges(string output)
         {
             if (UpdateTables.HasElements) RootDatabase.Add(UpdateTables);
             if (AddTables.HasElements) RootDatabase.Add(AddTables);
@@ -167,7 +161,7 @@ namespace DbDarwin.Service
         /// <param name="addWriter">XML Writer for add data</param>
         /// <param name="removeWriter">XML Writer for remove data</param>
         /// <param name="updateWriter">XML Writer for update data</param>
-        private void GenerateDifferenceData(Table source, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
+        void GenerateDifferenceData(Table source, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
         {
             if (source.Data == null && targetData == null) return;
             var sourceTable = source.Data.ToDictionaryList();
@@ -191,7 +185,7 @@ namespace DbDarwin.Service
         /// <param name="dataNode">Data Node</param>
         /// <param name="columnType">Column Type</param>
         /// <param name="writer">XML Writer</param>
-        private void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
+        void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
         {
             if (dataNodeAdd != null && dataNodeAdd.HasElements)
             {
@@ -206,7 +200,7 @@ namespace DbDarwin.Service
         /// <param name="sourceTable">soucre table</param>
         /// <param name="targetTable">target table</param>
         /// <returns>return ditionary</returns>
-        private Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
+        Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
             var compareLogic = new CompareLogic
             {
@@ -224,8 +218,7 @@ namespace DbDarwin.Service
             {
                 sourceRow.TryGetValue("Name", out var val);
                 var exists = false;
-                if (val == null)
-                    continue;
+                if (val == null) continue;
                 foreach (var targetRow in targetTable)
                 {
                     if (targetRow.Any(x => x.Key.Equals("Name", StringComparison.OrdinalIgnoreCase)
@@ -253,14 +246,13 @@ namespace DbDarwin.Service
         /// <param name="sourceTable">Souce Data</param>
         /// <param name="targetTable">Target Data</param>
         /// <returns>Data XML Node</returns>
-        private XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
+        XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
             var dataNodeRemove = new XElement("Data");
             foreach (var row in targetTable)
             {
                 row.TryGetValue("Name", out var val);
-                if (val == null)
-                    continue;
+                if (val == null) continue;
                 var exists = false;
                 foreach (var data2 in sourceTable)
                 {
@@ -342,7 +334,7 @@ namespace DbDarwin.Service
             File.WriteAllText(model.MigrateSqlFile, xml);
         }
 
-        private static void SetColumnName(Column column, Transformation model)
+        static void SetColumnName(Column column, Transformation model)
         {
             if (column != null) column.SetName = model.ToName;
         }
@@ -416,7 +408,7 @@ namespace DbDarwin.Service
             }
         }
 
-        private object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
+        object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
         {
             object found = null;
             if (typeof(T) == typeof(Column))
@@ -435,7 +427,7 @@ namespace DbDarwin.Service
             return (T)Convert.ChangeType(found, typeof(T));
         }
 
-        private List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
+        List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
         {
             object tempAdd = null;
             if (sourceList == null) return new List<T>();
@@ -468,7 +460,6 @@ namespace DbDarwin.Service
 
             disposedValue = true;
         }
-
 
         // This code added to correctly implement the disposable pattern.
         public void Dispose()

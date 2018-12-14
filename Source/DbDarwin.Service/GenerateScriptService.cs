@@ -41,7 +41,7 @@ namespace DbDarwin.Service
     }
     public class GenerateScriptService
     {
-        private readonly List<GeneratedScriptResult> results;
+        readonly List<GeneratedScriptResult> results;
         public GenerateScriptService()
         {
             results = new List<GeneratedScriptResult>();
@@ -158,7 +158,7 @@ namespace DbDarwin.Service
         /// </summary>
         /// <param name="diffFile">Diff file</param>
         /// <returns>SQL Scripts</returns>
-        private string GenerateData(Database diffFile)
+        string GenerateData(Database diffFile)
         {
             var builder = new StringBuilder();
 
@@ -181,7 +181,7 @@ namespace DbDarwin.Service
             return string.Empty;
         }
 
-        private string GenerateUpdateRows(Table table)
+        string GenerateUpdateRows(Table table)
         {
             var sb = new StringBuilder();
             var sourceDataTable = table.Update?.Data?.Rows.ToDictionaryList();
@@ -210,7 +210,7 @@ namespace DbDarwin.Service
             return builder.ToString();
         }
 
-        private string GenerateRemoveRows(Table table)
+        string GenerateRemoveRows(Table table)
         {
             var sb = new StringBuilder();
             var sourceDataTable = table.Remove?.Data?.Rows.ToDictionaryList();
@@ -230,7 +230,7 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        private string GenerateInsertRows(Table table)
+        string GenerateInsertRows(Table table)
         {
             var sb = new StringBuilder();
             var sourceDataTable = table.Add?.Data?.Rows.ToDictionaryList();
@@ -262,12 +262,12 @@ namespace DbDarwin.Service
                        .Trim(',', ' ', '|') + " }";
         }
 
-        private string GenerateInsertData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
+        string GenerateInsertData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
         {
             return $"({rowData.Aggregate("", (current, data) => current + (data.Value.NormalData(columnTypes[data.Key].ToString()) + ", ")).Trim(',', ' ')})";
         }
 
-        private static string GenerateUpdateData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
+        static string GenerateUpdateData(IDictionary<string, object> rowData, IDictionary<string, object> columnTypes)
         {
             var builder = new StringBuilder();
             var condition = string.Empty;
@@ -284,7 +284,7 @@ namespace DbDarwin.Service
             return builder.ToString();
         }
 
-        private string GenerateRemoveTables(IEnumerable<Table> tables)
+        string GenerateRemoveTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
@@ -304,7 +304,7 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        private string GenerateAddTables(IEnumerable<Table> tables)
+        string GenerateAddTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
@@ -329,7 +329,7 @@ namespace DbDarwin.Service
             return sb.ToString();
         }
 
-        private string GenerateUpdateTables(IEnumerable<Table> tables)
+        string GenerateUpdateTables(IEnumerable<Table> tables)
         {
             var sb = new StringBuilder();
             foreach (var table in tables)
@@ -407,8 +407,7 @@ namespace DbDarwin.Service
                                   where tables.Attribute("Name").Value.Equals(selectedAddOrUpdate.TableName) &&
                                         (tables.Attribute("Schema")?.Value == string.Empty || tables.Attribute("Schema")?.Value == selectedAddOrUpdate.Schema)
                                   select tables).FirstOrDefault();
-            if (tablesElements == null)
-                return null;
+            if (tablesElements == null) return null;
             var addRecords = tablesElements.Descendants("add").Descendants("Data").Descendants("Row");
             var deleteRecords = tablesElements.Descendants("remove").Descendants("Data").Descendants("Row");
 
@@ -506,7 +505,7 @@ END
             return sb.ToString();
         }
 
-        private string GenerateNewPrimaryKey(PrimaryKey key, string tableName, string schema)
+        string GenerateNewPrimaryKey(PrimaryKey key, string tableName, string schema)
         {
             var sb = new StringBuilder();
 
@@ -526,7 +525,7 @@ END
             return sb.ToString();
         }
 
-        private static string GeneratePrimaryKeyCore(PrimaryKey key)
+        static string GeneratePrimaryKeyCore(PrimaryKey key)
         {
             var sb = new StringBuilder();
             if (!key.is_system_named)
@@ -545,7 +544,7 @@ END
             return sb.ToString();
         }
 
-        private static string PrimaryKeyOptions(PrimaryKey key)
+        static string PrimaryKeyOptions(PrimaryKey key)
         {
             var sb = new StringBuilder();
 
@@ -570,7 +569,7 @@ END
             return sb.Length > 0 ? $" WITH ({sb})".Trim(',', ' ') : string.Empty;
         }
 
-        private string GenerateUpdateForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
+        string GenerateUpdateForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -614,7 +613,7 @@ END
             return sb.ToString();
         }
 
-        private string GenerateUpdateIndexes(IEnumerable<Index> indexes, string tableName, string schema)
+        string GenerateUpdateIndexes(IEnumerable<Index> indexes, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -669,7 +668,7 @@ END
             return sb.ToString();
         }
 
-        private string GenerateUpdateColumns(IEnumerable<Column> columns, string tableName, string schema)
+        string GenerateUpdateColumns(IEnumerable<Column> columns, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -791,7 +790,7 @@ END
         /// <param name="tableName">Table Name</param>
         /// <param name="schema">Table Schema</param>
         /// <returns>sql script</returns>
-        private string GenerateRemoveForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
+        string GenerateRemoveForeignKey(IEnumerable<ForeignKey> foreignKeys, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -819,7 +818,7 @@ END
         /// <param name="tableName">Table Name</param>
         /// <param name="indexes">Index Collection for this table</param>
         /// <returns>sql script to remove object</returns>
-        private string GenerateRemoveIndexes(IEnumerable<Index> indexes, string tableName, string schema)
+        string GenerateRemoveIndexes(IEnumerable<Index> indexes, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -841,7 +840,7 @@ END
             return sb.ToString();
         }
 
-        private string GenerateRemoveColumns(IEnumerable<Column> columns, string tableName, string schema)
+        string GenerateRemoveColumns(IEnumerable<Column> columns, string tableName, string schema)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -864,7 +863,7 @@ END
             return sb.ToString();
         }
 
-        private List<SqlCommandGenerated> GenerateNewForeignKey(IEnumerable<ForeignKey> foreignKey, string tableName, string schema)
+        List<SqlCommandGenerated> GenerateNewForeignKey(IEnumerable<ForeignKey> foreignKey, string tableName, string schema)
         {
             var sb = new StringBuilder();
             if (foreignKey.Any())
@@ -914,7 +913,7 @@ END
             return commandBuilder;
         }
 
-        private static string GenerateLength(Column column)
+        static string GenerateLength(Column column)
         {
             var typeLen = string.Empty;
             if (IsTypeHaveLength(column.DATA_TYPE))
@@ -939,7 +938,7 @@ END
             return typeLen;
         }
 
-        private static string GenerateColumns(IEnumerable<Column> columns, string tableName)
+        static string GenerateColumns(IEnumerable<Column> columns, string tableName)
         {
             var columnsBuilder = new StringBuilder();
             foreach (var column in columns)
@@ -957,14 +956,14 @@ END
             return columnsBuilder.ToString().Trim(',', '\r', '\n');
         }
 
-        private static string GenerateColumnOption(Column column)
+        static string GenerateColumnOption(Column column)
         {
             if (column.IsIdentity)
                 return $" IDENTITY({column.SeedValue},{column.IncrementValue}) ";
             return " ";
         }
 
-        private string GenerateNewColumns(IEnumerable<Column> columns, string tableName, string schema)
+        string GenerateNewColumns(IEnumerable<Column> columns, string tableName, string schema)
         {
             var sb = new StringBuilder();
 
@@ -991,7 +990,7 @@ END
             return sb.ToString();
         }
 
-        private string GenerateNewIndexes(IEnumerable<Index> indexes, string tableName, string schema, bool indexExists)
+        string GenerateNewIndexes(IEnumerable<Index> indexes, string tableName, string schema, bool indexExists)
         {
             var sb = new StringBuilder();
             sb.AppendLine("-----------------------------------------------------------");
@@ -1040,7 +1039,7 @@ END
             return sb.ToString();
         }
 
-        private static string IndexOptions(Index index, bool indexExists)
+        static string IndexOptions(Index index, bool indexExists)
         {
             var sb = new StringBuilder();
 

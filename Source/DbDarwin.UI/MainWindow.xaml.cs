@@ -27,13 +27,11 @@ namespace DbDarwin.UI
     {
         public RadioButton SelectedAddOrUpdateRadio { get; set; }
 
-        public GeneratedScriptResult SelectedAddOrUpdate;
+        public GeneratedScriptResult SelectedAddOrUpdate, SelectedRemove;
 
         public RadioButton SelectedRemoveRadio { get; private set; }
-
-        public GeneratedScriptResult SelectedRemove;
-        private readonly Color RemoveItem = Color.FromArgb(255, 255, 76, 76);
-        private readonly Color AddItem = Color.FromArgb(255, 0, 143, 255);
+        readonly Color RemoveItem = Color.FromArgb(255, 255, 76, 76);
+        readonly Color AddItem = Color.FromArgb(255, 0, 143, 255);
 
         public MainWindow()
         {
@@ -51,7 +49,7 @@ namespace DbDarwin.UI
         public string SourceName { get; set; }
         public string TargetName { get; set; }
 
-        private void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var tag = ((ComboBoxItem)SelectSource.SelectedItem)?.Tag;
             if (tag?.ToString() == "1")
@@ -81,7 +79,7 @@ namespace DbDarwin.UI
             EnableCompare();
         }
 
-        private void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var tag = ((ComboBoxItem)SelectTarget.SelectedItem)?.Tag;
             if (tag?.ToString() == "1")
@@ -111,7 +109,7 @@ namespace DbDarwin.UI
             EnableCompare();
         }
 
-        private void CompareButton_Click(object sender, RoutedEventArgs e)
+        void CompareButton_Click(object sender, RoutedEventArgs e)
         {
             CompareButton.IsEnabled = false;
 
@@ -142,7 +140,7 @@ namespace DbDarwin.UI
               });
         }
 
-        private void GenerateSqlFileAndShowUpdates()
+        void GenerateSqlFileAndShowUpdates()
         {
             var engine = new GenerateScriptService();
             var result = engine.GenerateScript(
@@ -233,7 +231,7 @@ namespace DbDarwin.UI
                                        && string.Equals(SelectedAddOrUpdate.FullTableName, SelectedRemove.FullTableName, StringComparison.OrdinalIgnoreCase);
         }
 
-        private void Checkbox_Click(object sender, RoutedEventArgs e)
+        void Checkbox_Click(object sender, RoutedEventArgs e)
         {
             if (((RadioButton)sender).Tag.ToString() == "AddOrUpdate")
             {
@@ -270,7 +268,7 @@ namespace DbDarwin.UI
             RichTextBox.Document.Blocks.Add(new Paragraph(new Run(message)));
         }
 
-        private void GenerateButton_OnClick(object sender, RoutedEventArgs e)
+        void GenerateButton_OnClick(object sender, RoutedEventArgs e)
         {
             var diffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml";
             var sqlOutput = AppContext.BaseDirectory + "\\output.sql";
@@ -325,7 +323,7 @@ namespace DbDarwin.UI
             Process.Start(sqlOutput);
         }
 
-        private void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
+        void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
         {
             var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
             var table = database.Update?.Tables?.FirstOrDefault(x =>
@@ -357,7 +355,7 @@ namespace DbDarwin.UI
             SelectedRemove = null;
         }
 
-        private void TreeViewRemove_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        void TreeViewRemove_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             var tree = (TreeView)sender;
             if (tree.SelectedItem != null)
@@ -369,7 +367,7 @@ namespace DbDarwin.UI
             }
         }
 
-        private void ShowScript(TreeViewItem tab)
+        void ShowScript(TreeViewItem tab)
         {
             var builder = new StringBuilder();
             foreach (var item in tab.Items)
@@ -378,7 +376,7 @@ namespace DbDarwin.UI
             ShowScript(builder.ToString());
         }
 
-        private void ActuallyUpdate_OnClick(object sender, RoutedEventArgs e)
+        void ActuallyUpdate_OnClick(object sender, RoutedEventArgs e)
         {
             var dataAdd = GenerateScriptService.ActuallyUpdate(SelectedAddOrUpdate, SelectedRemove);
             if (dataAdd != null)

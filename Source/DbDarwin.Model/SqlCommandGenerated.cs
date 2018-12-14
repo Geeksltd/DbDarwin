@@ -8,8 +8,7 @@ namespace DbDarwin.Model
         public string AfterCommit { get; set; }
         public string Full => Body + "\r\n" + AfterCommit;
 
-        public string Line = "\r\n";
-        public string Tab = "\t";
+        public string Line = "\r\n", Tab = "\t";
 
         public void AppendBody(string command, LineEnum liner = LineEnum.NoLine)
         {
