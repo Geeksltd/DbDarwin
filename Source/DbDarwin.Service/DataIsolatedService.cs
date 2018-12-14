@@ -36,6 +36,7 @@ namespace DbDarwin.Service
         public string Password { get; set; }
         public string UserName { get; set; }
 
+        [JsonIgnore]
         public string Json => JsonConvert.SerializeObject(this);
     }
 

@@ -1,0 +1,12 @@
+Source/.vs/
+Source/DbDarwin.Model/bin/
+Source/DbDarwin.Model/obj/
+Source/DbDarwin.Service/bin/
+Source/DbDarwin.Service/obj/
+Source/DbDarwin.UI/bin/
+Source/DbDarwin.UI/obj/
+Source/DbDarwin.UnitTestProject/bin/
+Source/DbDarwin/bin/
+Source/packages/
+Source/DbDarwin/obj/
+Source/DbDarwin.UnitTestProject/obj/
