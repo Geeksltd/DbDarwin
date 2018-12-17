@@ -16,7 +16,7 @@
     <PackageReference Include="GCop.OliveZebbleMSharp" Version="2.4.4" />
     <PackageReference Include="GCop.String" Version="2.4.4" />
     <PackageReference Include="GCop.Thread" Version="2.4.4" />
-    <PackageReference Include="Olive" Version="1.0.143" />
+    <PackageReference Include="Olive" Version="1.0.146" />
   </ItemGroup>
 
 </Project>

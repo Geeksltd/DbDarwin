@@ -35,6 +35,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>DbDarwin.UI.App</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll</HintPath>
@@ -128,8 +131,8 @@
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Olive, Version=1.0.144.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Olive.1.0.144\lib\netstandard2.0\Olive.dll</HintPath>
+    <Reference Include="Olive, Version=1.0.145.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Olive.1.0.146\lib\netstandard2.0\Olive.dll</HintPath>
     </Reference>
     <Reference Include="PowerMapper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4d5ab713866e0486, processorArchitecture=MSIL">
       <HintPath>..\packages\PowerMapper.1.0.0\lib\net40\PowerMapper.dll</HintPath>
