@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DbDarwin.UI"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
         Title="DbDarwin UI" Height="527.027" Width="902.555">
@@ -22,10 +23,19 @@
         </Style>
 
 
- 
-       
+        <ResourceDictionary x:Key="R1">
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Button.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.PopupBox.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.TextBlock.xaml" />
+                <!-- throw in some extra colour for our floating action button -->
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/MaterialDesignColor.Green.Named.Primary.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+
 
     </Window.Resources>
+
     <Grid>
         <StatusBar Height="26" Margin="0" VerticalAlignment="Bottom" Background="#FF007ACC" Foreground="White">
             <Label x:Name="StatusLabel" Content="Ready"  HorizontalAlignment="Left" Padding="0" ScrollViewer.CanContentScroll="True" Margin="5,0,0,0" VerticalAlignment="Top" Foreground="#DDFFFFFF"/>
@@ -38,8 +48,22 @@
             <Button x:Name="ActuallyRename" IsEnabled="False" Content="Its actually a rename" Height="31" VerticalAlignment="Top" Click="ActuallyRename_OnClick"  Margin="2,0" Style="{DynamicResource MaterialDesignRaisedButton}"/>
             <Button x:Name="ActuallyUpdate" IsEnabled="False" Content="Its actually an update" Height="31" VerticalAlignment="Top" Click="ActuallyUpdate_OnClick"  Margin="2,0" Style="{DynamicResource MaterialDesignRaisedButton}"/>
 
+            <Button x:Name="DiffXMLFile" Style="{StaticResource MaterialDesignFlatButton}" Click="OpenDiffXMLFile"  Height="31" IsEnabled="False" VerticalAlignment="Top" Margin="2,0">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="File" />
+                    <TextBlock Margin="8 2 0 0" TextDecorations="Underline">Different XML File</TextBlock>
+                </StackPanel>
+            </Button>
+
             <Button x:Name="GenerateSelectedButton" IsEnabled="False" Content="Generate Selected (Next version)" Height="31" VerticalAlignment="Top"  Style="{DynamicResource MaterialDesignRaisedButton}"/>
 
+
+
+            <!--<TextBlock>           
+    <Hyperlink NavigateUri="http://www.google.com" RequestNavigate="Hyperlink_RequestNavigate" >
+        Click here
+    </Hyperlink>
+            </TextBlock>-->
             <!--<Button Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
                     ToolTip="MaterialDesignFloatingActionMiniLightButton">
                 <materialDesign:PackIcon Kind="Alarm" Height="24" Width="24" />
@@ -81,7 +105,7 @@
 
             <TreeView Grid.Row="0" Grid.Column="0" x:Name="TreeViewRoot" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" SelectedItemChanged="TreeViewRemove_OnSelectedItemChanged" Background="{x:Null}"  />
 
-       
+
             <RichTextBox x:Name="RichTextBox" Grid.Row="1" Grid.Column="0" FontSize="16" FontFamily="Verdana" Grid.ColumnSpan="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <FlowDocument>
                     <Paragraph >

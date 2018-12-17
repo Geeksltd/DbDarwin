@@ -207,7 +207,8 @@ namespace DbDarwin.UI
                         }
                     }
 
-                    GenerateButton.IsEnabled = true;
+                    DiffXMLFile.IsEnabled = GenerateButton.IsEnabled = true;
+
                 }
             }));
         }
@@ -353,6 +354,7 @@ namespace DbDarwin.UI
 
             SelectedAddOrUpdate = null;
             SelectedRemove = null;
+            ((Button)sender).IsEnabled = false;
         }
 
         void TreeViewRemove_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -400,6 +402,14 @@ namespace DbDarwin.UI
                 SelectedRemove = null;
                 ((Button)sender).IsEnabled = false;
             }
+        }
+
+
+
+        private void OpenDiffXMLFile(object sender, RoutedEventArgs e)
+        {
+            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"))
+                Process.Start(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
         }
     }
 
