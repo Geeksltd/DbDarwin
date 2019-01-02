@@ -1,20 +1,25 @@
+using DbDarwin.Common;
 using DbDarwin.Model.Command;
 using DbDarwin.Service;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+using System.IO;
 
 namespace DbDarwin.UnitTestProject
 {
     [TestClass]
     public class UnitTest1
     {
+        public UnitTest1()
+        {
+            Directory.CreateDirectory(ConstantData.WorkingDir);
+            Directory.CreateDirectory(ConstantData.LogDir);
+        }
         [TestMethod]
         public void ExtractSchema()
         {
             var sourceModel = new ExtractSchema
             {
-                ConnectionString =
-                    "Data Source=.;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
+                ConnectionString = "Data Source=.;Initial Catalog=Test3;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Source.xml"
             };
             using (var service = new ExtractSchemaService(sourceModel))
@@ -23,8 +28,7 @@ namespace DbDarwin.UnitTestProject
 
             var targetModel = new ExtractSchema
             {
-                ConnectionString =
-                    "Data Source=.;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30",
+                ConnectionString = "Data Source=.;Initial Catalog=Test4;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Target.xml"
             };
             using (var service = new ExtractSchemaService(targetModel))
@@ -40,9 +44,9 @@ namespace DbDarwin.UnitTestProject
             using (var service = new CompareSchemaService())
                 service.StartCompare(new GenerateDiffFile
                 {
-                    SourceSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
-                    TargetSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
-                    OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
+                    SourceSchemaFile = ConstantData.WorkingDir + "\\" + "Source.xml",
+                    TargetSchemaFile = ConstantData.WorkingDir + "\\" + "Target.xml",
+                    OutputFile = ConstantData.WorkingDir + "\\diff.xml"
                 });
 
 
@@ -57,8 +61,8 @@ namespace DbDarwin.UnitTestProject
             new GenerateScriptService().GenerateScript(
                 new GenerateScript
                 {
-                    CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
-                    MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
+                    CurrentDiffFile = ConstantData.WorkingDir + "\\diff.xml",
+                    MigrateSqlFile = ConstantData.WorkingDir + "\\output.sql"
                 });
             Assert.IsTrue(true);
         }
@@ -80,11 +84,11 @@ namespace DbDarwin.UnitTestProject
         {
             CompareSchemaService.TransformationDiffFile(new Transformation
             {
-                CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
+                CurrentDiffFile = ConstantData.WorkingDir + "\\diff.xml",
                 TableName = "Table_1",
                 FromName = "343",
                 ToName = "3434",
-                MigrateSqlFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff2.xml"
+                MigrateSqlFile = ConstantData.WorkingDir + "\\diff2.xml"
             });
             Assert.IsTrue(true);
         }

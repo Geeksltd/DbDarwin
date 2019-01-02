@@ -1,4 +1,5 @@
-﻿using Olive;
+﻿using DbDarwin.Common;
+using Olive;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -75,6 +76,7 @@ namespace DbDarwin.Service
                         }
                         catch (Exception ex)
                         {
+                            LogService.Info(ex.Message);
                             Trace.WriteLine(ex.Message);
                         }
                     }
@@ -86,6 +88,8 @@ namespace DbDarwin.Service
             }
             catch (Exception ex)
             {
+                LogService.Error(ex);
+                LogService.Info(ex.Message);
                 Console.WriteLine(ex.Message);
                 return new List<T>();
             }

@@ -29,7 +29,7 @@ namespace DbDarwin.UI
             ServerName.Text = System.Environment.MachineName;
         }
 
-        void DatabaseName_DropDownOpened(object sender, EventArgs e)
+        private void DatabaseName_DropDownOpened(object sender, EventArgs e)
         {
             try
             {
@@ -55,17 +55,18 @@ namespace DbDarwin.UI
             }
             catch (Exception exception)
             {
+                App.ShowAndLogError(exception);
                 MessageBox.Show(exception.Message);
             }
         }
 
-        void Cancel_Click(object sender, RoutedEventArgs e)
+        private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();
         }
 
-        void Connect_Click(object sender, RoutedEventArgs e)
+        private void Connect_Click(object sender, RoutedEventArgs e)
         {
             ConnectionName = ServerName.Text + "." + DatabaseName.SelectedValue;
             if (((ComboBoxItem)Authentication.SelectedItem).Tag.ToString() == "1")
@@ -79,7 +80,7 @@ namespace DbDarwin.UI
             DialogResult = true;
         }
 
-        void Authentication_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Authentication_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var combo = (ComboBox)sender;
             var item = (ComboBoxItem)combo.SelectedItem;

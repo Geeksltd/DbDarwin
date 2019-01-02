@@ -1,4 +1,5 @@
-﻿using DbDarwin.Model.Command;
+﻿using DbDarwin.Common;
+using DbDarwin.Model.Command;
 using DbDarwin.Model.Schema;
 using Olive;
 using PowerMapper;
@@ -16,8 +17,8 @@ namespace DbDarwin.Service
 {
     public class ExtractSchemaService : IDisposable
     {
-        bool disposedValue;
-        readonly SqlConnection CurrentSqlConnection;
+        private bool disposedValue;
+        private readonly SqlConnection CurrentSqlConnection;
         public List<ConstraintInformationModel> ConstraintInformation { get; set; }
         /// <summary>
         /// All Table Extend Property
@@ -159,13 +160,13 @@ namespace DbDarwin.Service
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.ToString());
                 Console.ForegroundColor = ConsoleColor.White;
-                return false;
+                throw ex;
             }
 
             return true;
         }
 
-        List<Column> FetchCulomns(string tableName, string schemaTable)
+        private List<Column> FetchCulomns(string tableName, string schemaTable)
         {
             var result = ColumnsMapped.Where(x => x.TABLE_NAME == tableName && x.TABLE_SCHEMA == schemaTable).ToList();
             foreach (var column in result)
@@ -185,7 +186,7 @@ namespace DbDarwin.Service
             return result;
         }
 
-        void CheckReferenceData(long tableId, string tableName, string schema, List<Column> columns)
+        private void CheckReferenceData(long tableId, string tableName, string schema, List<Column> columns)
         {
             // If table is deference data
             // For check reference data
@@ -230,7 +231,7 @@ namespace DbDarwin.Service
             return result;
         }
 
-        List<Index> FetchIndexes(int tableId)
+        private List<Index> FetchIndexes(int tableId)
         {
             var indexRows = ConstraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key.Equals("False", StringComparison.OrdinalIgnoreCase))
@@ -249,7 +250,7 @@ namespace DbDarwin.Service
             return existsIndex;
         }
 
-        PrimaryKey FetchPrimary(int tableId)
+        private PrimaryKey FetchPrimary(int tableId)
         {
             var indexRows = ConstraintInformation
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key.Equals("True", StringComparison.OrdinalIgnoreCase))
@@ -305,7 +306,7 @@ namespace DbDarwin.Service
                         element.Add(foundData.Elements(XName.Get("Data")));
                 }
 
-            var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
+            var path = ConstantData.WorkingDir + fileOutput;
             doc.Save(path);
             Console.WriteLine("Saving To xml");
         }
@@ -318,7 +319,7 @@ namespace DbDarwin.Service
 
             var xml = sw2.ToString();
 
-            var path = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileOutput;
+            var path = ConstantData.WorkingDir + "\\" + fileOutput;
             File.WriteAllText(path, xml);
             Console.WriteLine("Saving To xml");
         }

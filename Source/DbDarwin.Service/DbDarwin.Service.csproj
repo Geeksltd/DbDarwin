@@ -33,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DbDarwin.Common\DbDarwin.Common.csproj" />
     <ProjectReference Include="..\DbDarwin.Model\DbDarwin.Model.csproj" />
   </ItemGroup>
 

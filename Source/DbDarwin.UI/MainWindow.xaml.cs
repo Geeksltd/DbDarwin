@@ -1,4 +1,5 @@
-﻿using DbDarwin.Model;
+﻿using DbDarwin.Common;
+using DbDarwin.Model;
 using DbDarwin.Model.Command;
 using DbDarwin.Model.Schema;
 using DbDarwin.Service;
@@ -30,12 +31,20 @@ namespace DbDarwin.UI
         public GeneratedScriptResult SelectedAddOrUpdate, SelectedRemove;
 
         public RadioButton SelectedRemoveRadio { get; private set; }
-        readonly Color RemoveItem = Color.FromArgb(255, 255, 76, 76);
-        readonly Color AddItem = Color.FromArgb(255, 0, 143, 255);
+
+        private readonly Color RemoveItem = Color.FromArgb(255, 255, 76, 76);
+        private readonly Color AddItem = Color.FromArgb(255, 0, 143, 255);
 
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        public void ShowAndLogError(Exception ex)
+        {
+          
+                App.ShowAndLogError(ex);
+          
         }
 
         public void EnableCompare()
@@ -49,7 +58,7 @@ namespace DbDarwin.UI
         public string SourceName { get; set; }
         public string TargetName { get; set; }
 
-        void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void SelectSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var tag = ((ComboBoxItem)SelectSource.SelectedItem)?.Tag;
             if (tag?.ToString() == "1")
@@ -79,75 +88,94 @@ namespace DbDarwin.UI
             EnableCompare();
         }
 
-        void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void SelectTarget_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var tag = ((ComboBoxItem)SelectTarget.SelectedItem)?.Tag;
-            if (tag?.ToString() == "1")
+            try
             {
-                var connect = new ConnectWindow("SelectTarget");
-                var result = connect.ShowDialog();
-                if (result == true)
+                var tag = ((ComboBoxItem)SelectTarget.SelectedItem)?.Tag;
+                if (tag?.ToString() == "1")
                 {
-                    if (SelectTarget.Items.Count > 1)
-                        SelectTarget.Items.RemoveAt(1);
-
-                    TargetConnection = connect.ConnectionString;
-                    TargetName = connect.ConnectionName;
-                    SelectTarget.Items.Add(new ComboBoxItem
+                    var connect = new ConnectWindow("SelectTarget");
+                    var result = connect.ShowDialog();
+                    if (result == true)
                     {
-                        Content = connect.ConnectionName,
-                        DataContext = connect.ConnectionString,
-                        IsSelected = true,
-                    });
-                }
-                else
-                {
-                    SelectTarget.SelectedIndex = -1;
-                }
-            }
+                        if (SelectTarget.Items.Count > 1)
+                            SelectTarget.Items.RemoveAt(1);
 
-            EnableCompare();
+                        TargetConnection = connect.ConnectionString;
+                        TargetName = connect.ConnectionName;
+                        SelectTarget.Items.Add(new ComboBoxItem
+                        {
+                            Content = connect.ConnectionName,
+                            DataContext = connect.ConnectionString,
+                            IsSelected = true,
+                        });
+                    }
+                    else
+                    {
+                        SelectTarget.SelectedIndex = -1;
+                    }
+                }
+
+                EnableCompare();
+            }
+            catch (Exception ex)
+            {
+                App.ShowAndLogError(ex);
+            }
         }
 
-        void CompareButton_Click(object sender, RoutedEventArgs e)
+        private void CompareButton_Click(object sender, RoutedEventArgs e)
         {
             CompareButton.IsEnabled = false;
 
             Task.Factory.StartNew(() =>
               {
-                  UpdateState($"Extracting {SourceName} Schema...");
-                  using (var service = new ExtractSchemaService(new ExtractSchema
-                  { ConnectionString = SourceConnection, OutputFile = "Source.xml" }))
-                      service.ExtractSchema();
-                  UpdateState($"Extracted {SourceName} Schema.");
+                  try
+                  {
+                      UpdateState($"Extracting {SourceName} Schema...");
+                      using (var service = new ExtractSchemaService(new ExtractSchema
+                      { ConnectionString = SourceConnection, OutputFile = "Source.xml" }))
+                          service.ExtractSchema();
+                      UpdateState($"Extracted {SourceName} Schema.");
 
-                  UpdateState($"Extracting {TargetName} Schema...");
-                  using (var service = new ExtractSchemaService(new ExtractSchema
-                  { ConnectionString = TargetConnection, OutputFile = "Target.xml" }))
-                      service.ExtractSchema();
-                  UpdateState($"Extracted {TargetName} Schema.");
+                      UpdateState($"Extracting {TargetName} Schema...");
+                      using (var service = new ExtractSchemaService(new ExtractSchema
+                      { ConnectionString = TargetConnection, OutputFile = "Target.xml" }))
+                          service.ExtractSchema();
+                      UpdateState($"Extracted {TargetName} Schema.");
 
-                  UpdateState("Comparing Databases...");
-                  using (var service = new CompareSchemaService())
-                      service.StartCompare(new GenerateDiffFile
+                      UpdateState("Comparing Databases...");
+                      using (var service = new CompareSchemaService())
+                          service.StartCompare(new GenerateDiffFile
+                          {
+                              SourceSchemaFile = ConstantData.WorkingDir + "Source.xml",
+                              TargetSchemaFile = ConstantData.WorkingDir + "Target.xml",
+                              OutputFile = ConstantData.WorkingDir + "\\diff.xml"
+                          });
+                      UpdateState("Databases Compared.");
+                      GenerateSqlFileAndShowUpdates();
+                  }
+                  catch (Exception ex)
+                  {
+                      Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
                       {
-                          SourceSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Source.xml",
-                          TargetSchemaFile = AppDomain.CurrentDomain.BaseDirectory + "\\" + "Target.xml",
-                          OutputFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"
-                      });
-                  UpdateState("Databases Compared.");
-                  GenerateSqlFileAndShowUpdates();
+                          CompareButton.IsEnabled = true;
+                          UpdateState("has a error. refer to log path");
+                      }));
+                      ShowAndLogError(ex);
+                  }
               });
         }
 
-        void GenerateSqlFileAndShowUpdates()
+        private void GenerateSqlFileAndShowUpdates()
         {
             var engine = new GenerateScriptService();
             var result = engine.GenerateScript(
                 new GenerateScript
                 {
-                    CurrentDiffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml",
-                    MigrateSqlFile = AppContext.BaseDirectory + "\\output.sql"
+                    CurrentDiffFile = ConstantData.WorkingDir + "\\diff.xml",
+                    MigrateSqlFile = ConstantData.WorkingDir + "\\output.sql"
                 });
 
             Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
@@ -232,7 +260,7 @@ namespace DbDarwin.UI
                                        && string.Equals(SelectedAddOrUpdate.FullTableName, SelectedRemove.FullTableName, StringComparison.OrdinalIgnoreCase);
         }
 
-        void Checkbox_Click(object sender, RoutedEventArgs e)
+        private void Checkbox_Click(object sender, RoutedEventArgs e)
         {
             if (((RadioButton)sender).Tag.ToString() == "AddOrUpdate")
             {
@@ -269,10 +297,10 @@ namespace DbDarwin.UI
             RichTextBox.Document.Blocks.Add(new Paragraph(new Run(message)));
         }
 
-        void GenerateButton_OnClick(object sender, RoutedEventArgs e)
+        private void GenerateButton_OnClick(object sender, RoutedEventArgs e)
         {
-            var diffFile = AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml";
-            var sqlOutput = AppContext.BaseDirectory + "\\output.sql";
+            var diffFile = ConstantData.WorkingDir + "\\diff.xml";
+            var sqlOutput = ConstantData.WorkingDir + "\\output.sql";
             var engine = new GenerateScriptService();
             var result = engine.GenerateScript(
                 new GenerateScript
@@ -324,9 +352,9 @@ namespace DbDarwin.UI
             Process.Start(sqlOutput);
         }
 
-        void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
+        private void ActuallyRename_OnClick(object sender, RoutedEventArgs e)
         {
-            var database = CompareSchemaService.LoadXMLFile(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
+            var database = CompareSchemaService.LoadXMLFile(ConstantData.WorkingDir + "\\diff.xml");
             var table = database.Update?.Tables?.FirstOrDefault(x =>
                 string.Equals(x.FullName, SelectedAddOrUpdate.FullTableName, StringComparison.OrdinalIgnoreCase));
             if (table == null) return;
@@ -357,7 +385,7 @@ namespace DbDarwin.UI
             ((Button)sender).IsEnabled = false;
         }
 
-        void TreeViewRemove_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private void TreeViewRemove_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             var tree = (TreeView)sender;
             if (tree.SelectedItem != null)
@@ -369,7 +397,7 @@ namespace DbDarwin.UI
             }
         }
 
-        void ShowScript(TreeViewItem tab)
+        private void ShowScript(TreeViewItem tab)
         {
             var builder = new StringBuilder();
             foreach (var item in tab.Items)
@@ -378,7 +406,7 @@ namespace DbDarwin.UI
             ShowScript(builder.ToString());
         }
 
-        void ActuallyUpdate_OnClick(object sender, RoutedEventArgs e)
+        private void ActuallyUpdate_OnClick(object sender, RoutedEventArgs e)
         {
             var dataAdd = GenerateScriptService.ActuallyUpdate(SelectedAddOrUpdate, SelectedRemove);
             if (dataAdd != null)
@@ -389,7 +417,6 @@ namespace DbDarwin.UI
                 var reader = new StringReader(dataAdd.ToString());
                 var ser = new XmlSerializer(typeof(TableData), xRoot);
                 var addTableData = (TableData)ser.Deserialize(reader);
-
                 var dic = (IDictionary<string, object>)SelectedRemove.OrginalObject;
                 var dicAdd = (IDictionary<string, object>)SelectedAddOrUpdate.OrginalObject;
                 SelectedAddOrUpdate.SQLScript = GenerateScriptService.CreateUpdateRowScript(dicAdd,
@@ -397,7 +424,6 @@ namespace DbDarwin.UI
                 dicAdd.Remove("Name");
                 SelectedAddOrUpdateRadio.Content = $"Update record {GenerateScriptService.GenerateName(dic)} to set {GenerateScriptService.GenerateName(dicAdd)}";
                 SelectedAddOrUpdate.Mode = ViewMode.Update;
-
                 SelectedAddOrUpdate = null;
                 SelectedRemove = null;
                 ((Button)sender).IsEnabled = false;
@@ -408,8 +434,8 @@ namespace DbDarwin.UI
 
         private void OpenDiffXMLFile(object sender, RoutedEventArgs e)
         {
-            if (File.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml"))
-                Process.Start(AppDomain.CurrentDomain.BaseDirectory + "\\diff.xml");
+            if (File.Exists(ConstantData.WorkingDir + "\\diff.xml"))
+                Process.Start(ConstantData.WorkingDir + "\\diff.xml");
         }
     }
 
