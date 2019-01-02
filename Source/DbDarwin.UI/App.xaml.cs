@@ -17,15 +17,16 @@ namespace DbDarwin.UI
             Directory.CreateDirectory(ConstantData.WorkingDir);
             Directory.CreateDirectory(ConstantData.LogDir);
 
-            DispatcherUnhandledException += App_DispatcherUnhandledException2;
-            Dispatcher.UnhandledException += Dispatcher_UnhandledException;
+            DispatcherUnhandledException += App_DispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            Current.DispatcherUnhandledException += Current_DispatcherUnhandledException;
             System.Threading.Tasks.TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
         }
 
-        private void App_DispatcherUnhandledException2(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+
+
+        private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
+            e.Handled = true;
             if (e.Exception != null)
                 ShowAndLogError(e.Exception);
         }
@@ -33,15 +34,11 @@ namespace DbDarwin.UI
 
         private void TaskScheduler_UnobservedTaskException(object sender, System.Threading.Tasks.UnobservedTaskExceptionEventArgs e)
         {
+            e.SetObserved();
             if (e.Exception != null)
-                ShowAndLogError(e.Exception);
+                ShowAndLogError(e.Exception.InnerException ?? e.Exception);
         }
 
-        private void Current_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
-        {
-            if (e.Exception != null)
-                ShowAndLogError(e.Exception);
-        }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
@@ -49,11 +46,7 @@ namespace DbDarwin.UI
                 ShowAndLogError((Exception)e.ExceptionObject);
         }
 
-        private void Dispatcher_UnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
-        {
-            if (e.Exception != null)
-                ShowAndLogError(e.Exception);
-        }
+
 
         public static void ShowAndLogError(Exception ex)
         {
