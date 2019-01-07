@@ -13,8 +13,8 @@ namespace DbDarwin.Model.Schema
             IS_NULLABLE = "YES";
             NUMERIC_PRECISION = "10";
             NUMERIC_SCALE = "0";
-            COLLATION_NAME = "SQL_Latin1_General_CP1_CI_AS";
         }
+
         [XmlIgnore]
         public string TABLE_CATALOG { get; set; }
 
@@ -97,14 +97,6 @@ namespace DbDarwin.Model.Schema
 
         [XmlAttribute(AttributeName = "CollationSchema")]
         public string COLLATION_SCHEMA { get; set; }
-
-        [XmlAttribute(AttributeName = "CollationName")]
-        public string COLLATION_NAME { get; set; }
-
-        public bool ShouldSerializeCOLLATION_NAME()
-        {
-            return COLLATION_NAME.HasValue() && COLLATION_NAME.ToLower() != "SQL_Latin1_General_CP1_CI_AS".ToLower();
-        }
 
         [XmlAttribute(AttributeName = "DomainCatalog")]
         public string DOMAIN_CATALOG { get; set; }

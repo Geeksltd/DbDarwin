@@ -202,10 +202,11 @@ namespace DbDarwin.Service
                     tableElement.SetAttributeValue("Name", tableName);
                     if (schema.ToLower() != "dbo")
                         tableElement.SetAttributeValue("Schema", schema);
+
                     foreach (var rowData in data.Rows.Cast<DataRow>())
                     {
                         var rowElement = new XElement("Row");
-                        foreach (var column in data.Columns.Cast<DataColumn>())
+                        foreach (var column in data.Columns.Cast<DataColumn>().OrderBy(x => x.ColumnName))
                         {
                             if (column.ColumnName.Equals("ID", StringComparison.OrdinalIgnoreCase)
                                 || rowData[column.ColumnName] == System.DBNull.Value)
