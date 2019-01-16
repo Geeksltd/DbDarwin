@@ -130,7 +130,8 @@ namespace DbDarwin.Service
                     var indexes = FetchIndexes(tableId);
                     var primaryKey = FetchPrimary(tableId);
                     var columns = FetchCulomns(tableName, schemaTable);
-
+                    var foreignkeys = ReferencesMapped.Where(x =>
+                        x.TABLE_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList();
                     var newTable = new Table
                     {
                         Name = tableName,
@@ -138,13 +139,9 @@ namespace DbDarwin.Service
                         Columns = columns,
                         Indexes = indexes,
                         PrimaryKey = primaryKey,
-                        ForeignKeys = ReferencesMapped.Where(x =>
-                            x.TABLE_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList()
-
+                        ForeignKeys = foreignkeys
                     };
-
                     CheckReferenceData(tableId, newTable.Name, newTable.Schema, newTable.Columns);
-
                     Database.Tables.Add(newTable);
                 }
 

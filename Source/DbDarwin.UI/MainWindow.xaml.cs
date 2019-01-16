@@ -42,9 +42,7 @@ namespace DbDarwin.UI
 
         public void ShowAndLogError(Exception ex)
         {
-
             App.ShowAndLogError(ex);
-
         }
 
         public void EnableCompare()
@@ -133,7 +131,6 @@ namespace DbDarwin.UI
               {
                   try
                   {
-
                       UpdateState($"Extracting {SourceName} Schema...");
                       using (var service = new ExtractSchemaService(new ExtractSchema
                       { ConnectionString = SourceConnection, OutputFile = "Source.xml" }))
@@ -237,7 +234,6 @@ namespace DbDarwin.UI
                     }
 
                     DiffXMLFile.IsEnabled = GenerateButton.IsEnabled = true;
-
                 }
             }));
         }
@@ -430,8 +426,6 @@ namespace DbDarwin.UI
                 ((Button)sender).IsEnabled = false;
             }
         }
-
-
 
         private void OpenDiffXMLFile(object sender, RoutedEventArgs e)
         {

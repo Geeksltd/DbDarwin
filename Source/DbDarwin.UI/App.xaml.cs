@@ -22,15 +22,12 @@ namespace DbDarwin.UI
             System.Threading.Tasks.TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
         }
 
-
-
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
             e.Handled = true;
             if (e.Exception != null)
                 ShowAndLogError(e.Exception);
         }
-
 
         private void TaskScheduler_UnobservedTaskException(object sender, System.Threading.Tasks.UnobservedTaskExceptionEventArgs e)
         {
@@ -39,18 +36,14 @@ namespace DbDarwin.UI
                 ShowAndLogError(e.Exception.InnerException ?? e.Exception);
         }
 
-
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (e.ExceptionObject != null)
                 ShowAndLogError((Exception)e.ExceptionObject);
         }
 
-
-
         public static void ShowAndLogError(Exception ex)
         {
-
             LogService.Error(ex);
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Normal, (Action)(() =>
             {
