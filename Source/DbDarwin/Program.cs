@@ -12,35 +12,32 @@ namespace DbDarwin
         static void Main(string[] args)
         {
             var argList = args.ToList();
-            if (argList.Any())
+            if(argList.Any())
             {
                 var first = args.First();
-                if (first.HasAny())
+                if(first.HasAny())
                 {
-                    if (first.ToLower() == "extract-schema")
+                    if(first.ToLower() == "extract-schema")
                     {
                         var model = IsArgumentExtractSchemaValid(argList);
-                        if (model.IsValid)
-                            using (var service = new ExtractSchemaService(model))
-                                service.ExtractSchema();
-                    }
-                    else if (first.ToLower() == "generate-diff")
+                        if(model.IsValid)
+                            using(var service = new ExtractSchemaService(model))
+                                service.ExtractSchema(Model.CompareType.Schema);
+                    } else if(first.ToLower() == "generate-diff")
                     {
                         var model = IsArgumentGenerateDiffFileValid(argList);
-                        if (model.IsValid)
-                            using (var service = new CompareSchemaService())
+                        if(model.IsValid)
+                            using(var service = new CompareSchemaService())
                                 service.StartCompare(model);
-                    }
-                    else if (first.ToLower() == "generate-script")
+                    } else if(first.ToLower() == "generate-script")
                     {
                         var model = IsArgumentGenerateScriptValid(argList);
-                        if (model.IsValid)
+                        if(model.IsValid)
                             new GenerateScriptService().GenerateScript(model);
-                    }
-                    else if (first.ToLower() == "rename")
+                    } else if(first.ToLower() == "rename")
                     {
                         var model = IsArgumentTransformationValid(argList);
-                        if (model.IsValid)
+                        if(model.IsValid)
                             CompareSchemaService.TransformationDiffFile(model);
                     }
                 }
@@ -80,8 +77,7 @@ namespace DbDarwin
         static ExtractSchema IsArgumentExtractSchemaValid(List<string> argList)
         {
             Console.WriteLine(@"Start Extract Schema...");
-            return new ExtractSchema
-            {
+            return new ExtractSchema {
                 // Read -connect parameter
                 ConnectionString = ReadArgument("-connect", argList, "-connect parameter is requirement"),
                 // Read -out parameter
@@ -92,8 +88,7 @@ namespace DbDarwin
         static GenerateDiffFile IsArgumentGenerateDiffFileValid(List<string> argList)
         {
             Console.WriteLine("Start generate the differences...");
-            return new GenerateDiffFile
-            {
+            return new GenerateDiffFile {
                 // Read -from parameter
                 TargetSchemaFile = ReadArgument("-from", argList, "-from parameter is requirement"),
                 // Read -to parameter
@@ -106,14 +101,14 @@ namespace DbDarwin
         static string ReadArgument(string argument, List<string> argList, string message, bool requirement = true)
         {
             var index = argList.IndexOf(argument);
-            if (index == -1 && requirement)
+            if(index == -1 && requirement)
             {
                 Console.WriteLine(message);
                 Console.ReadLine();
                 return string.Empty;
             }
 
-            if (argList.Count > index + 1)
+            if(argList.Count > index + 1)
                 return argList[index + 1];
             return string.Empty;
         }

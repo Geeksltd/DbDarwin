@@ -17,22 +17,20 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void ExtractSchema()
         {
-            var sourceModel = new ExtractSchema
-            {
+            var sourceModel = new ExtractSchema {
                 ConnectionString = "Data Source=.\\SQL2016;Initial Catalog=Source;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Source.xml"
             };
-            using (var service = new ExtractSchemaService(sourceModel))
-                service.ExtractSchema();
+            using(var service = new ExtractSchemaService(sourceModel))
+                service.ExtractSchema(Model.CompareType.Schema);
 
 
-            var targetModel = new ExtractSchema
-            {
+            var targetModel = new ExtractSchema {
                 ConnectionString = "Data Source=.\\SQL2016;Initial Catalog=Target;Integrated Security=True;Connect Timeout=30",
                 OutputFile = "Target.xml"
             };
-            using (var service = new ExtractSchemaService(targetModel))
-                service.ExtractSchema();
+            using(var service = new ExtractSchemaService(targetModel))
+                service.ExtractSchema(Model.CompareType.Schema);
 
 
 
@@ -41,9 +39,8 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void GenerateDiff()
         {
-            using (var service = new CompareSchemaService())
-                service.StartCompare(new GenerateDiffFile
-                {
+            using(var service = new CompareSchemaService())
+                service.StartCompare(new GenerateDiffFile {
                     SourceSchemaFile = ConstantData.WorkingDir + "\\" + "Source.xml",
                     TargetSchemaFile = ConstantData.WorkingDir + "\\" + "Target.xml",
                     OutputFile = ConstantData.WorkingDir + "\\diff.xml"
@@ -59,8 +56,7 @@ namespace DbDarwin.UnitTestProject
         public void GenerateScripts()
         {
             new GenerateScriptService().GenerateScript(
-                new GenerateScript
-                {
+                new GenerateScript {
                     CurrentDiffFile = ConstantData.WorkingDir + "\\diff.xml",
                     MigrateSqlFile = ConstantData.WorkingDir + "\\output.sql"
                 });
@@ -82,8 +78,7 @@ namespace DbDarwin.UnitTestProject
         [TestMethod]
         public void TransformationForRenameTableNameDiff()
         {
-            CompareSchemaService.TransformationDiffFile(new Transformation
-            {
+            CompareSchemaService.TransformationDiffFile(new Transformation {
                 CurrentDiffFile = ConstantData.WorkingDir + "\\diff.xml",
                 TableName = "Table_1",
                 FromName = "343",

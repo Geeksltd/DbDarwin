@@ -15,4 +15,9 @@
         WindowsAuthentication = 1,
         SQLAuthentication = 2
     }
+    public enum CompareType
+    {
+        Schema = 1,
+        Data = 2
+    }
 }

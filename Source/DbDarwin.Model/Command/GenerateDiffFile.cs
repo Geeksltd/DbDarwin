@@ -10,5 +10,7 @@ namespace DbDarwin.Model.Command
 
         public bool IsValid => TargetSchemaFile.HasValue() && SourceSchemaFile.HasValue() &&
                                OutputFile.HasValue();
+
+        public CompareType CompareType { get; set; }
     }
 }

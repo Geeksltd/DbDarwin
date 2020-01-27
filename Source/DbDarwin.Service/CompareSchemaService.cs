@@ -42,12 +42,11 @@ namespace DbDarwin.Service
                 TargetSchema = LoadXMLFile(model.TargetSchemaFile);
                 SourceSchema = LoadXMLFile(model.SourceSchemaFile);
 
-                CompareAndSave(model.OutputFile);
+                CompareAndSave(model.OutputFile, model.CompareType);
 
                 result.IsSuccessfully = true;
                 Console.WriteLine("Saving To xml");
-            }
-            catch (Exception ex)
+            } catch(Exception ex)
             {
                 result.IsSuccessfully = false;
                 result.Messsage = ex.Message;
@@ -56,8 +55,7 @@ namespace DbDarwin.Service
                 Console.WriteLine(ex.ToString());
                 Console.ForegroundColor = ConsoleColor.White;
                 throw ex;
-            }
-            finally
+            } finally
             {
                 GC.Collect();
             }
@@ -65,69 +63,79 @@ namespace DbDarwin.Service
             return result;
         }
 
-        private void CompareAndSave(string output)
+        private void CompareAndSave(string output, CompareType compare)
         {
-            foreach (var sourceTable in SourceSchema.Tables)
+            for(int i = 0; i < SourceSchema.Tables.Count; i++)
             {
+                var sourceTable = SourceSchema.Tables[i];
                 var foundTable = TargetSchema.Tables.FirstOrDefault(x => x.FullName.Equals(sourceTable.FullName, StringComparison.OrdinalIgnoreCase));
-                if (foundTable == null)
+                if(foundTable == null)
                 {
-                    sourceTable.Add = new Table { Data = sourceTable.Data };
-                    sourceTable.Data = null;
-                    using (var navigatorAdd = AddTables.CreateWriter())
-                        navigatorAdd.Serialize(sourceTable);
-                }
-                else
-                {
-                    var root = new XElement("Table");
-                    root.SetAttributeValue(nameof(sourceTable.Name), sourceTable.Name);
-                    root.SetAttributeValue(nameof(sourceTable.Schema), sourceTable.Schema);
-
-                    var add = new XElement("add");
-                    var navigatorAdd = add.CreateWriter();
-
-                    var removeColumn = new XElement("remove");
-                    var navigatorRemove = removeColumn.CreateWriter();
-
-                    var updateElement = new XElement("update");
-                    var navigatorUpdate = updateElement.CreateWriter();
-
-                    GenerateDifferencePrimaryKey(sourceTable, foundTable, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifference<Column>(sourceTable.Columns, foundTable.Columns, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifference<Index>(sourceTable.Indexes, foundTable.Indexes, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifference<ForeignKey>(sourceTable.ForeignKeys, foundTable.ForeignKeys, navigatorAdd, navigatorRemove, navigatorUpdate);
-                    GenerateDifferenceData(sourceTable, foundTable.Data, navigatorAdd, navigatorRemove, navigatorUpdate);
-
-                    navigatorAdd.Flush();
-                    navigatorAdd.Close();
-
-                    navigatorRemove.Flush();
-                    navigatorRemove.Close();
-
-                    navigatorUpdate.Flush();
-                    navigatorUpdate.Close();
-
-                    if (!add.IsEmpty) root.Add(add);
-                    if (!removeColumn.IsEmpty) root.Add(removeColumn);
-                    if (!updateElement.IsEmpty) root.Add(updateElement);
-                    if (!add.IsEmpty || !removeColumn.IsEmpty || !updateElement.IsEmpty) UpdateTables.Add(root);
-                }
+                    if(compare == CompareType.Schema || (sourceTable.Data != null && compare == CompareType.Data))
+                    {
+                        sourceTable.Add = new Table { Data = sourceTable.Data };
+                        sourceTable.Data = null;
+                        using(var navigatorAdd = AddTables.CreateWriter())
+                            navigatorAdd.Serialize(sourceTable);
+                    }
+                } else
+                    GenerateDifferenceSchemaOrData(ref sourceTable, ref foundTable);
             }
 
             DetectRemoveTables();
             SaveChanges(output);
         }
 
+        private void GenerateDifferenceSchemaOrData(ref Table sourceTable, ref Table foundTable)
+        {
+            var root = new XElement("Table");
+            root.SetAttributeValue(nameof(sourceTable.Name), sourceTable.Name);
+            root.SetAttributeValue(nameof(sourceTable.Schema), sourceTable.Schema);
+
+            var add = new XElement("add");
+            var navigatorAdd = add.CreateWriter();
+
+            var removeColumn = new XElement("remove");
+            var navigatorRemove = removeColumn.CreateWriter();
+
+            var updateElement = new XElement("update");
+            var navigatorUpdate = updateElement.CreateWriter();
+
+            GenerateDifferencePrimaryKey(sourceTable, foundTable, navigatorAdd, navigatorRemove, navigatorUpdate);
+            GenerateDifference<Column>(sourceTable.Columns, foundTable.Columns, navigatorAdd, navigatorRemove, navigatorUpdate);
+            GenerateDifference<Index>(sourceTable.Indexes, foundTable.Indexes, navigatorAdd, navigatorRemove, navigatorUpdate);
+            GenerateDifference<ForeignKey>(sourceTable.ForeignKeys, foundTable.ForeignKeys, navigatorAdd, navigatorRemove, navigatorUpdate);
+            GenerateDifferenceData(sourceTable, foundTable.Data, navigatorAdd, navigatorRemove, navigatorUpdate);
+
+            navigatorAdd.Flush();
+            navigatorAdd.Close();
+
+            navigatorRemove.Flush();
+            navigatorRemove.Close();
+
+            navigatorUpdate.Flush();
+            navigatorUpdate.Close();
+
+            if(!add.IsEmpty)
+                root.Add(add);
+            if(!removeColumn.IsEmpty)
+                root.Add(removeColumn);
+            if(!updateElement.IsEmpty)
+                root.Add(updateElement);
+            if(!add.IsEmpty || !removeColumn.IsEmpty || !updateElement.IsEmpty)
+                UpdateTables.Add(root);
+        }
+
         private void DetectRemoveTables()
         {
             var mustRemove = TargetSchema.Tables.Except(c => SourceSchema.Tables.Select(x => x.FullName).ToList().Contains(c.FullName, false)).ToList();
-            using (var writer = RemoveTables.CreateWriter())
+            using(var writer = RemoveTables.CreateWriter())
                 mustRemove.ForEach(c => writer.Serialize(c));
         }
 
         private void GenerateDifferencePrimaryKey(Table sourceTable, Table foundTable, XmlWriter navigatorAdd, XmlWriter navigatorRemove, XmlWriter navigatorUpdate)
         {
-            if (sourceTable.PrimaryKey == null && foundTable.PrimaryKey != null)
+            if(sourceTable.PrimaryKey == null && foundTable.PrimaryKey != null)
                 navigatorRemove.Serialize(foundTable.PrimaryKey);
             else
             {
@@ -144,9 +152,12 @@ namespace DbDarwin.Service
 
         private void SaveChanges(string output)
         {
-            if (UpdateTables.HasElements) RootDatabase.Add(UpdateTables);
-            if (AddTables.HasElements) RootDatabase.Add(AddTables);
-            if (RemoveTables.HasElements) RootDatabase.Add(RemoveTables);
+            if(UpdateTables.HasElements)
+                RootDatabase.Add(UpdateTables);
+            if(AddTables.HasElements)
+                RootDatabase.Add(AddTables);
+            if(RemoveTables.HasElements)
+                RootDatabase.Add(RemoveTables);
 
             Doc.Add(RootDatabase);
             Doc.Save(output);
@@ -162,7 +173,8 @@ namespace DbDarwin.Service
         /// <param name="updateWriter">XML Writer for update data</param>
         private void GenerateDifferenceData(Table source, TableData targetData, XmlWriter addWriter, XmlWriter removeWriter, XmlWriter updateWriter)
         {
-            if (source.Data == null && targetData == null) return;
+            if(source.Data == null && targetData == null)
+                return;
             var sourceTable = source.Data.ToDictionaryList();
             var targetTable = targetData.ToDictionaryList();
             var columnType = ExtractSchemaService.GetColumnTypes(source.Columns);
@@ -186,7 +198,7 @@ namespace DbDarwin.Service
         /// <param name="writer">XML Writer</param>
         private void AddDataElementToWriter(XElement dataNodeAdd, XElement columnType, XmlWriter writer)
         {
-            if (dataNodeAdd != null && dataNodeAdd.HasElements)
+            if(dataNodeAdd != null && dataNodeAdd.HasElements)
             {
                 dataNodeAdd.AddFirst(columnType);
                 writer.Serialize(dataNodeAdd);
@@ -201,8 +213,7 @@ namespace DbDarwin.Service
         /// <returns>return ditionary</returns>
         private Dictionary<string, XElement> DetectAddOrUpdate(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
-            var compareLogic = new CompareLogic
-            {
+            var compareLogic = new CompareLogic {
                 Config =
                 {
                     MaxDifferences = int.MaxValue,
@@ -213,26 +224,27 @@ namespace DbDarwin.Service
             var dataNodeAdd = new XElement("Data");
             var dataNodeUpdate = new XElement("Data");
             // Detect new data or updates
-            foreach (var sourceRow in sourceTable)
+            foreach(var sourceRow in sourceTable)
             {
                 sourceRow.TryGetValue("Name", out var val);
                 var exists = false;
-                if (val == null) continue;
-                foreach (var targetRow in targetTable)
+                if(val == null)
+                    continue;
+                foreach(var targetRow in targetTable)
                 {
-                    if (targetRow.Any(x => x.Key.Equals("Name", StringComparison.OrdinalIgnoreCase)
-                    && x.Value != null
-                    && x.Value.ToString().Equals(val.ToString(), StringComparison.OrdinalIgnoreCase)))
+                    if(targetRow.Any(x => x.Key.Equals("Name", StringComparison.OrdinalIgnoreCase)
+                   && x.Value != null
+                   && x.Value.ToString().Equals(val.ToString(), StringComparison.OrdinalIgnoreCase)))
                     {
                         var result = compareLogic.Compare(sourceRow, targetRow);
-                        if (!result.AreEqual)
+                        if(!result.AreEqual)
                             dataNodeUpdate.Add(sourceRow.ToElement("Row"));
                         exists = true;
                         break;
                     }
                 }
 
-                if (!exists)
+                if(!exists)
                     dataNodeAdd.Add(sourceRow.ToElement("Row"));
             }
 
@@ -248,20 +260,22 @@ namespace DbDarwin.Service
         private XElement DetectRemoveData(List<IDictionary<string, object>> sourceTable, List<IDictionary<string, object>> targetTable)
         {
             var dataNodeRemove = new XElement("Data");
-            foreach (var row in targetTable)
+            foreach(var row in targetTable)
             {
                 row.TryGetValue("Name", out var val);
-                if (val == null) continue;
+                if(val == null)
+                    continue;
                 var exists = false;
-                foreach (var data2 in sourceTable)
+                foreach(var data2 in sourceTable)
                 {
                     exists = data2.Any(x => x.Key.Equals("Name", StringComparison.OrdinalIgnoreCase)
                     && x.Value != null
                     && x.Value.ToString().Equals(val.ToString(), StringComparison.OrdinalIgnoreCase));
-                    if (exists) break;
+                    if(exists)
+                        break;
                 }
 
-                if (!exists)
+                if(!exists)
                     dataNodeRemove.Add(row.ToElement("Row"));
             }
 
@@ -271,8 +285,8 @@ namespace DbDarwin.Service
         public static Database LoadXMLFile(string currentFileName)
         {
             var serializer = new XmlSerializer(typeof(Database));
-            using (var reader = new StreamReader(currentFileName))
-                return (Database)serializer.Deserialize(reader);
+            using(var reader = new StreamReader(currentFileName))
+                return (Database) serializer.Deserialize(reader);
         }
 
         /// <summary>
@@ -287,36 +301,34 @@ namespace DbDarwin.Service
         {
             var serializer = new XmlSerializer(typeof(List<Table>));
             List<Table> currentDiffSchema = null;
-            using (var reader = new StreamReader(model.CurrentDiffFile))
-                currentDiffSchema = (List<Table>)serializer.Deserialize(reader);
+            using(var reader = new StreamReader(model.CurrentDiffFile))
+                currentDiffSchema = (List<Table>) serializer.Deserialize(reader);
 
-            if (currentDiffSchema != null)
+            if(currentDiffSchema != null)
             {
-                if (model.TableName.HasValue())
+                if(model.TableName.HasValue())
                 {
                     var table = currentDiffSchema.FirstOrDefault(x =>
                         string.Equals(x.Name, model.FromName, StringComparison.OrdinalIgnoreCase));
-                    if (table != null)
+                    if(table != null)
                         table.SetName = model.ToName;
                     else
                     {
                         table = new Table { Name = model.FromName, SetName = model.ToName };
                         currentDiffSchema.Add(table);
                     }
-                }
-                else
+                } else
                 {
                     var table = currentDiffSchema.FirstOrDefault(x =>
                         string.Equals(x.Name, model.TableName, StringComparison.OrdinalIgnoreCase));
-                    if (table != null)
+                    if(table != null)
                     {
-                        if (table.Update == null)
+                        if(table.Update == null)
                         {
                             var column = new Column { COLUMN_NAME = model.FromName, SetName = model.ToName };
                             table.Update = new Table();
                             table.Update.Columns.Add(column);
-                        }
-                        else
+                        } else
                         {
                             var column = table.Update.Columns.FirstOrDefault(x =>
                                 string.Equals(x.COLUMN_NAME, model.FromName,
@@ -335,7 +347,8 @@ namespace DbDarwin.Service
 
         private static void SetColumnName(Column column, Transformation model)
         {
-            if (column != null) column.SetName = model.ToName;
+            if(column != null)
+                column.SetName = model.ToName;
         }
 
         /// <summary>
@@ -356,12 +369,11 @@ namespace DbDarwin.Service
             var mustAdd = FindNewComponent<T>(sourceData, targetData);
 
             // Add new objects to xml
-            if (mustAdd != null)
-                foreach (var sqlObject in mustAdd)
+            if(mustAdd != null)
+                foreach(var sqlObject in mustAdd)
                     navigatorAdd.Serialize(sqlObject);
 
-            var compareLogic = new CompareLogic
-            {
+            var compareLogic = new CompareLogic {
                 Config =
                 {
                     MaxDifferences = int.MaxValue,
@@ -369,39 +381,39 @@ namespace DbDarwin.Service
                     CaseSensitive = false,
                 }
             };
-            if (typeof(T) == typeof(PrimaryKey))
+            if(typeof(T) == typeof(PrimaryKey))
             {
                 compareLogic.Config.MembersToIgnore.Add("Name");
                 compareLogic.Config.MembersToIgnore.Add("name");
             }
 
             // Detect Sql Objects Changes
-            if (targetData == null) return;
+            if(targetData == null)
+                return;
             {
-                if (mustAdd != null)
+                if(mustAdd != null)
                     sourceData = sourceData.Except(x => mustAdd.Contains(x)).ToList();
-                foreach (var currentObject in sourceData)
+                foreach(var currentObject in sourceData)
                 {
                     var foundObject = FindRemoveOrUpdate<T>(currentObject, targetData);
-                    if (foundObject == null)
+                    if(foundObject == null)
                     {
-                        if (typeof(T) == typeof(PrimaryKey))
+                        if(typeof(T) == typeof(PrimaryKey))
                             navigatorUpdate.Serialize(currentObject);
                         else
                             navigatorRemove.Serialize(currentObject);
-                    }
-                    else
+                    } else
                     {
                         var result = compareLogic.Compare(currentObject, foundObject);
-                        if (!result.AreEqual)
+                        if(!result.AreEqual)
                             navigatorUpdate.Serialize(currentObject);
                     }
                 }
 
-                foreach (var currentObject in targetData)
+                foreach(var currentObject in targetData)
                 {
                     var foundObject = FindRemoveOrUpdate<T>(currentObject, sourceData);
-                    if (foundObject == null)
+                    if(foundObject == null)
                         navigatorRemove.Serialize(currentObject);
                 }
             }
@@ -410,48 +422,51 @@ namespace DbDarwin.Service
         private object FindRemoveOrUpdate<T>(T currentObject, IEnumerable<T> newList)
         {
             object found = null;
-            if (typeof(T) == typeof(Column))
+            if(typeof(T) == typeof(Column))
                 found = newList.Cast<Column>().FirstOrDefault(x =>
                     x.Name.Equals(currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString(), StringComparison.OrdinalIgnoreCase));
-            else if (typeof(T) == typeof(Index))
+            else if(typeof(T) == typeof(Index))
                 found = newList.Cast<Index>().FirstOrDefault(x =>
                     x.Name.Equals(currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString(), StringComparison.OrdinalIgnoreCase));
-            else if (typeof(T) == typeof(ForeignKey))
+            else if(typeof(T) == typeof(ForeignKey))
                 found = newList.Cast<ForeignKey>().FirstOrDefault(x =>
                     x.Name.Equals(currentObject.GetType().GetProperty("Name")?.GetValue(currentObject).ToString(), StringComparison.OrdinalIgnoreCase));
-            else if (typeof(T) == typeof(PrimaryKey))
+            else if(typeof(T) == typeof(PrimaryKey))
                 found = newList.Cast<PrimaryKey>().FirstOrDefault(x =>
                     x.Columns.Equals(currentObject.GetType().GetProperty("Columns")?.GetValue(currentObject).ToString(), StringComparison.OrdinalIgnoreCase));
 
-            return (T)Convert.ChangeType(found, typeof(T));
+            return (T) Convert.ChangeType(found, typeof(T));
         }
 
         private List<T> FindNewComponent<T>(List<T> sourceList, List<T> targetList)
         {
             object tempAdd = null;
-            if (sourceList == null) return new List<T>();
-            if (targetList == null) return sourceList;
-            if (typeof(T) == typeof(Column))
+            if(sourceList == null)
+                return new List<T>();
+            if(targetList == null)
+                return sourceList;
+            if(typeof(T) == typeof(Column))
                 tempAdd = sourceList.Cast<Column>()
                     .Except(x => targetList.Cast<Column>().Select(c => c.COLUMN_NAME).ToList().Contains(x.COLUMN_NAME, false))
                     .ToList();
-            else if (typeof(T) == typeof(Index))
+            else if(typeof(T) == typeof(Index))
                 tempAdd = sourceList.Cast<Index>()
                     .Except(x => targetList.Cast<Index>().Select(c => c.name).ToList().Contains(x.name, false)).ToList();
-            else if (typeof(T) == typeof(ForeignKey))
+            else if(typeof(T) == typeof(ForeignKey))
                 tempAdd = sourceList.Cast<ForeignKey>()
                     .Except(x =>
                         targetList.Cast<ForeignKey>().Select(c => c.CONSTRAINT_NAME).ToList()
                             .Contains(x.CONSTRAINT_NAME, false)).ToList();
-            return (List<T>)Convert.ChangeType(tempAdd, typeof(List<T>));
+            return (List<T>) Convert.ChangeType(tempAdd, typeof(List<T>));
         }
 
         #region IDisposable Support
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposedValue) return;
-            if (disposing)
+            if(disposedValue)
+                return;
+            if(disposing)
             {
             }
 

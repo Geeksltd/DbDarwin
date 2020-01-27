@@ -1,4 +1,5 @@
 ﻿using DbDarwin.Common;
+using DbDarwin.Model;
 using DbDarwin.Model.Command;
 using DbDarwin.Model.Schema;
 using Olive;
@@ -89,16 +90,13 @@ namespace DbDarwin.Service
             IdentityColumns = SqlService.LoadData<IdentityData>(CurrentSqlConnection, "IdentityData", "select OBJECT_NAME(object_id) as TableName,OBJECT_SCHEMA_NAME(object_id) as SchemaName, * FROM sys.identity_columns");
 
             ConstraintInformation = (from ind in IndexMapped
-                                     join ic in IndexColumnsMapped on new { ind.object_id, ind.index_id } equals new
-                                     { ic.object_id, ic.index_id }
-                                     join col in SystemColumnsMapped on new { ic.object_id, ic.column_id } equals new
-                                     { col.object_id, col.column_id }
+                                     join ic in IndexColumnsMapped on new { ind.object_id, ind.index_id } equals new { ic.object_id, ic.index_id }
+                                     join col in SystemColumnsMapped on new { ic.object_id, ic.column_id } equals new { col.object_id, col.column_id }
                                      select new ConstraintInformationModel { Index = ind, IndexColumn = ic, SystemColumn = col }).ToList();
             Model = model;
 
             Database = new Database();
-            Doc = new XDocument
-            {
+            Doc = new XDocument {
                 Declaration = new XDeclaration("1.0", "UTF-8", "true")
             };
             RootDatabase = new XElement("Database");
@@ -109,15 +107,15 @@ namespace DbDarwin.Service
         /// </summary>
         /// <param name="model">Contain Connection string and output file</param>
         /// <returns>can be successful it is true</returns>
-        public bool ExtractSchema()
+        public bool ExtractSchema(CompareType compare)
         {
             try
             {
                 // Create Table Model
-                if (AllTables.Rows.Count > 0)
+                if(AllTables.Rows.Count > 0)
                     Database.Tables = new List<Table>();
 
-                foreach (var tableSchema in AllTables.Rows.Cast<DataRow>())
+                foreach(var tableSchema in AllTables.Rows.Cast<DataRow>())
                 {
                     var schemaTable = tableSchema["TABLE_SCHEMA"].ToString();
                     var tableName = tableSchema["TABLE_NAME"].ToString();
@@ -127,21 +125,25 @@ namespace DbDarwin.Service
                         .Select(x => x.object_id)
                         .FirstOrDefault();
 
-                    var indexes = FetchIndexes(tableId);
-                    var primaryKey = FetchPrimary(tableId);
-                    var columns = FetchCulomns(tableName, schemaTable);
-                    var foreignkeys = ReferencesMapped.Where(x =>
-                        x.TABLE_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList();
-                    var newTable = new Table
-                    {
+
+                    var newTable = new Table {
                         Name = tableName,
                         Schema = schemaTable,
-                        Columns = columns,
-                        Indexes = indexes,
-                        PrimaryKey = primaryKey,
-                        ForeignKeys = foreignkeys
+                        Columns = FetchCulomns(tableName, schemaTable)
                     };
-                    CheckReferenceData(tableId, newTable.Name, newTable.Schema, newTable.Columns);
+
+
+
+                    if(compare == CompareType.Schema)
+                    {
+                        newTable.Indexes = FetchIndexes(tableId);
+                        newTable.PrimaryKey = FetchPrimary(tableId);
+                        newTable.ForeignKeys = ReferencesMapped.Where(x =>
+                            x.TABLE_SCHEMA == schemaTable && x.TABLE_NAME == tableName).ToList();
+                    }
+                    if(compare == CompareType.Data)
+                        CheckReferenceData(tableId, newTable.Name, newTable.Schema, newTable.Columns);
+
                     Database.Tables.Add(newTable);
                 }
 
@@ -149,10 +151,9 @@ namespace DbDarwin.Service
 
                 // Create Serialize Object and save as XML file
                 Doc.Add(RootDatabase);
-                AddDataToTable(Database, Doc, Model.OutputFile);
-            }
+                AddDataToTableAndSaveFile(Database, Doc, Model.OutputFile, compare);
 
-            catch (Exception ex)
+            } catch(Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.ToString());
@@ -166,13 +167,13 @@ namespace DbDarwin.Service
         private List<Column> FetchCulomns(string tableName, string schemaTable)
         {
             var result = ColumnsMapped.Where(x => x.TABLE_NAME == tableName && x.TABLE_SCHEMA == schemaTable).ToList();
-            foreach (var column in result)
+            foreach(var column in result)
             {
                 var identity = IdentityColumns.FirstOrDefault(x =>
                 x.TableName.Equals(tableName, StringComparison.OrdinalIgnoreCase)
                 && x.SchemaName.Equals(schemaTable, StringComparison.OrdinalIgnoreCase)
                 && x.name.Equals(column.Name, StringComparison.OrdinalIgnoreCase));
-                if (identity != null)
+                if(identity != null)
                 {
                     column.IsIdentity = true;
                     column.SeedValue = identity.seed_value;
@@ -183,34 +184,36 @@ namespace DbDarwin.Service
             return result;
         }
 
-        private void CheckReferenceData(long tableId, string tableName, string schema, List<Column> columns)
+        private bool CheckReferenceData(long tableId, string tableName, string schema, List<Column> columns)
         {
             // If table is deference data
             // For check reference data
-            if (ExtendProperties.Any(x =>
-                x.major_id == tableId && x.name.Equals("ReferenceData", StringComparison.OrdinalIgnoreCase) &&
-                x.value.Equals("Enum", StringComparison.OrdinalIgnoreCase)))
+            bool existAddOrUpdate = false;
+            if(ExtendProperties.Any(x =>
+               x.major_id == tableId && x.name.Equals("ReferenceData", StringComparison.OrdinalIgnoreCase) &&
+               x.value.Equals("Enum", StringComparison.OrdinalIgnoreCase)))
             {
                 var data = SqlService.LoadData(CurrentSqlConnection, tableName, $"SELECT * FROM [{schema}].[{tableName}]");
-                if (data.Rows.Count > 0)
+                if(data.Rows.Count > 0)
                 {
                     var tableElement = new XElement("Table");
                     var dataElement = new XElement("Data");
                     tableElement.SetAttributeValue("Name", tableName);
-                    if (schema.ToLower() != "dbo")
+                    if(schema.ToLower() != "dbo")
                         tableElement.SetAttributeValue("Schema", schema);
 
-                    foreach (var rowData in data.Rows.Cast<DataRow>())
+                    foreach(var rowData in data.Rows.Cast<DataRow>())
                     {
                         var rowElement = new XElement("Row");
-                        foreach (var column in data.Columns.Cast<DataColumn>().OrderBy(x => x.ColumnName))
+                        foreach(var column in data.Columns.Cast<DataColumn>().OrderBy(x => x.ColumnName))
                         {
-                            if (column.ColumnName.Equals("ID", StringComparison.OrdinalIgnoreCase)
+                            if(column.ColumnName.Equals("ID", StringComparison.OrdinalIgnoreCase)
                                 || rowData[column.ColumnName] == System.DBNull.Value)
                                 continue;
+                            existAddOrUpdate = true;
                             rowElement.SetAttributeValue(XmlConvert.EncodeName(column.ColumnName) ?? column.ColumnName, rowData[column.ColumnName].ToString());
                         }
-
+                        existAddOrUpdate = true;
                         dataElement.Add(rowElement);
                     }
 
@@ -220,6 +223,7 @@ namespace DbDarwin.Service
                     RootDatabase.Add(tableElement);
                 }
             }
+            return existAddOrUpdate;
         }
 
         public static XElement GetColumnTypes(List<Column> columns)
@@ -235,10 +239,10 @@ namespace DbDarwin.Service
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key.Equals("False", StringComparison.OrdinalIgnoreCase))
                 .GroupBy(x => x.Index.name);
             var existsIndex = new List<Index>();
-            foreach (var index in indexRows)
+            foreach(var index in indexRows)
             {
                 var resultIndex = index.FirstOrDefault()?.Index;
-                if (resultIndex != null)
+                if(resultIndex != null)
                     resultIndex.Columns = index.ToList().OrderBy(x => x.IndexColumn.key_ordinal)
                         .Select(x => x.SystemColumn.name)
                         .Aggregate((x, y) => x + "|" + y).Trim('|');
@@ -254,16 +258,16 @@ namespace DbDarwin.Service
                 .Where(x => x.Index.object_id == tableId && x.Index.is_primary_key.Equals("True", StringComparison.OrdinalIgnoreCase))
                 .GroupBy(x => x.Index.name);
             var index = indexRows.FirstOrDefault();
-            if (index != null)
+            if(index != null)
             {
                 var resultIndex = index.FirstOrDefault()?.Index;
-                if (resultIndex != null)
+                if(resultIndex != null)
                     resultIndex.Columns = index.ToList().OrderBy(x => x.IndexColumn.key_ordinal)
                         .Select(x => x.SystemColumn.name)
                         .Aggregate((x, y) => x + "|" + y).Trim('|');
                 var primaryKeys = resultIndex.MapTo<PrimaryKey>();
                 var constraint = KeyConstraints.FirstOrDefault(x => x.name == primaryKeys.Name);
-                if (constraint != null)
+                if(constraint != null)
                     primaryKeys.is_system_named = constraint.is_system_named;
                 return primaryKeys;
             }
@@ -271,10 +275,10 @@ namespace DbDarwin.Service
             return null;
         }
 
-        public static void AddDataToTable(Database database, XDocument data, string fileOutput)
+        public static void AddDataToTableAndSaveFile(Database database, XDocument data, string fileOutput, CompareType type)
         {
             var doc = new XDocument();
-            using (var writer = doc.CreateWriter())
+            using(var writer = doc.CreateWriter())
             {
                 var serializer = new XmlSerializer(typeof(Database));
                 serializer.Serialize(writer, database);
@@ -282,26 +286,29 @@ namespace DbDarwin.Service
 
             var dataElements = data.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
             var schemaElements = doc.Elements().FirstOrDefault()?.Elements(XName.Get("Table")).ToList();
-            if (schemaElements != null)
-                foreach (var element in schemaElements)
+            if(schemaElements != null)
+                foreach(var element in schemaElements)
                 {
-                    if (element.Name.ToString().ToLower() != "table") continue;
+                    if(element.Name.ToString().ToLower() != "table")
+                        continue;
 
                     var tableNameAttribute = element.Attribute(XName.Get("Name"));
                     var schemaAttribute = element.Attribute(XName.Get("Schema"));
 
                     var tableName = string.Empty;
                     var schemaName = string.Empty;
-                    if (tableNameAttribute != null)
+                    if(tableNameAttribute != null)
                         tableName = tableNameAttribute.Value;
                     schemaName = schemaAttribute?.Value;
-
-                    var foundData = (from d in dataElements
-                                     where d.Attribute(XName.Get("Name"))?.Value == tableName
-                                     && d.Attribute(XName.Get("Schema"))?.Value == schemaName
-                                     select d).FirstOrDefault();
-                    if (foundData != null)
-                        element.Add(foundData.Elements(XName.Get("Data")));
+                    if(type == CompareType.Data)
+                    {
+                        var foundData = (from d in dataElements
+                                         where d.Attribute(XName.Get("Name"))?.Value == tableName
+                                         && d.Attribute(XName.Get("Schema"))?.Value == schemaName
+                                         select d).FirstOrDefault();
+                        if(foundData != null)
+                            element.Add(foundData.Elements(XName.Get("Data")));
+                    }
                 }
 
             var path = ConstantData.WorkingDir + fileOutput;
@@ -326,8 +333,9 @@ namespace DbDarwin.Service
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposedValue) return;
-            if (disposing)
+            if(disposedValue)
+                return;
+            if(disposing)
             {
                 CurrentSqlConnection.Close();
                 CurrentSqlConnection.Dispose();
