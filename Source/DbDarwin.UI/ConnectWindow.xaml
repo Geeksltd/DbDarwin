@@ -34,7 +34,7 @@
         <TextBox x:Name="ServerName" Grid.Column="1"  Grid.Row="0"  TextWrapping="Wrap" Text="" Width="300" Margin="5" FontSize="14" Height="25"/>
 
         <ComboBox  materialDesign:HintAssist.Hint="Authentication" x:Name="Authentication"  Width="300" Text="Select Source"  Grid.Column="1" Grid.Row="1" Margin="5" FontSize="14"  SelectionChanged="Authentication_SelectionChanged"  >
-            <ComboBoxItem IsSelected="True" Tag="1" >Windows Authentication</ComboBoxItem>
+            <ComboBoxItem IsSelected="True" Tag="1"  >Windows Authentication</ComboBoxItem>
             <ComboBoxItem Tag="2" >SQL Authentication</ComboBoxItem>
         </ComboBox>
 

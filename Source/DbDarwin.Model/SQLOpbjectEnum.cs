@@ -9,4 +9,10 @@
         ForeignKey = 5,
         RowData = 6
     }
+
+    public enum SQLAuthenticationType
+    {
+        WindowsAuthentication = 1,
+        SQLAuthentication = 2
+    }
 }
