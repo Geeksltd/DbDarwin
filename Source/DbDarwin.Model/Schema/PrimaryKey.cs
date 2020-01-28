@@ -113,6 +113,7 @@ namespace DbDarwin.Model.Schema
         [XmlAttribute(AttributeName = "FilterDefinition")]
         public string filter_definition { get; set; }
 
+        [XmlIgnore]
         [DefaultValue(true)]
         [XmlAttribute(AttributeName = "IsSystemNamed")]
         public bool is_system_named { get; set; }

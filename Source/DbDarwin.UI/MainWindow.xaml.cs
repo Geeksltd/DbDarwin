@@ -177,6 +177,12 @@ namespace DbDarwin.UI
                     mainWindow.CompareSchemaButton.IsEnabled = true;
 
                     TreeViewRoot.Items.Clear();
+                    if(result.Count == 0)
+                    {
+                        ShowScript(string.Empty);
+                        UpdateState("Databases compared and are equal.");
+                        MessageBox.Show("Databases compared and are equal.", "Result");
+                    }
 
                     foreach(var table in result.GroupBy(x => x.FullTableName).OrderBy(x => x.Key))
                     {
