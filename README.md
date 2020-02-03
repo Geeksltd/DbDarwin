@@ -1,6 +1,10 @@
 # DbDarwin
 *Forces evolution upon live databases*.
 
+
+[https://github.com/Geeksltd/DbDarwin/wiki/How-to-Detect-Compare-Center-Data-tables-and-schema](New changes version 1.0.0)
+
+
 DbDarwin is a utility for Sql database migration script generation, optimized for M# dev ops.  
 
 ## Background
