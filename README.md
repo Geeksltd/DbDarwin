@@ -123,6 +123,11 @@ DbDarwin.exe generate-script -diff "Diff.xml" -out "migrate.sql"
 ```
 It generates the sql code equvalent to the diff xml file.
 
+
+# Graphical User Interface
+DB Darwin has a very simple UI for comparing schema or data, at first you need to select the desired database for the source and target database, then you should proceed with the selecting `Compare schema` or `Compare data` button, finally you will see the result in the mid-section view and if you are satisfied with the result you can click on the `Generate All` button to see the result in the MS SQL Service.
+![app db darwin](https://github.com/Geeksltd/DbDarwin/raw/master/doc/Capture2.PNG)
+
 # Running the generated migration SQL
 During a deployment operation, we need to:
 
@@ -145,7 +150,7 @@ The developer would use the UI tool to go through a step-by-step process to:
 6. Clicking on any operation on either side, will show the equivalent generated SQL for it at the bottom of the screen.
 7. Click Done - which shows a screen with the full generated scripts and a button to Download as a file.
 
-![app db darwin](https://github.com/Geeksltd/DbDarwin/raw/master/doc/Capture2.PNG)
+
 
 ### Next version
 - Upon every such action, a new version of the Diff.xml will be created, with the ability to Undo (go back to a previous version)
