@@ -125,7 +125,8 @@ It generates the sql code equvalent to the diff xml file.
 
 
 # Graphical User Interface
-DB Darwin has a very simple UI for comparing schema or data, at first you need to select the desired database for the source and target database, then you should proceed with the selecting `Compare schema` or `Compare data` button, finally you will see the result in the mid-section view and if you are satisfied with the result you can click on the `Generate All` button to see the result in the MS SQL Service.
+DB Darwin has a very simple UI for comparing schema or data, at first you need to select the desired database for the source and target database, then you should proceed with the selecting `Compare schema` or `Compare data` button, finally you will see the result in the mid-section view and if you are satisfied with the result you can click on the `Generate All` button to see the result in the MS SQL Server.
+
 ![app db darwin](https://github.com/Geeksltd/DbDarwin/raw/master/doc/Capture2.PNG)
 
 # Running the generated migration SQL
