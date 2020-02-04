@@ -2,9 +2,6 @@
 *Forces evolution upon live databases*.
 
 
-[New Changes version 1.0.0](https://github.com/Geeksltd/DbDarwin/wiki/How-to-Detect-Compare-Center-Data-tables-and-schema)
-
-
 DbDarwin is a utility for Sql database migration script generation, optimized for M# dev ops.  
 
 ## Background
@@ -147,6 +144,8 @@ The developer would use the UI tool to go through a step-by-step process to:
 5. Rename operations will be shown on the right side.
 6. Clicking on any operation on either side, will show the equivalent generated SQL for it at the bottom of the screen.
 7. Click Done - which shows a screen with the full generated scripts and a button to Download as a file.
+
+![app db darwin](https://github.com/Geeksltd/DbDarwin/raw/master/doc/Capture2.PNG)
 
 ### Next version
 - Upon every such action, a new version of the Diff.xml will be created, with the ability to Undo (go back to a previous version)
