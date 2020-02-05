@@ -123,15 +123,11 @@ DbDarwin.exe generate-script -diff "Diff.xml" -out "migrate.sql"
 ```
 It generates the sql code equvalent to the diff xml file.
 
-# Running the generated migration SQL
-During a deployment operation, we need to:
 
-- Take the live database offline
-- Create a backup
-- Run the generated SQL file
-- Bring the database back online
+# Graphical User Interface
+DB Darwin has a clear UI for comparing schema/data of two tables and generating T-SQL result in the MS SQL Server.
 
-TODO: This is to be handled via the Jenkins process. We will need the DB change script to be injected into the pipeline. The simplest approach is to make it an ad-hoc deployment parameter. But then, the history will be lost. So ideally, we need the generated SQL to be added to the source repo. But how?
+![app db darwin](https://github.com/Geeksltd/DbDarwin/raw/master/doc/Capture2.PNG)
 
 ## Process
 The developer would use the UI tool to go through a step-by-step process to:
@@ -145,7 +141,15 @@ The developer would use the UI tool to go through a step-by-step process to:
 6. Clicking on any operation on either side, will show the equivalent generated SQL for it at the bottom of the screen.
 7. Click Done - which shows a screen with the full generated scripts and a button to Download as a file.
 
-![app db darwin](https://github.com/Geeksltd/DbDarwin/raw/master/doc/Capture2.PNG)
+# Running the generated migration SQL
+During a deployment operation, we need to:
+
+- Take the live database offline
+- Create a backup
+- Run the generated SQL file
+- Bring the database back online
+
+TODO: This is to be handled via the Jenkins process. We will need the DB change script to be injected into the pipeline. The simplest approach is to make it an ad-hoc deployment parameter. But then, the history will be lost. So ideally, we need the generated SQL to be added to the source repo. But how?
 
 ### Next version
 - Upon every such action, a new version of the Diff.xml will be created, with the ability to Undo (go back to a previous version)
