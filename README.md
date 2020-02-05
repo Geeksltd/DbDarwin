@@ -125,19 +125,9 @@ It generates the sql code equvalent to the diff xml file.
 
 
 # Graphical User Interface
-DB Darwin has a very simple UI for comparing schema or data, at first you need to select the desired database for the source and target database, then you should proceed with the selecting `Compare schema` or `Compare data` button, finally you will see the result in the mid-section view and if you are satisfied with the result you can click on the `Generate All` button to see the result in the MS SQL Server.
+DB Darwin has clear UI for comparing schema/data of two tables and generating T-SQL result in the MS SQL Server.
 
 ![app db darwin](https://github.com/Geeksltd/DbDarwin/raw/master/doc/Capture2.PNG)
-
-# Running the generated migration SQL
-During a deployment operation, we need to:
-
-- Take the live database offline
-- Create a backup
-- Run the generated SQL file
-- Bring the database back online
-
-TODO: This is to be handled via the Jenkins process. We will need the DB change script to be injected into the pipeline. The simplest approach is to make it an ad-hoc deployment parameter. But then, the history will be lost. So ideally, we need the generated SQL to be added to the source repo. But how?
 
 ## Process
 The developer would use the UI tool to go through a step-by-step process to:
@@ -150,6 +140,16 @@ The developer would use the UI tool to go through a step-by-step process to:
 5. Rename operations will be shown on the right side.
 6. Clicking on any operation on either side, will show the equivalent generated SQL for it at the bottom of the screen.
 7. Click Done - which shows a screen with the full generated scripts and a button to Download as a file.
+
+# Running the generated migration SQL
+During a deployment operation, we need to:
+
+- Take the live database offline
+- Create a backup
+- Run the generated SQL file
+- Bring the database back online
+
+TODO: This is to be handled via the Jenkins process. We will need the DB change script to be injected into the pipeline. The simplest approach is to make it an ad-hoc deployment parameter. But then, the history will be lost. So ideally, we need the generated SQL to be added to the source repo. But how?
 
 
 
