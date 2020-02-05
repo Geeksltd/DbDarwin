@@ -151,8 +151,6 @@ During a deployment operation, we need to:
 
 TODO: This is to be handled via the Jenkins process. We will need the DB change script to be injected into the pipeline. The simplest approach is to make it an ad-hoc deployment parameter. But then, the history will be lost. So ideally, we need the generated SQL to be added to the source repo. But how?
 
-
-
 ### Next version
 - Upon every such action, a new version of the Diff.xml will be created, with the ability to Undo (go back to a previous version)
 - Any change (on either side of the screen) can be manually excluded, which simply deletes that item from the Diff xml.
