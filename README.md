@@ -125,7 +125,7 @@ It generates the sql code equvalent to the diff xml file.
 
 
 # Graphical User Interface
-DB Darwin has clear UI for comparing schema/data of two tables and generating T-SQL result in the MS SQL Server.
+DB Darwin has a clear UI for comparing schema/data of two tables and generating T-SQL result in the MS SQL Server.
 
 ![app db darwin](https://github.com/Geeksltd/DbDarwin/raw/master/doc/Capture2.PNG)
 
